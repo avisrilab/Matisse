@@ -1,0 +1,20 @@
+Package: SCLRILA
+Type: Package
+Title: Long-Read Single-Cell RNA-seq Isoform-Level Analysis
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Jamie", "Bregman",
+      email = "jbregman@wistar.org",
+      role = c("aut", "cre")
+    )
+  )
+Description: Provides a suite of functions for the processing, visualization, and analysis of long-read scRNA-seq data at isoform level resolution.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+  Matrix,
+  methods
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
