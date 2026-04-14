@@ -222,9 +222,10 @@ setMethod("AddIsoformMetadata", "MatisseObject",
 # [[ operator: isoform metadata first, then Seurat
 # ---------------------------------------------------------------------------
 
-#' @rdname MatisseObject-class
-#' @param i Character. Column name to look up via \code{[[}.
-#' @param name Column name in the Seurat \code{meta.data} (for \code{$}).
+#' @describeIn MatisseObject-class
+#'   Access isoform metadata columns or Seurat slots via \code{[[}.
+#'   Checks \code{isoform_metadata} first; falls back to the embedded
+#'   Seurat object.
 #' @export
 setMethod("[[", "MatisseObject", function(x, i, j, ...) {
   meta <- x@isoform_metadata
