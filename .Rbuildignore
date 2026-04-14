@@ -5,6 +5,7 @@
 ^pkgdown$
 ^\.github$
 ^README\.Rmd$
+^README\.md$
 ^LICENSE\.md$
 ^\.lintr$
 ^codecov\.yml$
