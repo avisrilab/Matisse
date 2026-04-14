@@ -24,7 +24,7 @@
 #'
 #' @section Package website:
 #' Full documentation and vignettes are available at
-#' \url{https://k3yavi.github.io/Matisse}.
+#' \url{https://avisrilab.github.io/Matisse}.
 #'
 #' @keywords internal
 "_PACKAGE"

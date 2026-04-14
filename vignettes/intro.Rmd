@@ -34,7 +34,7 @@ isoform-resolved single-cell RNA-seq data. It builds on
 ```r
 # Install development version from GitHub
 # install.packages("remotes")
-remotes::install_github("k3yavi/Matisse")
+remotes::install_github("avisrilab/Matisse")
 ```
 
 ## The MatisseObject

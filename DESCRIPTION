@@ -1,7 +1,7 @@
 Package: Matisse
 Title: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments
 Version: 0.1.0
-Authors@R: person("k3yavi", role = c("aut", "cre"),
+Authors@R: person("avisrilab", role = c("aut", "cre"),
     email = "placeholder@example.com",
     comment = c(ORCID = ""))
 Description: Integrative analysis of single-cell transcriptomics with isoform
@@ -38,5 +38,5 @@ Suggests:
     viridis
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://k3yavi.github.io/Matisse, https://github.com/k3yavi/Matisse
-BugReports: https://github.com/k3yavi/Matisse/issues
+URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse
+BugReports: https://github.com/avisrilab/Matisse/issues

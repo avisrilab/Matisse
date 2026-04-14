@@ -1,4 +1,4 @@
-url: https://k3yavi.github.io/Matisse
+url: https://avisrilab.github.io/Matisse
 
 template:
   bootstrap: 5
@@ -16,9 +16,9 @@ home:
     calculation, isoform-aware QC, and rich visualizations.
   links:
     - text: GitHub repository
-      href: https://github.com/k3yavi/Matisse
+      href: https://github.com/avisrilab/Matisse
     - text: Report an issue
-      href: https://github.com/k3yavi/Matisse/issues
+      href: https://github.com/avisrilab/Matisse/issues
 
 navbar:
   structure:
@@ -27,7 +27,7 @@ navbar:
   components:
     github:
       icon: fab fa-github fa-lg
-      href: https://github.com/k3yavi/Matisse
+      href: https://github.com/avisrilab/Matisse
       aria-label: GitHub
 
 reference:
