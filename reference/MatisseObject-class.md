@@ -52,6 +52,10 @@ x$name
 
   Ignored.
 
+- name:
+
+  Column name in the Seurat `meta.data` (used by `$`).
+
 ## Functions
 
 - `show(MatisseObject)`: Display a summary of a `MatisseObject`.
