@@ -4,7 +4,7 @@ NULL
 
 #' Create a MatisseObject
 #'
-#' The primary constructor for \code{\link{MatisseObject}}. Combines a
+#' The primary constructor for \code{\linkS4class{MatisseObject}}. Combines a
 #' \code{Seurat} object with optional isoform-resolved data layers.
 #'
 #' @param seurat A \code{Seurat} object. Required; provides cell barcodes,
@@ -22,7 +22,7 @@ NULL
 #'   \code{strand}, \code{gene_id}. Default: \code{NULL} (empty table).
 #' @param verbose Logical. Print construction progress. Default: \code{TRUE}.
 #'
-#' @return A \code{\link{MatisseObject}}.
+#' @return A \code{\linkS4class{MatisseObject}}.
 #'
 #' @examples
 #' \dontrun{

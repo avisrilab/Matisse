@@ -32,6 +32,7 @@ NULL
 #'
 #' @seealso \code{\link{FilterCells}}, \code{\link{PlotQCMetrics}}
 #'
+#' @rdname ComputeIsoformQC
 #' @export
 setMethod("ComputeIsoformQC", "MatisseObject",
           function(object, min_coverage = 5L, verbose = TRUE) {
@@ -120,6 +121,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #'
 #' @seealso \code{\link{ComputeIsoformQC}}
 #'
+#' @rdname FilterCells
 #' @export
 setMethod("FilterCells", "MatisseObject",
           function(object,
@@ -187,6 +189,7 @@ setMethod("FilterCells", "MatisseObject",
 #'
 #' @return The filtered \code{MatisseObject}.
 #'
+#' @rdname FilterEvents
 #' @export
 setMethod("FilterEvents", "MatisseObject",
           function(object,

@@ -35,6 +35,7 @@ NULL
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @rdname PlotPSIUMAP
 #' @export
 setMethod("PlotPSIUMAP", "MatisseObject",
           function(object, event_id,
@@ -95,6 +96,7 @@ setMethod("PlotPSIUMAP", "MatisseObject",
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @rdname PlotPSIViolin
 #' @export
 setMethod("PlotPSIViolin", "MatisseObject",
           function(object, event_id,
@@ -164,6 +166,7 @@ setMethod("PlotPSIViolin", "MatisseObject",
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @rdname PlotPSIHeatmap
 #' @export
 setMethod("PlotPSIHeatmap", "MatisseObject",
           function(object,
@@ -262,6 +265,7 @@ setMethod("PlotPSIHeatmap", "MatisseObject",
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @rdname PlotJunctionCoverage
 #' @export
 setMethod("PlotJunctionCoverage", "MatisseObject",
           function(object, gene, cells = NULL, log_scale = FALSE) {
@@ -337,6 +341,7 @@ setMethod("PlotJunctionCoverage", "MatisseObject",
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @rdname PlotQCMetrics
 #' @export
 setMethod("PlotQCMetrics", "MatisseObject",
           function(object, features = NULL, group_by = NULL, ncol = 2L) {

@@ -18,7 +18,7 @@ NULL
 #' Entries where the total coverage (inclusion + exclusion) falls below
 #' \code{min_coverage} are set to \code{na_fill} (default \code{NA}).
 #'
-#' @param object A \code{\link{MatisseObject}} that has a non-\code{NULL}
+#' @param object A \code{\linkS4class{MatisseObject}} that has a non-\code{NULL}
 #'   \code{junction_counts} slot, or a sparse matrix (cells x junctions).
 #' @param events When \code{object} is a matrix: a \code{data.frame} with
 #'   columns \code{event_id}, \code{inclusion_junctions}, and
@@ -63,6 +63,7 @@ NULL
 #' psi_mat <- CalculatePSI(jxn_mat, events, min_coverage = 3)
 #' }
 #'
+#' @rdname CalculatePSI
 #' @export
 setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
@@ -104,6 +105,7 @@ setMethod("CalculatePSI", "MatisseObject",
 })
 
 # CalculatePSI for a raw matrix input
+#' @rdname CalculatePSI
 setMethod("CalculatePSI", "ANY",
           function(object, events, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE) {

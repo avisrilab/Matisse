@@ -47,12 +47,8 @@ setMethod("show", "MatisseObject", function(object) {
 # dim / nrow / ncol
 # ---------------------------------------------------------------------------
 
-#' Dimensions of a MatisseObject
-#'
-#' Returns a two-element integer vector: \code{c(n_cells, n_events)}.
-#'
+#' @rdname MatisseObject-class
 #' @param x A \code{MatisseObject}.
-#' @return Integer vector of length 2.
 #' @export
 setMethod("dim", "MatisseObject", function(x) {
   c(.n_cells(x), .n_events(x))
@@ -62,16 +58,11 @@ setMethod("dim", "MatisseObject", function(x) {
 # Subsetting: [ (cells x events)
 # ---------------------------------------------------------------------------
 
-#' Subset a MatisseObject
-#'
-#' \code{object[cells, events]} subsets by cell barcodes (rows) and/or event
-#' IDs (columns). Either index may be omitted to keep all.
-#'
-#' @param x A \code{MatisseObject}.
+#' @rdname MatisseObject-class
 #' @param i Cell barcodes (character) or integer indices.
 #' @param j Event IDs (character) or integer indices.
+#' @param ... Ignored.
 #' @param drop Ignored.
-#' @return A subsetted \code{MatisseObject}.
 #' @export
 setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
   # Resolve cell indices
@@ -153,28 +144,38 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
 # Accessor methods
 # ---------------------------------------------------------------------------
 
+#' @rdname GetSeurat
 setMethod("GetSeurat", "MatisseObject", function(object, ...) object@seurat)
+#' @rdname GetPSI
 setMethod("GetPSI",    "MatisseObject", function(object, ...) object@psi)
 
+#' @rdname SetPSI
 setMethod("SetPSI", "MatisseObject", function(object, value) {
   object@psi <- value
   methods::validObject(object)
   object
 })
 
+#' @rdname GetJunctionCounts
 setMethod("GetJunctionCounts",  "MatisseObject",
           function(object, ...) object@junction_counts)
+#' @rdname GetInclusionCounts
 setMethod("GetInclusionCounts", "MatisseObject",
           function(object, ...) object@inclusion_counts)
+#' @rdname GetExclusionCounts
 setMethod("GetExclusionCounts", "MatisseObject",
           function(object, ...) object@exclusion_counts)
+#' @rdname GetEventData
 setMethod("GetEventData",       "MatisseObject",
           function(object, ...) object@event_data)
+#' @rdname GetJunctionData
 setMethod("GetJunctionData",    "MatisseObject",
           function(object, ...) object@junction_data)
+#' @rdname MatisseMeta
 setMethod("MatisseMeta",        "MatisseObject",
           function(object, ...) object@isoform_metadata)
 
+#' @rdname MatisseMeta
 setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
   stopifnot(is.data.frame(value))
   object@isoform_metadata <- value
@@ -221,18 +222,9 @@ setMethod("AddIsoformMetadata", "MatisseObject",
 # [[ operator: isoform metadata first, then Seurat
 # ---------------------------------------------------------------------------
 
-#' Access isoform metadata or Seurat slots via \code{[[}
-#'
-#' Checks \code{isoform_metadata} columns first; falls back to the embedded
-#' Seurat object. This mirrors the behaviour of \code{[[} on a
-#' \code{Seurat} object.
-#'
-#' @param x A \code{MatisseObject}.
-#' @param i Character. Column name to look up.
-#' @param j Ignored.
-#' @param ... Ignored.
-#' @return The requested column as a vector, or whatever the Seurat \code{[[}
-#'   returns (assay, reduction, etc.).
+#' @rdname MatisseObject-class
+#' @param i Character. Column name to look up via \code{[[}.
+#' @param name Column name in the Seurat \code{meta.data} (for \code{$}).
 #' @export
 setMethod("[[", "MatisseObject", function(x, i, j, ...) {
   meta <- x@isoform_metadata
@@ -250,14 +242,7 @@ setMethod("[[", "MatisseObject", function(x, i, j, ...) {
 # $ operator: forwards to Seurat
 # ---------------------------------------------------------------------------
 
-#' Access Seurat cell metadata via \code{$}
-#'
-#' Delegates to the embedded Seurat object so that common patterns like
-#' \code{obj$seurat_clusters} work seamlessly.
-#'
-#' @param x A \code{MatisseObject}.
-#' @param name Column name in the Seurat \code{meta.data}.
-#' @return The requested column.
+#' @rdname MatisseObject-class
 #' @export
 setMethod("$", "MatisseObject", function(x, name) {
   if (is.null(x@seurat)) {
