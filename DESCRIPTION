@@ -1,8 +1,8 @@
 Package: Matisse
 Title: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments
 Version: 0.1.0
-Authors@R: person("avisrilab", role = c("aut", "cre"),
-    email = "placeholder@example.com",
+Authors@R: person("k3yavi", role = c("aut", "cre"),
+    email = "avisrilab@gmail.com",
     comment = c(ORCID = ""))
 Description: Integrative analysis of single-cell transcriptomics with isoform
     resolution. Matisse extends Seurat and Signac to support PSI (Percent Spliced
@@ -38,5 +38,15 @@ Suggests:
     viridis
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Collate:
+    'Matisse-package.R'
+    'MatisseObject-class.R'
+    'generics.R'
+    'MatisseObject-methods.R'
+    'constructors.R'
+    'psi.R'
+    'qc.R'
+    'visualization.R'
+    'utils.R'
 URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse
 BugReports: https://github.com/avisrilab/Matisse/issues

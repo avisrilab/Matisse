@@ -9,6 +9,7 @@ name: pkgdown
 
 permissions:
   contents: write
+  pages: write
 
 jobs:
   pkgdown:
@@ -28,16 +29,18 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, any::roxygen2, local::.
           needs: website
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: |
+          roxygen2::roxygenise()
+          pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          clean:  false
+          clean: false
           branch: gh-pages
           folder: docs
