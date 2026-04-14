@@ -30,11 +30,14 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom methods new is validObject show setClass setGeneric setMethod
-#'   setValidity slot initialize prototype isVirtualClass
+#' @importFrom methods new is isVirtualClass validObject show setClass
+#'   setGeneric setMethod setValidity slot initialize prototype as
 #' @importFrom Matrix sparseMatrix nnzero rowSums colSums t Matrix
-#' @importFrom rlang abort warn inform check_installed
+#' @importFrom rlang abort warn inform .data
 #' @importFrom cli cli_alert_info cli_alert_success cli_alert_warning
-#'   cli_progress_bar cli_progress_update cli_progress_done
+#' @importFrom utils packageVersion
+#' @importFrom stats median sd var hclust dist
+#' @importFrom dplyr all_of
+#' @importFrom tidyr pivot_longer
 ## usethis namespace: end
 NULL

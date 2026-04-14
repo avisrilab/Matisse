@@ -62,7 +62,7 @@ BuildSimpleEvents <- function(junctions, event_type = "simple") {
 #'
 #' Concatenates two \code{MatisseObject}s that share the same set of splice
 #' events. All matrices are row-bound; the embedded Seurat objects are merged
-#' with \code{\link[SeuratObject]{merge}}.
+#' via \code{merge()} (dispatches to Seurat's merge method).
 #'
 #' @param x A \code{MatisseObject}.
 #' @param y A \code{MatisseObject}.
@@ -89,8 +89,8 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     }
   }
 
-  # Merge Seurat objects
-  merged_seurat <- SeuratObject::merge(
+  # Merge Seurat objects via base generic (dispatches to Seurat's merge.Seurat)
+  merged_seurat <- merge(
     x@seurat, y@seurat,
     add.cell.ids = add_cell_ids
   )
