@@ -121,7 +121,7 @@ setMethod("CalculatePSI", "ANY",
     na_fill      = na_fill,
     verbose      = verbose
   )
-  result$psi
+  as.matrix(result$psi)
 })
 
 # ---------------------------------------------------------------------------

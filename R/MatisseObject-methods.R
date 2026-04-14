@@ -188,12 +188,13 @@ setMethod("AddIsoformMetadata", "MatisseObject",
 
   if (is.data.frame(metadata)) {
     new_cols <- metadata
-  } else if (is.numeric(metadata) || is.character(metadata)) {
+  } else if (is.numeric(metadata) || is.character(metadata) ||
+             is.logical(metadata) || is.integer(metadata)) {
     if (is.null(names(metadata))) {
-      rlang::abort("'metadata' vector must be named.")
+      rlang::abort("'metadata' vector must be named with cell barcodes.")
     }
-    new_cols <- as.data.frame(as.list(metadata))
-    rownames(new_cols) <- cells
+    # as.data.frame() on a named vector produces N-row x 1-col with row names
+    new_cols <- as.data.frame(metadata)
   } else {
     rlang::abort("'metadata' must be a data.frame or named vector.")
   }
