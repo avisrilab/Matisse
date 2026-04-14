@@ -3,6 +3,7 @@
 
 exportClasses(MatisseObject)
 
+# S4 methods for generics defined in OTHER packages
 exportMethods(
   show,
   dim,
@@ -11,6 +12,7 @@ exportMethods(
   "$"
 )
 
+# Functions and S4 generics defined in THIS package
 export(
   CreateMatisseObject,
   GetSeurat,
@@ -22,8 +24,10 @@ export(
   GetEventData,
   GetJunctionData,
   MatisseMeta,
+  "MatisseMeta<-",
   AddIsoformMetadata,
   CalculatePSI,
+  SummarizePSI,
   ComputeIsoformQC,
   FilterCells,
   FilterEvents,
@@ -31,13 +35,16 @@ export(
   PlotPSIUMAP,
   PlotPSIViolin,
   PlotJunctionCoverage,
-  PlotQCMetrics
+  PlotQCMetrics,
+  BuildSimpleEvents,
+  MergeMatisse
 )
 
 importFrom(methods, new, is, isVirtualClass, validObject, show,
            setClass, setGeneric, setMethod, setValidity, slot,
-           initialize, prototype)
-importFrom(Matrix, sparseMatrix, nnzero, rowSums, colSums, t)
-importFrom(rlang, abort, warn, inform, check_installed)
-importFrom(cli, cli_alert_info, cli_alert_success, cli_alert_warning,
-           cli_progress_bar, cli_progress_update, cli_progress_done)
+           initialize, prototype, as)
+importFrom(Matrix, sparseMatrix, nnzero, rowSums, colSums, t, Matrix)
+importFrom(rlang, abort, warn, inform, .data)
+importFrom(cli, cli_alert_info, cli_alert_success, cli_alert_warning)
+importFrom(utils, packageVersion)
+importFrom(stats, median, sd, var, hclust, dist)

@@ -110,7 +110,7 @@ setMethod("CalculatePSI", "ANY",
   if (!inherits(object, "Matrix") && !is.matrix(object)) {
     rlang::abort("`object` must be a MatisseObject or a matrix.")
   }
-  if (missing(events) || nrow(events) == 0) {
+  if (is.null(events) || nrow(events) == 0) {
     rlang::abort("`events` is required when `object` is a matrix.")
   }
 

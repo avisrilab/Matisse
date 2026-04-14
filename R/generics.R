@@ -108,7 +108,7 @@ setGeneric("AddIsoformMetadata",
 #' @return A \code{MatisseObject} (when given one) or a PSI matrix.
 #' @export
 setGeneric("CalculatePSI",
-           function(object, events, ...) standardGeneric("CalculatePSI"))
+           function(object, events = NULL, ...) standardGeneric("CalculatePSI"))
 
 #' Compute per-cell isoform QC metrics
 #'
