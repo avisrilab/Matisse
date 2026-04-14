@@ -217,6 +217,35 @@ setMethod("AddIsoformMetadata", "MatisseObject",
 })
 
 # ---------------------------------------------------------------------------
+# [[ operator: isoform metadata first, then Seurat
+# ---------------------------------------------------------------------------
+
+#' Access isoform metadata or Seurat slots via \code{[[}
+#'
+#' Checks \code{isoform_metadata} columns first; falls back to the embedded
+#' Seurat object. This mirrors the behaviour of \code{[[} on a
+#' \code{Seurat} object.
+#'
+#' @param x A \code{MatisseObject}.
+#' @param i Character. Column name to look up.
+#' @param j Ignored.
+#' @param ... Ignored.
+#' @return The requested column as a vector, or whatever the Seurat \code{[[}
+#'   returns (assay, reduction, etc.).
+#' @export
+setMethod("[[", "MatisseObject", function(x, i, j, ...) {
+  meta <- x@isoform_metadata
+  if (nrow(meta) > 0 && i %in% colnames(meta)) {
+    return(meta[[i]])
+  }
+  if (!is.null(x@seurat)) {
+    return(x@seurat[[i]])
+  }
+  rlang::abort(paste0(
+    "'", i, "' not found in isoform_metadata or the embedded Seurat object."))
+})
+
+# ---------------------------------------------------------------------------
 # $ operator: forwards to Seurat
 # ---------------------------------------------------------------------------
 
