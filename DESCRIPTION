@@ -1,0 +1,42 @@
+Package: Matisse
+Title: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments
+Version: 0.1.0
+Authors@R: person("k3yavi", role = c("aut", "cre"),
+    email = "placeholder@example.com",
+    comment = c(ORCID = ""))
+Description: Integrative analysis of single-cell transcriptomics with isoform
+    resolution. Matisse extends Seurat and Signac to support PSI (Percent Spliced
+    In) matrix calculation, isoform-aware quality control, and visualization for
+    long-read and splice-resolved single-cell RNA-seq data. It provides a
+    dedicated S4 object that wraps a Seurat object, keeping gene expression and
+    isoform layers synchronized throughout an analysis.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0)
+Imports:
+    methods,
+    Matrix (>= 1.5.0),
+    SeuratObject (>= 5.0.0),
+    Seurat (>= 5.0.0),
+    ggplot2 (>= 3.4.0),
+    dplyr (>= 1.1.0),
+    rlang (>= 1.1.0),
+    cli (>= 3.6.0),
+    tidyr (>= 1.3.0),
+    scales (>= 1.3.0)
+Suggests:
+    Signac (>= 1.12.0),
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    withr,
+    covr,
+    pheatmap,
+    viridis
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://k3yavi.github.io/Matisse, https://github.com/k3yavi/Matisse
+BugReports: https://github.com/k3yavi/Matisse/issues

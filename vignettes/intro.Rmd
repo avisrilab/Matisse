@@ -1,0 +1,203 @@
+---
+title: "Introduction to Matisse"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to Matisse}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+**Matisse** (Multi-modal Analysis of Transcript Isoforms in Single-cell
+Sequencing Experiments) provides an integrated framework for analysing
+isoform-resolved single-cell RNA-seq data. It builds on
+[Seurat](https://satijalab.org/seurat/) and
+[Signac](https://stuartlab.org/signac/), adding:
+
+- A `MatisseObject` that wraps a `Seurat` object and co-stores isoform layers
+- PSI (Percent Spliced In) matrix calculation from junction read counts
+- Isoform-aware quality control metrics and filtering
+- Visualization functions for PSI values on UMAPs, violins, and heatmaps
+
+## Installation
+
+```r
+# Install development version from GitHub
+# install.packages("remotes")
+remotes::install_github("k3yavi/Matisse")
+```
+
+## The MatisseObject
+
+The central data structure is a `MatisseObject`. It consists of:
+
+| Slot | Contents |
+|------|----------|
+| `seurat` | An embedded `Seurat` object (gene expression, reductions, metadata) |
+| `junction_counts` | Sparse matrix: cells × junctions |
+| `psi` | Sparse matrix: cells × splice events (PSI in [0, 1]) |
+| `inclusion_counts` | Sparse matrix: cells × events |
+| `exclusion_counts` | Sparse matrix: cells × events |
+| `event_data` | Splice event annotation table |
+| `junction_data` | Junction annotation table |
+| `isoform_metadata` | Per-cell isoform QC metrics |
+
+## Quick Start
+
+### 1. Prepare your data
+
+Matisse expects:
+
+1. A `Seurat` object (processed gene-level data from any pipeline)
+2. A sparse junction count matrix (cells × junctions), e.g. from
+   STARsolo, Cell Ranger, or a long-read quantifier
+3. A splice event annotation table (e.g. exported from rMATS or SUPPA2)
+
+```{r eval=FALSE}
+library(Matisse)
+library(Seurat)
+library(Matrix)
+
+# -- Toy data for illustration -----------------------------------------------
+set.seed(42)
+n_cells <- 200; n_genes <- 500; n_jxns <- 50
+
+gene_counts <- matrix(rpois(n_genes * n_cells, 10),
+                      nrow     = n_genes,
+                      dimnames = list(paste0("Gene", seq_len(n_genes)),
+                                      paste0("CELL", seq_len(n_cells))))
+
+seu <- CreateSeuratObject(gene_counts) |>
+  NormalizeData() |>
+  FindVariableFeatures() |>
+  ScaleData() |>
+  RunPCA() |>
+  RunUMAP(dims = 1:10) |>
+  FindNeighbors(dims = 1:10) |>
+  FindClusters()
+
+# Junction counts (cells × junctions)
+jxn_counts <- Matrix(
+  matrix(rpois(n_cells * n_jxns, lambda = 3),
+         nrow     = n_cells,
+         dimnames = list(colnames(seu),
+                         paste0("chr1:", seq(1000, by = 500, length.out = n_jxns),
+                                "-", seq(1500, by = 500, length.out = n_jxns), ":+"))),
+  sparse = TRUE
+)
+```
+
+### 2. Define splice events
+
+```{r eval=FALSE}
+# Build a simple one-versus-rest event table from the junction list
+jd <- data.frame(
+  junction_id = colnames(jxn_counts),
+  chr         = "chr1",
+  start       = seq(1000, by = 500, length.out = n_jxns),
+  end         = seq(1500, by = 500, length.out = n_jxns),
+  strand      = "+",
+  gene_id     = rep(paste0("Gene", 1:10), each = 5)
+)
+
+# Use the built-in helper for simple (one-vs-rest) events
+ed <- BuildSimpleEvents(jd)
+head(ed)
+```
+
+### 3. Create a MatisseObject
+
+```{r eval=FALSE}
+obj <- CreateMatisseObject(
+  seurat          = seu,
+  junction_counts = jxn_counts,
+  event_data      = ed,
+  junction_data   = jd
+)
+obj
+```
+
+### 4. Calculate PSI
+
+```{r eval=FALSE}
+obj <- CalculatePSI(obj, min_coverage = 5)
+```
+
+### 5. Quality control
+
+```{r eval=FALSE}
+obj <- ComputeIsoformQC(obj)
+PlotQCMetrics(obj, group_by = "seurat_clusters")
+```
+
+Filter out cells with insufficient isoform coverage:
+
+```{r eval=FALSE}
+obj <- FilterCells(
+  obj,
+  min_junctions      = 5,
+  min_junction_reads = 20,
+  min_pct_covered    = 10
+)
+```
+
+Remove poorly covered events:
+
+```{r eval=FALSE}
+obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
+```
+
+### 6. Visualisation
+
+```{r eval=FALSE}
+# UMAP coloured by PSI of a specific event
+PlotPSIUMAP(obj, event_id = "Gene1:chr1:1000-1500:+:chr1:1000-1500:+")
+
+# Violin plot across clusters
+PlotPSIViolin(obj,
+              event_id = "Gene1:chr1:1000-1500:+:chr1:1000-1500:+",
+              group_by = "seurat_clusters")
+
+# Heatmap of top variable events
+PlotPSIHeatmap(obj, max_cells = 100)
+
+# Per-gene junction coverage
+PlotJunctionCoverage(obj, gene = "Gene1")
+```
+
+## Accessing the embedded Seurat object
+
+All Seurat functionality remains directly accessible:
+
+```{r eval=FALSE}
+# Extract the Seurat object
+seu_embedded <- GetSeurat(obj)
+
+# Seurat-style metadata access via $
+obj$seurat_clusters
+
+# Subset by cell barcode (keeps both Seurat and isoform layers in sync)
+subset_obj <- obj[c("CELL1", "CELL2", "CELL3"), ]
+```
+
+## Next steps
+
+- **Vignette: PSI analysis** — differential splicing between cell types
+- **Vignette: Integration with Signac** — linking splicing to chromatin
+  accessibility in multiome data
+
+## Session info
+
+```{r}
+sessionInfo()
+```

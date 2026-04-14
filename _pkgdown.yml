@@ -1,0 +1,91 @@
+url: https://k3yavi.github.io/Matisse
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  bslib:
+    primary: "#2C6E8A"
+    heading-font: "Lato"
+    base-font-size: "1rem"
+
+home:
+  title: "Matisse — Isoform-resolved single-cell analysis"
+  description: >
+    Integrative analysis of single-cell transcriptomics with isoform
+    resolution. Matisse extends Seurat and Signac with PSI matrix
+    calculation, isoform-aware QC, and rich visualizations.
+  links:
+    - text: GitHub repository
+      href: https://github.com/k3yavi/Matisse
+    - text: Report an issue
+      href: https://github.com/k3yavi/Matisse/issues
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/k3yavi/Matisse
+      aria-label: GitHub
+
+reference:
+  - title: "The MatisseObject"
+    desc: >
+      The core data structure and its constructor.
+    contents:
+      - MatisseObject-class
+      - CreateMatisseObject
+
+  - title: "Accessors"
+    desc: Getters and setters for all slots.
+    contents:
+      - GetSeurat
+      - GetPSI
+      - SetPSI
+      - GetJunctionCounts
+      - GetInclusionCounts
+      - GetExclusionCounts
+      - GetEventData
+      - GetJunctionData
+      - MatisseMeta
+      - "MatisseMeta<-"
+      - AddIsoformMetadata
+
+  - title: "PSI Analysis"
+    desc: Compute and summarize PSI matrices.
+    contents:
+      - CalculatePSI
+      - SummarizePSI
+
+  - title: "Quality Control"
+    desc: Per-cell and per-event QC metrics and filtering.
+    contents:
+      - ComputeIsoformQC
+      - FilterCells
+      - FilterEvents
+
+  - title: "Visualization"
+    desc: Publication-ready plots.
+    contents:
+      - PlotPSIUMAP
+      - PlotPSIViolin
+      - PlotPSIHeatmap
+      - PlotJunctionCoverage
+      - PlotQCMetrics
+
+  - title: "Utilities"
+    desc: Helper functions for building objects and merging datasets.
+    contents:
+      - BuildSimpleEvents
+      - MergeMatisse
+
+articles:
+  - title: "Getting started"
+    navbar: ~
+    contents:
+      - intro
+
+news:
+  - one_page: true
