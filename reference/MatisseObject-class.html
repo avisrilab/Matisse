@@ -84,7 +84,7 @@ synchronized.</p>
 
 
 <dt id="arg-i">i<a class="anchor" aria-label="anchor" href="#arg-i"></a></dt>
-<dd><p>Character. Column name to look up via <code>[[</code>.</p></dd>
+<dd><p>Cell barcodes (character) or integer indices.</p></dd>
 
 
 <dt id="arg-j">j<a class="anchor" aria-label="anchor" href="#arg-j"></a></dt>
@@ -98,15 +98,14 @@ synchronized.</p>
 <dt id="arg-drop">drop<a class="anchor" aria-label="anchor" href="#arg-drop"></a></dt>
 <dd><p>Ignored.</p></dd>
 
-
-<dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>Column name in the Seurat <code>meta.data</code> (for <code>$</code>).</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
 
 <ul><li><p><code>show(MatisseObject)</code>: Display a summary of a <code>MatisseObject</code>.</p></li>
+<li><p><code>x[[i</code>: Access isoform metadata columns or Seurat slots via <code>[[</code>.
+Checks <code>isoform_metadata</code> first; falls back to the embedded
+Seurat object.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>

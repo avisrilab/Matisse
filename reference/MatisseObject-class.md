@@ -38,7 +38,7 @@ x$name
 
 - i:
 
-  Character. Column name to look up via `[[`.
+  Cell barcodes (character) or integer indices.
 
 - j:
 
@@ -52,13 +52,13 @@ x$name
 
   Ignored.
 
-- name:
-
-  Column name in the Seurat `meta.data` (for `$`).
-
 ## Functions
 
 - `show(MatisseObject)`: Display a summary of a `MatisseObject`.
+
+- `x[[i`: Access isoform metadata columns or Seurat slots via `[[`.
+  Checks `isoform_metadata` first; falls back to the embedded Seurat
+  object.
 
 ## Slots
 
