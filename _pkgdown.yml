@@ -82,8 +82,8 @@ reference:
       - MergeMatisse
 
 articles:
-  - title: "Getting started"
-    navbar: ~
+  - title: "Vignettes"
+    navbar: "Vignettes"
     contents:
       - intro
 
