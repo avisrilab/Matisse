@@ -1,4 +1,4 @@
-# Matisse
+# Matisse - Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml)
