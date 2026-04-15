@@ -25,6 +25,11 @@ navbar:
     left:  [intro, reference, articles, news]
     right: [search, github]
   components:
+    articles:
+      text: Vignettes
+      menu:
+        - text: Getting started with Matisse
+          href: articles/intro.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/avisrilab/Matisse
