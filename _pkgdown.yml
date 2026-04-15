@@ -31,15 +31,22 @@ navbar:
       aria-label: GitHub
 
 reference:
-  - title: "The MatisseObject"
+  - title: "Creating a Matisse object"
     desc: >
-      The core data structure and its constructor.
+      Start here. These functions combine your Seurat object with splicing
+      data into a single Matisse object ready for analysis. Use
+      `CreateMatisseObject()` if you have junction counts from STAR/STARsolo,
+      or `CreateMatisseObjectFromTranscripts()` if you have isoform-level
+      counts from Bagpiper or a long-read quantifier.
     contents:
       - MatisseObject-class
       - CreateMatisseObject
+      - CreateMatisseObjectFromTranscripts
 
-  - title: "Accessors"
-    desc: Getters and setters for all slots.
+  - title: "Retrieve or update your data"
+    desc: >
+      Functions for pulling specific data tables out of your Matisse object,
+      or putting updated tables back in.
     contents:
       - GetSeurat
       - GetPSI
@@ -53,21 +60,29 @@ reference:
       - "MatisseMeta<-"
       - AddIsoformMetadata
 
-  - title: "PSI Analysis"
-    desc: Compute and summarize PSI matrices.
+  - title: "Calculate splicing ratios (PSI)"
+    desc: >
+      Compute PSI (Percent Spliced In) — the fraction of transcripts in each
+      cell that include a given exon. Values range from 0 (exon always skipped)
+      to 1 (exon always included).
     contents:
       - CalculatePSI
       - SummarizePSI
 
-  - title: "Quality Control"
-    desc: Per-cell and per-event QC metrics and filtering.
+  - title: "Quality control and filtering"
+    desc: >
+      Identify and remove cells or splicing events that don't have enough
+      data for reliable analysis.
     contents:
       - ComputeIsoformQC
       - FilterCells
       - FilterEvents
 
-  - title: "Visualization"
-    desc: Publication-ready plots.
+  - title: "Visualisation"
+    desc: >
+      Plot splicing patterns across your cells. Overlay PSI values on a UMAP,
+      compare splicing between cell types, or inspect junction usage for a
+      gene of interest.
     contents:
       - PlotPSIUMAP
       - PlotPSIViolin
@@ -76,7 +91,8 @@ reference:
       - PlotQCMetrics
 
   - title: "Utilities"
-    desc: Helper functions for building objects and merging datasets.
+    desc: >
+      Helper functions for building event tables and combining datasets.
     contents:
       - BuildSimpleEvents
       - MergeMatisse
