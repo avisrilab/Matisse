@@ -49,6 +49,18 @@ test_that("show method: produces output without error", {
   expect_output(show(obj), regexp = "MatisseObject")
 })
 
+test_that("show method: PSI coverage line is a valid percentage, not NA", {
+  obj <- make_matisse_object()
+  obj <- CalculatePSI(obj, verbose = FALSE)
+  out <- capture.output(show(obj))
+  cov_line <- grep("PSI coverage", out, value = TRUE)
+  expect_length(cov_line, 1L)
+  # Must not show "NA %" (bare NA as the computed value)
+  expect_false(grepl(":\\s+NA\\s+%", cov_line))
+  # Must contain a numeric percentage
+  expect_true(grepl("[0-9]", cov_line))
+})
+
 test_that("dim: returns c(n_cells, n_events) after PSI calculation", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)

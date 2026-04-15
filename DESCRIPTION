@@ -13,7 +13,7 @@ Description: Integrative analysis of single-cell transcriptomics with isoform
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -45,7 +45,8 @@ Collate:
     'constructors.R'
     'psi.R'
     'qc.R'
-    'visualization.R'
+    'transcript_psi.R'
     'utils.R'
+    'visualization.R'
 URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse
 BugReports: https://github.com/avisrilab/Matisse/issues
