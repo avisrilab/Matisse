@@ -7,7 +7,7 @@ Violin plots of isoform QC metrics
 ## Usage
 
 ``` r
-PlotQCMetrics(object, features, ...)
+PlotQCMetrics(object, features = NULL, ...)
 
 # S4 method for class 'MatisseObject'
 PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L)
