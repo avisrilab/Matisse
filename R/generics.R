@@ -184,4 +184,4 @@ setGeneric("PlotJunctionCoverage",
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotQCMetrics",
-           function(object, features, ...) standardGeneric("PlotQCMetrics"))
+           function(object, features = NULL, ...) standardGeneric("PlotQCMetrics"))
