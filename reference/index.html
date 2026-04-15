@@ -18,7 +18,9 @@
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/intro.html">Introduction to Matisse</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Vignettes</h6></li>
+    <li><a class="dropdown-item" href="../articles/intro.html">Getting started with Matisse</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -36,9 +38,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="the-matisseobject">The MatisseObject<a class="anchor" aria-label="anchor" href="#the-matisseobject"></a></h2>
+      <h2 id="creating-a-matisse-object">Creating a Matisse object<a class="anchor" aria-label="anchor" href="#creating-a-matisse-object"></a></h2>
 
-      <div class="section-desc"><p>The core data structure and its constructor.</p></div>
+      <div class="section-desc"><p>Start here. These functions combine your Seurat object with splicing data into a single Matisse object ready for analysis. Use <code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code> if you have junction counts from STAR/STARsolo, or <code><a href="../reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts()</a></code> if you have isoform-level counts from Bagpiper or a long-read quantifier.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -58,10 +60,17 @@
 
         </dt>
         <dd>Create a MatisseObject</dd>
-      </dl></div><div class="section level2">
-      <h2 id="accessors">Accessors<a class="anchor" aria-label="anchor" href="#accessors"></a></h2>
 
-      <div class="section-desc"><p>Getters and setters for all slots.</p></div>
+        <dt>
+
+          <code><a href="CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts()</a></code>
+
+        </dt>
+        <dd>Create a MatisseObject from transcript-level counts</dd>
+      </dl></div><div class="section level2">
+      <h2 id="retrieve-or-update-your-data">Retrieve or update your data<a class="anchor" aria-label="anchor" href="#retrieve-or-update-your-data"></a></h2>
+
+      <div class="section-desc"><p>Functions for pulling specific data tables out of your Matisse object, or putting updated tables back in.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -138,9 +147,9 @@
         </dt>
         <dd>Add columns to the isoform metadata</dd>
       </dl></div><div class="section level2">
-      <h2 id="psi-analysis">PSI Analysis<a class="anchor" aria-label="anchor" href="#psi-analysis"></a></h2>
+      <h2 id="calculate-splicing-ratios-psi-">Calculate splicing ratios (PSI)<a class="anchor" aria-label="anchor" href="#calculate-splicing-ratios-psi-"></a></h2>
 
-      <div class="section-desc"><p>Compute and summarize PSI matrices.</p></div>
+      <div class="section-desc"><p>Compute PSI (Percent Spliced In) — the fraction of transcripts in each cell that include a given exon. Values range from 0 (exon always skipped) to 1 (exon always included).</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -161,9 +170,9 @@
         </dt>
         <dd>Summarize PSI distribution across cells for each event</dd>
       </dl></div><div class="section level2">
-      <h2 id="quality-control">Quality Control<a class="anchor" aria-label="anchor" href="#quality-control"></a></h2>
+      <h2 id="quality-control-and-filtering">Quality control and filtering<a class="anchor" aria-label="anchor" href="#quality-control-and-filtering"></a></h2>
 
-      <div class="section-desc"><p>Per-cell and per-event QC metrics and filtering.</p></div>
+      <div class="section-desc"><p>Identify and remove cells or splicing events that don’t have enough data for reliable analysis.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -191,9 +200,9 @@
         </dt>
         <dd>Filter splice events by coverage or variance</dd>
       </dl></div><div class="section level2">
-      <h2 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a></h2>
+      <h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a></h2>
 
-      <div class="section-desc"><p>Publication-ready plots.</p></div>
+      <div class="section-desc"><p>Plot splicing patterns across your cells. Overlay PSI values on a UMAP, compare splicing between cell types, or inspect junction usage for a gene of interest.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -237,7 +246,7 @@
       </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
 
-      <div class="section-desc"><p>Helper functions for building objects and merging datasets.</p></div>
+      <div class="section-desc"><p>Helper functions for building event tables and combining datasets.</p></div>
 
       <dl></dl></div><div class="section level2">
 

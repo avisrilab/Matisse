@@ -37,7 +37,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/intro.html">Introduction to Matisse</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Vignettes</h6></li>
+    <li><a class="dropdown-item" href="articles/intro.html">Getting started with Matisse</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -59,21 +61,18 @@
 </h1></div>
 <!-- badges: start -->
 
-<p><strong>Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments</strong></p>
-<p>Matisse is an R package for integrative analysis of isoform-resolved single-cell transcriptomics. It extends <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> and <a href="https://stuartlab.org/signac/" class="external-link">Signac</a> with a dedicated <code>MatisseObject</code> that co-stores gene expression and isoform layers in a single synchronized object.</p>
-<div class="section level2">
-<h2 id="key-capabilities">Key capabilities<a class="anchor" aria-label="anchor" href="#key-capabilities"></a>
-</h2>
+<p><strong>Understand how genes are spliced differently across individual cells</strong></p>
+<p>When a gene is expressed, its pre-mRNA can be spliced in multiple ways — different exons can be included or skipped, producing different protein isoforms. Matisse lets you measure this <strong>alternative splicing</strong> at single-cell resolution, so you can ask questions like:</p>
 <ul>
-<li>
-<strong>PSI matrix</strong> — compute per-cell Percent Spliced In (PSI) values from junction read counts for any set of annotated splice events</li>
-<li>
-<strong>Isoform QC</strong> — per-cell metrics (junction detection rate, event coverage, mean PSI) with threshold-based filtering</li>
-<li>
-<strong>Visualization</strong> — UMAP overlays, violin plots, PSI heatmaps, and junction coverage plots via a consistent ggplot2 API</li>
-<li>
-<strong>Seurat-native</strong> — the embedded Seurat object is always in sync; all Seurat workflows continue to work unchanged</li>
+<li>Do neurons splice <em>PTBP1</em> differently from astrocytes?</li>
+<li>Is the splicing change I see in bulk RNA-seq driven by one cell type or many?</li>
+<li>Which cells are switching isoforms along a developmental trajectory?</li>
 </ul>
+<p>Matisse works alongside your existing <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> workflow — your gene expression analysis stays intact, and splicing information is layered on top.</p>
+<div class="section level2">
+<h2 id="what-matisse-measures">What Matisse measures<a class="anchor" aria-label="anchor" href="#what-matisse-measures"></a>
+</h2>
+<p>For each cell and each splicing event, Matisse computes a <strong>PSI value</strong> (Percent Spliced In): the fraction of transcripts that <em>include</em> a given exon, ranging from 0 (exon always skipped) to 1 (exon always included). A PSI of 0.5 means half the transcripts in that cell include the exon.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -85,42 +84,61 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
+<div class="section level3">
+<h3 id="starting-from-junction-counts-short-read-10x-data">Starting from junction counts (short-read 10x data)<a class="anchor" aria-label="anchor" href="#starting-from-junction-counts-short-read-10x-data"></a>
+</h3>
+<p>If you ran STAR or STARsolo for alignment, you already have junction counts — a table recording how many reads span each exon-exon junction in each cell.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 1. Start from an existing Seurat object</span></span>
+<span><span class="co"># 1. Load your existing Seurat object (gene expression, UMAP, clusters, etc.)</span></span>
 <span><span class="va">seu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"my_seurat.rds"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. Load junction counts (cells × junctions sparse matrix)</span></span>
+<span><span class="co"># 2. Load junction counts from STARsolo (cells × junctions)</span></span>
 <span><span class="va">jxn_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"junction_counts.rds"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 3. Load splice event definitions (e.g. exported from rMATS / SUPPA2)</span></span>
+<span><span class="co"># 3. Load splice event definitions (from rMATS, SUPPA2, or BuildSimpleEvents)</span></span>
 <span><span class="va">event_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"events.csv"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 4. Build a MatisseObject</span></span>
+<span><span class="co"># 4. Combine everything into a Matisse object</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
-<span>  seurat        <span class="op">=</span> <span class="va">seu</span>,</span>
+<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,</span>
 <span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,</span>
-<span>  event_data    <span class="op">=</span> <span class="va">event_data</span></span>
+<span>  event_data      <span class="op">=</span> <span class="va">event_data</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 5. Calculate PSI</span></span>
+<span><span class="co"># 5. Calculate the PSI (splicing ratio) for each cell and each event</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 6. QC and filter</span></span>
+<span><span class="co"># 6. Run quality control and remove low-quality cells and events</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/FilterCells.html">FilterCells</a></span><span class="op">(</span><span class="va">obj</span>, min_junctions <span class="op">=</span> <span class="fl">5</span>, min_pct_covered <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 7. Visualize</span></span>
+<span><span class="co"># 7. Visualize — overlay splicing on your UMAP</span></span>
 <span><span class="fu"><a href="reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE_PTBP1_e9"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE_PTBP1_e9"</span>, group_by <span class="op">=</span> <span class="st">"seurat_clusters"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="starting-from-transcript-counts-bagpiper-or-long-read-data">Starting from transcript counts (Bagpiper or long-read data)<a class="anchor" aria-label="anchor" href="#starting-from-transcript-counts-bagpiper-or-long-read-data"></a>
+</h3>
+<p>If your quantifier reports counts per transcript isoform rather than per junction, use this path instead. Provide your transcript count table and SUPPA2 annotation files — Matisse handles the rest.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># transcript_counts: transcripts × cells, with GENCODE transcript IDs as row names</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts</a></span><span class="op">(</span></span>
+<span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
+<span>  transcript_counts <span class="op">=</span> <span class="va">transcript_counts</span>,</span>
+<span>  ioe_files         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"events_SE.ioe"</span>, <span class="st">"events_RI.ioe"</span><span class="op">)</span>,</span>
+<span>  min_coverage      <span class="op">=</span> <span class="fl">5L</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>From here, all QC, filtering, and visualization steps are identical to the junction-count workflow above.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<p>Full documentation and vignettes are at <strong><a href="https://avisrilab.github.io/Matisse" class="uri">https://avisrilab.github.io/Matisse</a></strong>.</p>
+<p>Full vignettes and function reference are at <strong><a href="https://avisrilab.github.io/Matisse" class="uri">https://avisrilab.github.io/Matisse</a></strong>.</p>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>

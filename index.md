@@ -1,25 +1,27 @@
 # Matisse
 
-**Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing
-Experiments**
+**Understand how genes are spliced differently across individual cells**
 
-Matisse is an R package for integrative analysis of isoform-resolved
-single-cell transcriptomics. It extends
-[Seurat](https://satijalab.org/seurat/) and
-[Signac](https://stuartlab.org/signac/) with a dedicated `MatisseObject`
-that co-stores gene expression and isoform layers in a single
-synchronized object.
+When a gene is expressed, its pre-mRNA can be spliced in multiple ways —
+different exons can be included or skipped, producing different protein
+isoforms. Matisse lets you measure this **alternative splicing** at
+single-cell resolution, so you can ask questions like:
 
-## Key capabilities
+- Do neurons splice *PTBP1* differently from astrocytes?
+- Is the splicing change I see in bulk RNA-seq driven by one cell type
+  or many?
+- Which cells are switching isoforms along a developmental trajectory?
 
-- **PSI matrix** — compute per-cell Percent Spliced In (PSI) values from
-  junction read counts for any set of annotated splice events
-- **Isoform QC** — per-cell metrics (junction detection rate, event
-  coverage, mean PSI) with threshold-based filtering
-- **Visualization** — UMAP overlays, violin plots, PSI heatmaps, and
-  junction coverage plots via a consistent ggplot2 API
-- **Seurat-native** — the embedded Seurat object is always in sync; all
-  Seurat workflows continue to work unchanged
+Matisse works alongside your existing
+[Seurat](https://satijalab.org/seurat/) workflow — your gene expression
+analysis stays intact, and splicing information is layered on top.
+
+## What Matisse measures
+
+For each cell and each splicing event, Matisse computes a **PSI value**
+(Percent Spliced In): the fraction of transcripts that *include* a given
+exon, ranging from 0 (exon always skipped) to 1 (exon always included).
+A PSI of 0.5 means half the transcripts in that cell include the exon.
 
 ## Installation
 
@@ -30,42 +32,67 @@ remotes::install_github("avisrilab/Matisse")
 
 ## Quick start
 
+### Starting from junction counts (short-read 10x data)
+
+If you ran STAR or STARsolo for alignment, you already have junction
+counts — a table recording how many reads span each exon-exon junction
+in each cell.
+
 ``` r
 library(Matisse)
 library(Seurat)
 
-# 1. Start from an existing Seurat object
+# 1. Load your existing Seurat object (gene expression, UMAP, clusters, etc.)
 seu <- readRDS("my_seurat.rds")
 
-# 2. Load junction counts (cells × junctions sparse matrix)
+# 2. Load junction counts from STARsolo (cells × junctions)
 jxn_counts <- readRDS("junction_counts.rds")
 
-# 3. Load splice event definitions (e.g. exported from rMATS / SUPPA2)
+# 3. Load splice event definitions (from rMATS, SUPPA2, or BuildSimpleEvents)
 event_data <- read.csv("events.csv")
 
-# 4. Build a MatisseObject
+# 4. Combine everything into a Matisse object
 obj <- CreateMatisseObject(
-  seurat        = seu,
+  seurat          = seu,
   junction_counts = jxn_counts,
-  event_data    = event_data
+  event_data      = event_data
 )
 
-# 5. Calculate PSI
+# 5. Calculate the PSI (splicing ratio) for each cell and each event
 obj <- CalculatePSI(obj, min_coverage = 5)
 
-# 6. QC and filter
+# 6. Run quality control and remove low-quality cells and events
 obj <- ComputeIsoformQC(obj)
 obj <- FilterCells(obj, min_junctions = 5, min_pct_covered = 10)
 obj <- FilterEvents(obj, min_cells_covered = 20)
 
-# 7. Visualize
+# 7. Visualize — overlay splicing on your UMAP
 PlotPSIUMAP(obj, event_id = "SE_PTBP1_e9")
 PlotPSIViolin(obj, event_id = "SE_PTBP1_e9", group_by = "seurat_clusters")
 ```
 
+### Starting from transcript counts (Bagpiper or long-read data)
+
+If your quantifier reports counts per transcript isoform rather than per
+junction, use this path instead. Provide your transcript count table and
+SUPPA2 annotation files — Matisse handles the rest.
+
+``` r
+# transcript_counts: transcripts × cells, with GENCODE transcript IDs as row names
+obj <- CreateMatisseObjectFromTranscripts(
+  seurat            = seu,
+  transcript_counts = transcript_counts,
+  ioe_files         = c("events_SE.ioe", "events_RI.ioe"),
+  min_coverage      = 5L
+)
+```
+
+From here, all QC, filtering, and visualization steps are identical to
+the junction-count workflow above.
+
 ## Documentation
 
-Full documentation and vignettes are at
+Full vignettes and function reference are at
 **<https://avisrilab.github.io/Matisse>**.
 
 ## Citation

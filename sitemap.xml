@@ -12,6 +12,7 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/CalculatePSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterCells.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterEvents.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetEventData.html</loc></url>
@@ -32,7 +33,9 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/SetPSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/SummarizePSI.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/dot-aggregate_transcript_counts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/dot-calculate_psi_matrix.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/dot-parse_ioe_files.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/index.html</loc></url>
 </urlset>
 

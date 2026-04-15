@@ -1,8 +1,14 @@
 # Package index
 
-## The MatisseObject
+## Creating a Matisse object
 
-The core data structure and its constructor.
+Start here. These functions combine your Seurat object with splicing
+data into a single Matisse object ready for analysis. Use
+[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+if you have junction counts from STAR/STARsolo, or
+[`CreateMatisseObjectFromTranscripts()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md)
+if you have isoform-level counts from Bagpiper or a long-read
+quantifier.
 
 - [`show(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
   [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
@@ -12,10 +18,13 @@ The core data structure and its constructor.
   : The MatisseObject S4 class
 - [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
   : Create a MatisseObject
+- [`CreateMatisseObjectFromTranscripts()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md)
+  : Create a MatisseObject from transcript-level counts
 
-## Accessors
+## Retrieve or update your data
 
-Getters and setters for all slots.
+Functions for pulling specific data tables out of your Matisse object,
+or putting updated tables back in.
 
 - [`GetSeurat()`](https://avisrilab.github.io/Matisse/reference/GetSeurat.md)
   : Get the embedded Seurat object
@@ -39,18 +48,21 @@ Getters and setters for all slots.
 - [`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
   : Add columns to the isoform metadata
 
-## PSI Analysis
+## Calculate splicing ratios (PSI)
 
-Compute and summarize PSI matrices.
+Compute PSI (Percent Spliced In) — the fraction of transcripts in each
+cell that include a given exon. Values range from 0 (exon always
+skipped) to 1 (exon always included).
 
 - [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
   : Calculate PSI matrix from junction counts
 - [`SummarizePSI()`](https://avisrilab.github.io/Matisse/reference/SummarizePSI.md)
   : Summarize PSI distribution across cells for each event
 
-## Quality Control
+## Quality control and filtering
 
-Per-cell and per-event QC metrics and filtering.
+Identify and remove cells or splicing events that don’t have enough data
+for reliable analysis.
 
 - [`ComputeIsoformQC()`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md)
   : Compute per-cell isoform QC metrics
@@ -59,9 +71,11 @@ Per-cell and per-event QC metrics and filtering.
 - [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
   : Filter splice events by coverage or variance
 
-## Visualization
+## Visualisation
 
-Publication-ready plots.
+Plot splicing patterns across your cells. Overlay PSI values on a UMAP,
+compare splicing between cell types, or inspect junction usage for a
+gene of interest.
 
 - [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md)
   : UMAP plot colored by PSI of a specific splice event
@@ -76,7 +90,7 @@ Publication-ready plots.
 
 ## Utilities
 
-Helper functions for building objects and merging datasets.
+Helper functions for building event tables and combining datasets.
 
 - [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md)
   : Build a minimal junction event annotation table
