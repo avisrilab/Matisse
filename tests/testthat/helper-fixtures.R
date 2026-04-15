@@ -1,6 +1,47 @@
 # ---------------------------------------------------------------------------
 # Shared test fixtures
 # ---------------------------------------------------------------------------
+
+# ---- Transcript count matrix (transcripts x cells) -------------------------
+
+#' Create a tiny transcript count matrix.
+#' Transcripts: tx1–tx8. Cells: Cell1–Cell10.
+#' tx1+tx2 = inclusion for event 1, tx3 = exclusion for event 1
+#' tx4+tx5 = inclusion for event 2, tx6+tx7 = exclusion for event 2
+#' tx8     = not part of any event (should be ignored)
+make_transcript_counts <- function(n_cells = 10L, seed = 42L) {
+  set.seed(seed)
+  cells <- paste0("Cell", seq_len(n_cells))
+  txs   <- paste0("tx",   seq_len(8L))
+  mat   <- matrix(
+    sample(c(0L, 0L, 1L:15L), n_cells * 8L, replace = TRUE),
+    nrow = 8L, ncol = n_cells,
+    dimnames = list(txs, cells)
+  )
+  Matrix::Matrix(mat, sparse = TRUE)
+}
+
+#' Write a SUPPA2 IOE file to a temp path and return the path.
+#' Two events:
+#'   SE_gene1_t12: inclusion = tx1,tx2  exclusion = tx3
+#'   SE_gene1_t45: inclusion = tx4,tx5  exclusion = tx6,tx7
+make_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
+  lines <- c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    paste(c("chr1",
+            "ENSG00000001;SE:chr1:100-200:300-400:+",
+            "tx1,tx2",
+            "tx1,tx2,tx3"),
+          collapse = "\t"),
+    paste(c("chr1",
+            "ENSG00000001;SE:chr1:500-600:700-800:+",
+            "tx4,tx5",
+            "tx4,tx5,tx6,tx7"),
+          collapse = "\t")
+  )
+  writeLines(lines, file)
+  file
+}
 # These helpers are auto-loaded by testthat before test files run.
 # They create minimal, self-contained objects without requiring real data.
 

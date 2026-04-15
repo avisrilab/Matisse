@@ -35,7 +35,7 @@ setMethod("show", "MatisseObject", function(object) {
   # PSI coverage
   if (!is.null(object@psi)) {
     pct_covered <- round(
-      100 * nnzero(object@psi) / (n_cells * n_events), 1)
+      100 * sum(!is.na(object@psi)) / (n_cells * n_events), 1)
     cat("  PSI coverage :", pct_covered, "% non-NA entries\n")
   }
 
