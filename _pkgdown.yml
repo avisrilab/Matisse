@@ -9,11 +9,14 @@ template:
     base-font-size: "1rem"
 
 home:
-  title: "Matisse — Isoform-resolved single-cell analysis"
+  title: "Matisse — See how your cells splice genes"
   description: >
-    Integrative analysis of single-cell transcriptomics with isoform
-    resolution. Matisse extends Seurat and Signac with PSI matrix
-    calculation, isoform-aware QC, and rich visualizations.
+    Matisse adds alternative splicing analysis to your existing Seurat
+    workflow. For each cell in your dataset, it measures which version of
+    a transcript that cell is making — then lets you visualise those
+    differences on your UMAP, across clusters, or along a trajectory.
+    Works with 10x Chromium (STARsolo junction counts) and long-read or
+    isoform-resolved data (Bagpiper, FLAMES, LIQA).
   links:
     - text: GitHub repository
       href: https://github.com/avisrilab/Matisse
@@ -22,9 +25,12 @@ home:
 
 navbar:
   structure:
-    left:  [intro, reference, articles, news]
+    left:  [intro, install, reference, articles, news]
     right: [search, github]
   components:
+    install:
+      text: Install
+      href: index.html#installation
     articles:
       text: Vignettes
       menu:
