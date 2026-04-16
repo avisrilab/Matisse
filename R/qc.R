@@ -51,7 +51,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 
   # --- PSI-level metrics -----------------------------------------------------
   if (!is.null(object@psi)) {
-    psi <- as.matrix(object@psi)
+    psi <- .psi_to_dense_na(object@psi)
     inc <- if (!is.null(object@inclusion_counts)) {
       as.matrix(object@inclusion_counts)
     } else {
@@ -200,15 +200,14 @@ setMethod("FilterEvents", "MatisseObject",
     rlang::abort("PSI matrix is NULL. Run CalculatePSI() first.")
   }
 
-  psi <- as.matrix(object@psi)
-  keep <- rep(TRUE, ncol(psi))
-
-  n_covered <- colSums(!is.na(psi))
-  keep <- keep & (n_covered >= min_cells_covered)
+  # Absent entries in the sparse PSI = not covered; count stored entries only.
+  n_covered <- .n_covered_per_event(object@psi)
+  keep      <- n_covered >= min_cells_covered
 
   if (!is.null(min_psi_variance)) {
+    psi       <- .psi_to_dense_na(object@psi)
     variances <- apply(psi, 2, stats::var, na.rm = TRUE)
-    keep <- keep & (variances >= min_psi_variance)
+    keep      <- keep & (variances >= min_psi_variance)
   }
 
   n_removed <- sum(!keep)
@@ -218,6 +217,6 @@ setMethod("FilterEvents", "MatisseObject",
       "{sum(keep)} events remain.")
   }
 
-  event_ids <- colnames(psi)[keep]
+  event_ids <- colnames(object@psi)[keep]
   object[, event_ids]
 })

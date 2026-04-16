@@ -168,7 +168,8 @@ CreateMatisseObjectFromTranscripts <- function(
   )
 
   if (verbose) {
-    pct <- round(100 * sum(!is.na(result$psi)) / length(result$psi), 1)
+    pct <- round(100 * Matrix::nnzero(result$psi) /
+                   (nrow(result$psi) * ncol(result$psi)), 1)
     cli::cli_alert_success(
       "MatisseObject created from transcript counts: \\
       {length(common_cells)} cells, {nrow(events)} events, \\
@@ -290,50 +291,30 @@ CreateMatisseObjectFromTranscripts <- function(
 #' @keywords internal
 .aggregate_transcript_counts <- function(tx_counts, events,
                                           min_coverage, cells) {
-  n_cells  <- length(cells)
-  n_events <- nrow(events)
-  tx_names <- rownames(tx_counts)
+  tx_names  <- rownames(tx_counts)
+  n_events  <- nrow(events)
 
-  psi_mat <- matrix(NA_real_, nrow = n_cells, ncol = n_events,
-                    dimnames = list(cells, events$event_id))
-  inc_mat <- matrix(0L,       nrow = n_cells, ncol = n_events,
-                    dimnames = list(cells, events$event_id))
-  exc_mat <- matrix(0L,       nrow = n_cells, ncol = n_events,
-                    dimnames = list(cells, events$event_id))
+  # Parse all transcript lists upfront (vectorised)
+  inc_lists <- strsplit(events$inclusion_transcripts, ";", fixed = TRUE)
+  exc_lists <- strsplit(events$exclusion_transcripts, ";", fixed = TRUE)
 
-  for (i in seq_len(n_events)) {
-    inc_txs <- .parse_junction_list(events$inclusion_transcripts[i])
-    exc_txs <- .parse_junction_list(events$exclusion_transcripts[i])
+  # Build sparse indicator matrices: transcripts x events
+  A_inc <- .build_indicator_matrix(inc_lists, tx_names)
+  A_exc <- .build_indicator_matrix(exc_lists, tx_names)
+  colnames(A_inc) <- colnames(A_exc) <- events$event_id
 
-    inc_present <- intersect(inc_txs, tx_names)
-    exc_present <- intersect(exc_txs, tx_names)
+  # Single matrix multiply replaces the per-event loop:
+  #   (cells x transcripts) %*% (transcripts x events) → (cells x events)
+  tx_t    <- Matrix::t(tx_counts)   # cells x transcripts
+  inc_mat <- tx_t %*% A_inc          # cells x events
+  exc_mat <- tx_t %*% A_exc          # cells x events
+  dimnames(inc_mat) <- dimnames(exc_mat) <- list(cells, events$event_id)
 
-    inc_counts <- if (length(inc_present) > 0L) {
-      Matrix::colSums(tx_counts[inc_present, , drop = FALSE])
-    } else {
-      rep(0, n_cells)
-    }
-
-    exc_counts <- if (length(exc_present) > 0L) {
-      Matrix::colSums(tx_counts[exc_present, , drop = FALSE])
-    } else {
-      rep(0, n_cells)
-    }
-
-    total   <- inc_counts + exc_counts
-    covered <- total >= min_coverage
-
-    psi_val          <- rep(NA_real_, n_cells)
-    psi_val[covered] <- inc_counts[covered] / total[covered]
-
-    psi_mat[, i] <- psi_val
-    inc_mat[, i] <- as.integer(inc_counts)
-    exc_mat[, i] <- as.integer(exc_counts)
-  }
+  psi_mat <- .psi_from_sparse_counts(inc_mat, exc_mat, min_coverage)
 
   list(
-    psi       = Matrix::Matrix(psi_mat, sparse = TRUE),
-    inclusion = Matrix::Matrix(inc_mat, sparse = TRUE),
-    exclusion = Matrix::Matrix(exc_mat, sparse = TRUE)
+    psi       = psi_mat,
+    inclusion = Matrix::Matrix(round(inc_mat), sparse = TRUE),
+    exclusion = Matrix::Matrix(round(exc_mat), sparse = TRUE)
   )
 }

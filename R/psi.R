@@ -95,7 +95,8 @@ setMethod("CalculatePSI", "MatisseObject",
   object@exclusion_counts <- result$exclusion
 
   if (verbose) {
-    pct <- round(100 * sum(!is.na(result$psi)) / length(result$psi), 1)
+    pct <- round(100 * Matrix::nnzero(result$psi) /
+                   (nrow(result$psi) * ncol(result$psi)), 1)
     cli::cli_alert_success(
       "PSI calculated for {ncol(result$psi)} events; {pct}% entries covered.")
   }
@@ -123,7 +124,7 @@ setMethod("CalculatePSI", "ANY",
     na_fill      = na_fill,
     verbose      = verbose
   )
-  as.matrix(result$psi)
+  .psi_to_dense_na(result$psi)
 })
 
 # ---------------------------------------------------------------------------
@@ -158,49 +159,29 @@ setMethod("CalculatePSI", "ANY",
       "Calculating PSI for {n_events} events across {n_cells} cells...")
   }
 
-  # Pre-allocate output matrices (dense for intermediate calc, sparse for store)
-  psi_mat  <- matrix(NA_real_, nrow = n_cells, ncol = n_events,
-                     dimnames = list(cells, events$event_id))
-  inc_mat  <- matrix(0L,       nrow = n_cells, ncol = n_events,
-                     dimnames = list(cells, events$event_id))
-  exc_mat  <- matrix(0L,       nrow = n_cells, ncol = n_events,
-                     dimnames = list(cells, events$event_id))
+  # Parse all junction lists upfront (vectorised)
+  inc_lists <- lapply(strsplit(events$inclusion_junctions, ";", fixed = TRUE),
+                      trimws)
+  exc_lists <- lapply(strsplit(events$exclusion_junctions, ";", fixed = TRUE),
+                      trimws)
 
-  for (i in seq_len(n_events)) {
-    inc_jxns <- .parse_junction_list(events$inclusion_junctions[i])
-    exc_jxns <- .parse_junction_list(events$exclusion_junctions[i])
+  # Build sparse indicator matrices: junctions x events
+  A_inc <- .build_indicator_matrix(inc_lists, jxn_names)
+  A_exc <- .build_indicator_matrix(exc_lists, jxn_names)
+  colnames(A_inc) <- colnames(A_exc) <- events$event_id
 
-    inc_present <- intersect(inc_jxns, jxn_names)
-    exc_present <- intersect(exc_jxns, jxn_names)
+  # Single matrix multiply replaces the per-event loop:
+  #   (cells x junctions) %*% (junctions x events) → (cells x events)
+  inc_mat <- jxn_counts %*% A_inc   # cells x events
+  exc_mat <- jxn_counts %*% A_exc
+  dimnames(inc_mat) <- dimnames(exc_mat) <- list(cells, events$event_id)
 
-    inc_counts <- if (length(inc_present) > 0) {
-      Matrix::rowSums(jxn_counts[, inc_present, drop = FALSE])
-    } else {
-      rep(0, n_cells)
-    }
-
-    exc_counts <- if (length(exc_present) > 0) {
-      Matrix::rowSums(jxn_counts[, exc_present, drop = FALSE])
-    } else {
-      rep(0, n_cells)
-    }
-
-    total <- inc_counts + exc_counts
-    covered <- total >= min_coverage
-
-    # PSI only where coverage is sufficient
-    psi_val          <- rep(na_fill, n_cells)
-    psi_val[covered] <- inc_counts[covered] / total[covered]
-
-    psi_mat[, i] <- psi_val
-    inc_mat[, i] <- inc_counts
-    exc_mat[, i] <- exc_counts
-  }
+  psi_mat <- .psi_from_sparse_counts(inc_mat, exc_mat, min_coverage)
 
   list(
-    psi       = Matrix::Matrix(psi_mat,  sparse = TRUE),
-    inclusion = Matrix::Matrix(inc_mat,  sparse = TRUE),
-    exclusion = Matrix::Matrix(exc_mat,  sparse = TRUE)
+    psi       = psi_mat,
+    inclusion = Matrix::Matrix(round(inc_mat), sparse = TRUE),
+    exclusion = Matrix::Matrix(round(exc_mat), sparse = TRUE)
   )
 }
 
@@ -232,18 +213,21 @@ SummarizePSI <- function(object, cells = NULL) {
     rlang::abort("PSI matrix is empty. Run CalculatePSI() first.")
   }
 
-  psi <- as.matrix(object@psi)
+  psi_sp <- object@psi
   if (!is.null(cells)) {
-    psi <- psi[cells, , drop = FALSE]
+    psi_sp <- psi_sp[cells, , drop = FALSE]
   }
+  # Convert to dense NA matrix for na.rm-aware statistics.
+  # Absent entries in the sparse matrix = not covered = NA.
+  psi <- .psi_to_dense_na(psi_sp)
 
   data.frame(
-    event_id       = colnames(psi),
-    mean_psi       = colMeans(psi, na.rm = TRUE),
-    median_psi     = apply(psi, 2, stats::median, na.rm = TRUE),
-    sd_psi         = apply(psi, 2, stats::sd,     na.rm = TRUE),
-    n_cells_covered = colSums(!is.na(psi)),
+    event_id        = colnames(psi),
+    mean_psi        = colMeans(psi, na.rm = TRUE),
+    median_psi      = apply(psi, 2, stats::median, na.rm = TRUE),
+    sd_psi          = apply(psi, 2, stats::sd,     na.rm = TRUE),
+    n_cells_covered = .n_covered_per_event(psi_sp),
     stringsAsFactors = FALSE,
-    row.names       = NULL
+    row.names        = NULL
   )
 }

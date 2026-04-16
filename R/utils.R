@@ -140,3 +140,107 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
 
 # Check required column names (re-exported from constructors.R for reuse)
 # (defined in constructors.R; referenced here via the package namespace)
+
+# ---------------------------------------------------------------------------
+# Shared PSI computation helpers
+# ---------------------------------------------------------------------------
+
+# Build a sparse (n_features x n_events) indicator matrix.
+# id_lists   : list of length n_events; each element is a character vector of
+#              feature IDs (transcript IDs or junction IDs) for that event.
+# id_universe: character vector of all feature IDs (row universe = rownames of
+#              the count matrix).
+# Returns a dgCMatrix with 1s where feature i belongs to event j.
+.build_indicator_matrix <- function(id_lists, id_universe) {
+  n_ev  <- length(id_lists)
+  n_ids <- length(id_universe)
+  if (n_ev == 0L || n_ids == 0L) {
+    return(Matrix::sparseMatrix(
+      i = integer(0), j = integer(0), x = numeric(0),
+      dims = c(n_ids, n_ev), repr = "C"
+    ))
+  }
+  id_vec  <- unlist(id_lists, use.names = FALSE)
+  ev_idx  <- rep(seq_len(n_ev), lengths(id_lists))
+  id_idx  <- match(id_vec, id_universe)
+  keep    <- !is.na(id_idx)
+  if (!any(keep)) {
+    return(Matrix::sparseMatrix(
+      i = integer(0), j = integer(0), x = numeric(0),
+      dims = c(n_ids, n_ev), repr = "C"
+    ))
+  }
+  Matrix::sparseMatrix(
+    i    = id_idx[keep],
+    j    = ev_idx[keep],
+    x    = 1.0,
+    dims = c(n_ids, n_ev),
+    repr = "C"
+  )
+}
+
+# Compute a sparse PSI matrix from sparse inclusion and exclusion count matrices.
+# inc_mat, exc_mat : dgCMatrix (cells x events)
+# min_coverage     : integer
+# Returns a dgCMatrix (cells x events) where only covered entries (total >=
+# min_coverage) are stored.  Absent entries = not enough data (equivalent to NA).
+# Use .psi_to_dense_na() when a dense NA-filled matrix is needed.
+.psi_from_sparse_counts <- function(inc_mat, exc_mat, min_coverage) {
+  total_mat <- inc_mat + exc_mat
+  total_T   <- as(total_mat, "dgTMatrix")   # triplet form
+  nz_i      <- total_T@i                    # 0-based row
+  nz_j      <- total_T@j                    # 0-based col
+  nz_total  <- total_T@x
+  n_cells   <- nrow(inc_mat)
+  n_events  <- ncol(inc_mat)
+
+  covered <- nz_total >= min_coverage
+
+  # Look up inclusion counts at covered positions using column-major linear index.
+  inc_T   <- as(inc_mat, "dgTMatrix")
+  inc_lin <- inc_T@j * as.double(n_cells) + inc_T@i   # 0-based col-major key
+
+  psi_x <- rep(NA_real_, length(nz_total))             # default NA (low coverage)
+  if (any(covered)) {
+    cov_lin          <- nz_j[covered] * as.double(n_cells) + nz_i[covered]
+    m                <- match(cov_lin, inc_lin)
+    inc_cov          <- ifelse(is.na(m), 0.0, inc_T@x[m])
+    psi_x[covered]   <- inc_cov / nz_total[covered]
+  }
+  # All non-zero-total entries are stored: covered → PSI value, not covered → NA.
+  # Zero-total entries are absent (not stored); accessing them returns 0.
+  Matrix::sparseMatrix(
+    i    = nz_i + 1L,
+    j    = nz_j + 1L,
+    x    = psi_x,
+    dims = c(n_cells, n_events),
+    dimnames = dimnames(inc_mat),
+    repr = "C"
+  )
+}
+
+# Convert a sparse PSI matrix (only covered entries stored) to a dense matrix
+# with NA for absent (uncovered) positions.  Used by SummarizePSI and any
+# function that needs na.rm-aware statistics over cells.
+.psi_to_dense_na <- function(psi_sparse) {
+  psi_csc <- as(psi_sparse, "dgCMatrix")
+  n_r     <- nrow(psi_sparse)
+  n_c     <- ncol(psi_sparse)
+  mat     <- matrix(NA_real_, nrow = n_r, ncol = n_c,
+                    dimnames = dimnames(psi_sparse))
+  n_stored <- length(psi_csc@i)
+  if (n_stored > 0L) {
+    col_idx <- rep(seq_len(n_c), diff(psi_csc@p))
+    mat[cbind(psi_csc@i + 1L, col_idx)] <- psi_csc@x
+  }
+  mat
+}
+
+# Count covered cells per event: stored entries that are not NA.
+# (NA entries = low coverage but non-zero total; absent entries = zero total.)
+.n_covered_per_event <- function(psi_sparse) {
+  psi_csc <- as(psi_sparse, "dgCMatrix")
+  not_na  <- !is.na(psi_csc@x)
+  col_idx <- rep(seq_len(ncol(psi_sparse)), diff(psi_csc@p))
+  tabulate(col_idx[not_na], nbins = ncol(psi_sparse))
+}

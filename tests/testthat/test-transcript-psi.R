@@ -181,6 +181,43 @@ test_that(".aggregate_transcript_counts: missing transcripts treated as zero", {
   expect_equal(as.numeric(res$psi[1, 1]), 0.0)
 })
 
+test_that(".aggregate_transcript_counts: vectorised result matches brute-force per-event", {
+  # Build a small 3-transcript x 4-cell matrix and 2 events, then verify that
+  # the matrix-multiply path gives the same PSI as manual row-subset sums.
+  set.seed(42)
+  tx_names <- c("txA", "txB", "txC")
+  cells    <- paste0("C", 1:4)
+  counts   <- Matrix::Matrix(
+    matrix(c(8,2,0, 1,1,8, 5,5,5, 0,0,0), nrow = 3,
+           dimnames = list(tx_names, cells)), sparse = TRUE)
+
+  events <- data.frame(
+    event_id              = c("E1", "E2"),
+    gene_id               = c("G1", "G1"),
+    chr                   = c("chr1", "chr1"),
+    strand                = c("+", "+"),
+    event_type            = c("SE", "SE"),
+    inclusion_transcripts = c("txA",     "txA;txB"),
+    exclusion_transcripts = c("txB;txC", "txC"),
+    stringsAsFactors      = FALSE
+  )
+
+  res <- Matisse:::.aggregate_transcript_counts(counts, events,
+                                                 min_coverage = 1L, cells = cells)
+
+  # E1: inc = txA, exc = txB+txC
+  #   C1: inc=8, exc=2+0=2 → PSI = 8/10 = 0.8
+  #   C3: inc=5, exc=5+5=10 → PSI = 5/15 ≈ 0.333
+  #   C4: total=0 → absent (0 from sparse access)
+  expect_equal(as.numeric(res$psi["C1", "E1"]), 0.8,   tolerance = 1e-6)
+  expect_equal(as.numeric(res$psi["C3", "E1"]), 1/3,   tolerance = 1e-6)
+  expect_equal(as.numeric(res$psi["C4", "E1"]), 0)     # absent → 0
+
+  # E2: inc = txA+txB, exc = txC
+  #   C2: inc=1+1=2, exc=8 → PSI = 2/10 = 0.2
+  expect_equal(as.numeric(res$psi["C2", "E2"]), 0.2,   tolerance = 1e-6)
+})
+
 # ---- CreateMatisseObjectFromTranscripts -------------------------------------
 
 test_that("CreateMatisseObjectFromTranscripts: returns a MatisseObject", {
