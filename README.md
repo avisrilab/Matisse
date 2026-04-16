@@ -9,7 +9,7 @@
 
 Most single-cell tools treat every transcript from a gene as equivalent. Matisse goes further: it measures *which version* of a transcript each cell is making. Some cell types skip exons. Others include them. Those choices change protein function — and Matisse lets you see them.
 
-![PSI values for PTBP1 exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon; astrocytes (right) include it.](vignettes/figures/ptbp1_umap.png)
+![PSI values for PTBP1 exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon; astrocytes (right) include it.](man/figures/ptbp1_umap.png)
 
 *Neurons and astrocytes express the same gene — but splice it differently. Matisse finds these differences automatically.*
 
