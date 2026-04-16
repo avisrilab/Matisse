@@ -54,6 +54,20 @@ test_that(".parse_ioe_files: errors on malformed gene_id column", {
   expect_error(Matisse:::.parse_ioe_files(bad), regexp = "malformed")
 })
 
+test_that(".parse_ioe_files: handles 5-column IOE format (SUPPA2 v2+)", {
+  f <- tempfile(fileext = ".ioe")
+  writeLines(c(
+    "seqname\tgene_id\tevent_id\tinclusion_transcripts\ttotal_transcripts",
+    "chr1\tENSG00000001\tENSG00000001;SE:chr1:100-200:300-400:+\ttx1,tx2\ttx1,tx2,tx3"
+  ), f)
+  events <- Matisse:::.parse_ioe_files(f)
+  expect_equal(nrow(events), 1L)
+  expect_equal(events$gene_id,   "ENSG00000001")
+  expect_equal(events$event_id,  "SE:chr1:100-200:300-400:+")
+  expect_equal(events$inclusion_transcripts, "tx1;tx2")
+  expect_equal(events$exclusion_transcripts, "tx3")
+})
+
 test_that(".parse_ioe_files: error message shows row number and bad value", {
   bad <- tempfile(fileext = ".ioe")
   writeLines(c(

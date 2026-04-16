@@ -198,10 +198,18 @@ CreateMatisseObjectFromTranscripts <- function(
     )
     if (ncol(df) < 4) {
       rlang::abort(paste0(
-        "IOE file '", f, "' must have 4 columns: seqname, gene_id, ",
+        "IOE file '", f, "' must have at least 4 columns: seqname, gene_id, ",
         "inclusion_transcripts, total_transcripts."))
     }
-    # Standardise column names regardless of what SUPPA2 wrote
+    # SUPPA2 generates two IOE layouts:
+    #   4-col: seqname | gene_id;event_id | inclusion_tx | total_tx
+    #   5-col: seqname | gene_id | gene_id;event_id | inclusion_tx | total_tx
+    # Detect by checking whether column 2 contains a semicolon.
+    col2_has_semicolon <- any(grepl(";", df[[2L]], fixed = TRUE))
+    if (!col2_has_semicolon && ncol(df) >= 5L &&
+        any(grepl(";", df[[3L]], fixed = TRUE))) {
+      df <- df[, c(1L, 3L, 4L, 5L)]
+    }
     colnames(df)[1:4] <- c("seqname", "gene_event_id",
                            "inclusion_transcripts", "total_transcripts")
     df        <- df[, 1:4]
