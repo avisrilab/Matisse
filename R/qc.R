@@ -49,30 +49,22 @@ setMethod("ComputeIsoformQC", "MatisseObject",
       "junction_counts is NULL; junction QC metrics will not be computed.")
   }
 
-  # --- PSI-level metrics -----------------------------------------------------
+  # --- PSI-level metrics — all sparse, no dense conversion ------------------
   if (!is.null(object@psi)) {
-    psi <- .psi_to_dense_na(object@psi)
-    inc <- if (!is.null(object@inclusion_counts)) {
-      as.matrix(object@inclusion_counts)
-    } else {
-      NULL
-    }
-    exc <- if (!is.null(object@exclusion_counts)) {
-      as.matrix(object@exclusion_counts)
-    } else {
-      NULL
-    }
+    n_events <- ncol(object@psi)
 
-    n_events <- ncol(psi)
-
-    if (!is.null(inc) && !is.null(exc)) {
-      covered <- (inc + exc) >= min_coverage
-      qc$n_events_covered   <- rowSums(covered)
-      qc$pct_events_covered <- round(
-        100 * qc$n_events_covered / n_events, 2)
+    if (!is.null(object@inclusion_counts) && !is.null(object@exclusion_counts)) {
+      # Coverage: sum inclusion + exclusion sparse matrices, threshold per cell
+      total_csc    <- as(object@inclusion_counts + object@exclusion_counts, "dgCMatrix")
+      total_csc@x  <- as.numeric(total_csc@x >= min_coverage)
+      covered_sp   <- Matrix::drop0(total_csc)
+      n_cov        <- as.integer(Matrix::rowSums(covered_sp))
+      qc$n_events_covered   <- n_cov
+      qc$pct_events_covered <- round(100 * n_cov / n_events, 2)
     }
 
-    qc$mean_psi <- rowMeans(psi, na.rm = TRUE)
+    # Mean PSI across covered events — sparse row means, no dense conversion
+    qc$mean_psi <- .psi_rowmeans_sparse(object@psi)
   } else {
     if (verbose) {
       rlang::warn(

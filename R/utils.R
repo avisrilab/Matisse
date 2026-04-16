@@ -187,7 +187,7 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
 # Use .psi_to_dense_na() when a dense NA-filled matrix is needed.
 .psi_from_sparse_counts <- function(inc_mat, exc_mat, min_coverage) {
   total_mat <- inc_mat + exc_mat
-  total_T   <- as(total_mat, "dgTMatrix")   # triplet form
+  total_T   <- as(total_mat, "TsparseMatrix")   # triplet form
   nz_i      <- total_T@i                    # 0-based row
   nz_j      <- total_T@j                    # 0-based col
   nz_total  <- total_T@x
@@ -197,7 +197,7 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   covered <- nz_total >= min_coverage
 
   # Look up inclusion counts at covered positions using column-major linear index.
-  inc_T   <- as(inc_mat, "dgTMatrix")
+  inc_T   <- as(inc_mat, "TsparseMatrix")
   inc_lin <- inc_T@j * as.double(n_cells) + inc_T@i   # 0-based col-major key
 
   psi_x <- rep(NA_real_, length(nz_total))             # default NA (low coverage)
@@ -243,4 +243,22 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   not_na  <- !is.na(psi_csc@x)
   col_idx <- rep(seq_len(ncol(psi_sparse)), diff(psi_csc@p))
   tabulate(col_idx[not_na], nbins = ncol(psi_sparse))
+}
+
+# Count covered events per cell: row-wise counterpart of .n_covered_per_event.
+.n_covered_per_cell <- function(psi_sparse) {
+  psi_csc <- as(psi_sparse, "dgCMatrix")
+  not_na  <- !is.na(psi_csc@x)
+  tabulate(psi_csc@i[not_na] + 1L, nbins = nrow(psi_sparse))
+}
+
+# Sparse row means of PSI, ignoring NAs, without any dense conversion.
+.psi_rowmeans_sparse <- function(psi_sparse) {
+  psi_csc      <- as(psi_sparse, "dgCMatrix")
+  psi_x        <- psi_csc@x
+  psi_x[is.na(psi_x)] <- 0
+  psi_csc@x    <- psi_x
+  n_cov        <- .n_covered_per_cell(psi_sparse)
+  row_sums     <- as.numeric(Matrix::rowSums(psi_csc))
+  ifelse(n_cov > 0L, row_sums / n_cov, NA_real_)
 }

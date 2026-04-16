@@ -181,3 +181,44 @@ test_that("SummarizePSI: errors if PSI is NULL", {
   obj <- make_matisse_object()
   expect_error(SummarizePSI(obj), regexp = "PSI matrix is empty")
 })
+
+# ---- CalculatePSI on transcript-based object (junction_counts = NULL) -------
+
+test_that("CalculatePSI: warns and returns unchanged if PSI already computed from transcripts", {
+  seu    <- make_seurat()
+  tx_mat <- make_transcript_counts()
+  f      <- make_ioe_file()
+  obj    <- CreateMatisseObjectFromTranscripts(
+    seurat = seu, transcript_counts = tx_mat,
+    ioe_files = f, min_coverage = 1L, verbose = FALSE)
+
+  psi_before <- obj@psi
+  expect_warning(
+    obj2 <- CalculatePSI(obj, verbose = FALSE),
+    regexp = "already has PSI computed")
+  expect_identical(obj2@psi, psi_before)
+})
+
+# ---- .n_covered_per_cell and .psi_rowmeans_sparse --------------------------
+
+test_that(".n_covered_per_cell: counts non-NA stored entries per row", {
+  # 3 cells x 4 events; cell 1 covered for 2 events, cell 2 for 1, cell 3 for 0
+  psi_sp <- Matrix::sparseMatrix(
+    i = c(1, 1, 2), j = c(1, 3, 2), x = c(0.8, 0.2, 0.5),
+    dims = c(3, 4), repr = "C")
+  result <- Matisse:::.n_covered_per_cell(psi_sp)
+  expect_equal(result, c(2L, 1L, 0L))
+})
+
+test_that(".psi_rowmeans_sparse: ignores NAs and absent entries", {
+  # Cell 1: events 1 and 3 covered (0.8 and 0.2) → mean = 0.5
+  # Cell 2: event 2 covered (0.5) → mean = 0.5
+  # Cell 3: nothing → NA
+  psi_sp <- Matrix::sparseMatrix(
+    i = c(1, 1, 2), j = c(1, 3, 2), x = c(0.8, 0.2, 0.5),
+    dims = c(3, 4), repr = "C")
+  result <- Matisse:::.psi_rowmeans_sparse(psi_sp)
+  expect_equal(result[1], 0.5, tolerance = 1e-6)
+  expect_equal(result[2], 0.5, tolerance = 1e-6)
+  expect_true(is.na(result[3]))
+})

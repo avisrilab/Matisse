@@ -5,22 +5,22 @@
 [![pkgdown](https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg)](https://avisrilab.github.io/Matisse)
 <!-- badges: end -->
 
-**See how your cells splice genes — one cell at a time**
+**Understand your cells, layer by layer — splicing and chromatin together**
 
-Most single-cell tools treat every transcript from a gene as equivalent. Matisse goes further: it measures *which version* of a transcript each cell is making. Some cell types skip exons. Others include them. Those choices change protein function — and Matisse lets you see them.
+Most single-cell tools stop at gene expression. Matisse goes further: it measures *which isoform* each cell is making and links those choices to chromatin accessibility in the same cells. Some cell types skip exons. Others include them. Open chromatin at a splice site may predict which. Matisse lets you see all of this, in the same object, on the same UMAP.
 
 ![PSI values for PTBP1 exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon; astrocytes (right) include it.](man/figures/ptbp1_umap.png)
 
-*Neurons and astrocytes express the same gene — but splice it differently. Matisse finds these differences automatically.*
+*Neurons and astrocytes express the same gene — but splice it differently. Matisse finds these differences automatically, alongside your existing chromatin and gene expression layers.*
 
 ---
 
 ## What you can discover
 
 - **Cell-type-specific splicing** — Do my neurons and astrocytes process this exon differently?
+- **Chromatin shapes isoforms** — Is the splicing switch I see linked to chromatin accessibility changes at the same locus?
 - **Splicing along a trajectory** — Is there a coordinated isoform switch as cells differentiate?
 - **Context for bulk data** — I see a splicing change in bulk RNA-seq — which cell type is driving it?
-- **Multi-event surveys** — Which of the hundreds of alternative exons in my dataset vary across clusters?
 
 ---
 
@@ -32,19 +32,22 @@ For each cell and each splicing event, Matisse calculates a **PSI value** (Perce
 - **PSI = 0** — every transcript skips the exon
 - **PSI = 0.5** — half include, half skip
 
-PSI values are stored alongside your gene expression data in a single object, so you can overlay splicing on any plot you've already made — UMAPs, violin plots, heatmaps.
+PSI values are stored alongside your gene expression and chromatin data in a single object, so you can overlay splicing on any plot you've already made — UMAPs, violin plots, heatmaps — and directly compare with ATAC peaks in the same cells.
 
 ---
 
 ## Works with your existing setup
 
-Matisse layers on top of [Seurat](https://satijalab.org/seurat/) — your clustering, UMAP, and cell-type labels stay exactly as they are.
+Matisse layers on top of [Seurat](https://satijalab.org/seurat/) and [Signac](https://stuartlab.org/signac/) — your clustering, UMAP, chromatin peaks, and cell-type labels stay exactly as they are.
 
-**Short-read data (10x Chromium):**
+**Short-read RNA data (10x Chromium):**
 Aligned with STAR or STARsolo → junction count matrix → Matisse
 
 **Long-read / isoform-resolved data:**
 Quantified with Bagpiper, FLAMES, or LIQA → transcript count table + SUPPA2 `.ioe` files → Matisse
+
+**ATAC / chromatin accessibility (10x Multiome, Signac, ArchR):**
+Your existing Signac object is embedded directly — chromatin and splicing layers stay synchronized
 
 **Splice event annotations:**
 Compatible with SUPPA2 `generateEvents`, rMATS output, or a simple table you build yourself.

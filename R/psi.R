@@ -69,9 +69,15 @@ setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE) {
   if (is.null(object@junction_counts)) {
+    if (!is.null(object@psi)) {
+      rlang::warn(paste0(
+        "This object was created from transcript counts and already has PSI computed. ",
+        "CalculatePSI() only applies to junction-count objects (from CreateMatisseObject()). ",
+        "Returning the object unchanged."))
+      return(object)
+    }
     rlang::abort(
-      "junction_counts slot is NULL. Provide junction counts via \\
-       CreateMatisseObject() or assign them directly.")
+      "junction_counts slot is NULL. Provide junction counts via CreateMatisseObject().")
   }
   if (is.null(events)) {
     events <- object@event_data
@@ -95,7 +101,7 @@ setMethod("CalculatePSI", "MatisseObject",
   object@exclusion_counts <- result$exclusion
 
   if (verbose) {
-    pct <- round(100 * Matrix::nnzero(result$psi) /
+    pct <- round(100 * sum(.n_covered_per_event(result$psi)) /
                    (nrow(result$psi) * ncol(result$psi)), 1)
     cli::cli_alert_success(
       "PSI calculated for {ncol(result$psi)} events; {pct}% entries covered.")

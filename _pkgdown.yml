@@ -9,14 +9,16 @@ template:
     base-font-size: "1rem"
 
 home:
-  title: "Matisse — See how your cells splice genes"
+  title: "Matisse — Splicing and chromatin, one cell at a time"
   description: >
-    Matisse adds alternative splicing analysis to your existing Seurat
-    workflow. For each cell in your dataset, it measures which version of
-    a transcript that cell is making — then lets you visualise those
-    differences on your UMAP, across clusters, or along a trajectory.
-    Works with 10x Chromium (STARsolo junction counts) and long-read or
-    isoform-resolved data (Bagpiper, FLAMES, LIQA).
+    Matisse adds isoform-resolved splicing and chromatin accessibility
+    layers to your Seurat/Signac workflow. For each cell, measure which
+    transcript isoform is being made and compare that directly with
+    chromatin accessibility at the same loci — all within one object,
+    on the same UMAP, across the same clusters.
+    Works with 10x Chromium (STARsolo junction counts), long-read
+    isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac
+    for paired ATAC + RNA.
   links:
     - text: GitHub repository
       href: https://github.com/avisrilab/Matisse

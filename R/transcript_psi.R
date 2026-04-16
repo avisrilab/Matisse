@@ -168,7 +168,7 @@ CreateMatisseObjectFromTranscripts <- function(
   )
 
   if (verbose) {
-    pct <- round(100 * Matrix::nnzero(result$psi) /
+    pct <- round(100 * sum(.n_covered_per_event(result$psi)) /
                    (nrow(result$psi) * ncol(result$psi)), 1)
     cli::cli_alert_success(
       "MatisseObject created from transcript counts: \\

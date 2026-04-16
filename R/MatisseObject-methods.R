@@ -32,11 +32,13 @@ setMethod("show", "MatisseObject", function(object) {
     cat("  Junctions    :", ncol(object@junction_counts), "\n")
   }
 
-  # PSI coverage
+  # PSI coverage — count non-NA stored entries without dense coercion
   if (!is.null(object@psi)) {
-    pct_covered <- round(
-      100 * sum(!is.na(object@psi)) / (n_cells * n_events), 1)
-    cat("  PSI coverage :", pct_covered, "% non-NA entries\n")
+    psi_csc     <- as(object@psi, "dgCMatrix")
+    n_covered   <- sum(!is.na(psi_csc@x))
+    pct_covered <- if (n_cells > 0L && n_events > 0L)
+      round(100 * n_covered / (n_cells * n_events), 1) else 0
+    cat("  PSI coverage :", pct_covered, "% entries covered\n")
   }
 
   cat("  Version      :", object@version, "\n")
