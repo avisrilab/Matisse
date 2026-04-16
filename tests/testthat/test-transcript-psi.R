@@ -54,6 +54,19 @@ test_that(".parse_ioe_files: errors on malformed gene_id column", {
   expect_error(Matisse:::.parse_ioe_files(bad), regexp = "malformed")
 })
 
+test_that(".parse_ioe_files: error message shows row number and bad value", {
+  bad <- tempfile(fileext = ".ioe")
+  writeLines(c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    "chr1\tENSG00000001;SE:chr1:100-200:300-400:+\ttx1\ttx1,tx2",
+    "chr2\tNO_SEMICOLON_HERE\ttx3\ttx3,tx4"
+  ), bad)
+  err <- tryCatch(Matisse:::.parse_ioe_files(bad), error = function(e) conditionMessage(e))
+  expect_match(err, "row 2")
+  expect_match(err, "NO_SEMICOLON_HERE")
+  expect_match(err, basename(bad))
+})
+
 # ---- .aggregate_transcript_counts ------------------------------------------
 
 test_that(".aggregate_transcript_counts: output dimensions are cells x events", {

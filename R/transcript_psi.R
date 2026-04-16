@@ -204,7 +204,9 @@ CreateMatisseObjectFromTranscripts <- function(
     # Standardise column names regardless of what SUPPA2 wrote
     colnames(df)[1:4] <- c("seqname", "gene_event_id",
                            "inclusion_transcripts", "total_transcripts")
-    df[, 1:4]
+    df        <- df[, 1:4]
+    df$.source <- f
+    df
   })
   ioe <- do.call(rbind, dfs)
 
@@ -215,10 +217,29 @@ CreateMatisseObjectFromTranscripts <- function(
     if (length(x) >= 2L) x[2L] else NA_character_, character(1))
 
   if (any(is.na(event_ids))) {
+    bad      <- which(is.na(event_ids))
+    n_show   <- min(5L, length(bad))
+    examples <- paste(
+      sprintf("  row %d in '%s'\n    seqname: %s\n    gene_id: %s\n    inclusion_transcripts: %s\n    total_transcripts: %s",
+              bad[seq_len(n_show)],
+              ioe$.source[bad[seq_len(n_show)]],
+              ioe$seqname[bad[seq_len(n_show)]],
+              ioe$gene_event_id[bad[seq_len(n_show)]],
+              ioe$inclusion_transcripts[bad[seq_len(n_show)]],
+              ioe$total_transcripts[bad[seq_len(n_show)]]),
+      collapse = "\n")
     rlang::abort(paste0(
       "Some rows in the IOE file(s) have a malformed gene_id column. ",
-      "Expected format: 'gene_id;event_id' (e.g. ENSG00000001;SE:chr1:...)."))
+      "Expected format: 'gene_id;event_id' (e.g. ENSG00000001;SE:chr1:...).\n",
+      "The gene_id column must contain both the gene ID and event ID separated ",
+      "by a semicolon. This is the format produced by SUPPA2's generateEvents ",
+      "command -- make sure you are using the .ioe output files from that step ",
+      "and not another file type.\n",
+      length(bad), " problematic row(s) found. First ", n_show, ":\n",
+      examples))
   }
+
+  ioe$.source <- NULL
 
   # Event type = text before the first ":" in the event_id
   event_types <- sub(":.*", "", event_ids)
