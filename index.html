@@ -5,15 +5,16 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Matisse — Isoform-resolved single-cell analysis • Matisse</title>
+<title>Matisse — See how your cells splice genes • Matisse</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Matisse — Isoform-resolved single-cell analysis">
-<meta name="description" content="Integrative analysis of single-cell transcriptomics with isoform resolution. Matisse extends Seurat and Signac with PSI matrix calculation, isoform-aware QC, and rich visualizations.
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<meta property="og:title" content="Matisse — See how your cells splice genes">
+<meta name="description" content="Matisse adds alternative splicing analysis to your existing Seurat workflow. For each cell in your dataset, it measures which version of a transcript that cell is making — then lets you visualise those differences on your UMAP, across clusters, or along a trajectory. Works with 10x Chromium (STARsolo junction counts) and long-read or isoform-resolved data (Bagpiper, FLAMES, LIQA).
 ">
-<meta property="og:description" content="Integrative analysis of single-cell transcriptomics with isoform resolution. Matisse extends Seurat and Signac with PSI matrix calculation, isoform-aware QC, and rich visualizations.
+<meta property="og:description" content="Matisse adds alternative splicing analysis to your existing Seurat workflow. For each cell in your dataset, it measures which version of a transcript that cell is making — then lets you visualise those differences on your UMAP, across clusters, or along a trajectory. Works with 10x Chromium (STARsolo junction counts) and long-read or isoform-resolved data (Bagpiper, FLAMES, LIQA).
 ">
 </head>
 <body>
@@ -33,6 +34,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="index.html#installation">Install</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
@@ -54,99 +56,87 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="matisse">Matisse<a class="anchor" aria-label="anchor" href="#matisse"></a>
+  <main id="main" class="col-md-9">
+<div class="mat-hero">
+<div class="page-header"><h1>
+See how your cells<br>splice genes
 </h1></div>
-<!-- badges: start -->
-
-<p><strong>Understand how genes are spliced differently across individual cells</strong></p>
-<p>When a gene is expressed, its pre-mRNA can be spliced in multiple ways — different exons can be included or skipped, producing different protein isoforms. Matisse lets you measure this <strong>alternative splicing</strong> at single-cell resolution, so you can ask questions like:</p>
-<ul>
-<li>Do neurons splice <em>PTBP1</em> differently from astrocytes?</li>
-<li>Is the splicing change I see in bulk RNA-seq driven by one cell type or many?</li>
-<li>Which cells are switching isoforms along a developmental trajectory?</li>
-</ul>
-<p>Matisse works alongside your existing <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> workflow — your gene expression analysis stays intact, and splicing information is layered on top.</p>
-<div class="section level2">
-<h2 id="what-matisse-measures">What Matisse measures<a class="anchor" aria-label="anchor" href="#what-matisse-measures"></a>
-</h2>
-<p>For each cell and each splicing event, Matisse computes a <strong>PSI value</strong> (Percent Spliced In): the fraction of transcripts that <em>include</em> a given exon, ranging from 0 (exon always skipped) to 1 (exon always included). A PSI of 0.5 means half the transcripts in that cell include the exon.</p>
+<p class="mat-hero-sub">
+Matisse measures alternative splicing at single-cell resolution and layers it on top of your existing Seurat workflow — no re-processing, no new object format to learn.
+</p>
+<p><a href="#installation" class="btn mat-btn-primary">Install</a> <a href="articles/intro.html" class="btn mat-btn-outline">View walkthrough →</a></p>
 </div>
-<div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<section class="mat-section"><p class="mat-section-title">
+What you can discover
+</p>
+<p class="mat-section-sub">
+Biological questions Matisse is built to answer
+</p>
+<div class="mat-cards">
+<div class="mat-card">
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">1</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Cell<span class="sc">-</span>type<span class="sc">-</span>specific splicing<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Do my neurons and astrocytes process this exon differently?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+<div class="mat-card">
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">2</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Isoform switches along a trajectory<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Is there a coordinated splicing change as my cells differentiate?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+<div class="mat-card">
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">3</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Context <span class="cf">for</span> bulk RNA<span class="sc">-</span>seq<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>I see a splicing difference <span class="cf">in</span> bulk data — which cell type is driving it?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+<div class="mat-card">
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">4</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Dataset<span class="sc">-</span>wide survey<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Which of the hundreds of alternative exons <span class="cf">in</span> my data vary across clusters?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+</div>
+</section><figure class="mat-figure"><img src="reference/figures/ptbp1_umap.png" alt="PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells. Neurons consistently skip this exon; astrocytes include it."><figcaption>
+PSI values for <em>Ptbp1</em> exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon (low PSI); astrocytes (right) include it (high PSI). Same gene — different splicing. Visible at single-cell resolution.
+</figcaption></figure><section class="mat-section"><p class="mat-section-title">
+Works with your existing setup
+</p>
+<p class="mat-section-sub">
+Matisse layers on top of Seurat — your clusters, UMAP, and cell labels stay intact
+</p>
+<div class="mat-compat">
+<div class="mat-compat-group">
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Short<span class="sc">-</span><span class="fu">read</span> (<span class="dv">10</span>x)<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>STAR <span class="sc">/</span> STARsolo<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>junction count matrix<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+<div class="mat-compat-group">
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Long<span class="sc">-</span>read <span class="sc">/</span> isoform<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>Bagpiper<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>FLAMES<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>LIQA<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>PacBio MAS<span class="sc">-</span>seq<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+<div class="mat-compat-group">
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Event annotations<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>SUPPA2 generateEvents<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>rMATS<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span><span class="fu">BuildSimpleEvents</span>()<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+</div>
+</div>
+</section><section class="mat-section" id="installation"><p class="mat-section-title">
+Installation
+</p>
+<div class="mat-install">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"avisrilab/Matisse"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
-</h2>
-<div class="section level3">
-<h3 id="starting-from-junction-counts-short-read-10x-data">Starting from junction counts (short-read 10x data)<a class="anchor" aria-label="anchor" href="#starting-from-junction-counts-short-read-10x-data"></a>
-</h3>
-<p>If you ran STAR or STARsolo for alignment, you already have junction counts — a table recording how many reads span each exon-exon junction in each cell.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 1. Load your existing Seurat object (gene expression, UMAP, clusters, etc.)</span></span>
-<span><span class="va">seu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"my_seurat.rds"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 2. Load junction counts from STARsolo (cells × junctions)</span></span>
-<span><span class="va">jxn_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"junction_counts.rds"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 3. Load splice event definitions (from rMATS, SUPPA2, or BuildSimpleEvents)</span></span>
-<span><span class="va">event_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"events.csv"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 4. Combine everything into a Matisse object</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
-<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,</span>
-<span>  event_data      <span class="op">=</span> <span class="va">event_data</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 5. Calculate the PSI (splicing ratio) for each cell and each event</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 6. Run quality control and remove low-quality cells and events</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/FilterCells.html">FilterCells</a></span><span class="op">(</span><span class="va">obj</span>, min_junctions <span class="op">=</span> <span class="fl">5</span>, min_pct_covered <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 7. Visualize — overlay splicing on your UMAP</span></span>
-<span><span class="fu"><a href="reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE_PTBP1_e9"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE_PTBP1_e9"</span>, group_by <span class="op">=</span> <span class="st">"seurat_clusters"</span><span class="op">)</span></span></code></pre></div>
+</section><div class="mat-cta-footer">
+<p>
+Ready to explore your splicing data?
+</p>
+<p><a href="articles/intro.html" class="btn mat-btn-primary">View the full walkthrough →</a></p>
 </div>
-<div class="section level3">
-<h3 id="starting-from-transcript-counts-bagpiper-or-long-read-data">Starting from transcript counts (Bagpiper or long-read data)<a class="anchor" aria-label="anchor" href="#starting-from-transcript-counts-bagpiper-or-long-read-data"></a>
-</h3>
-<p>If your quantifier reports counts per transcript isoform rather than per junction, use this path instead. Provide your transcript count table and SUPPA2 annotation files — Matisse handles the rest.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># transcript_counts: transcripts × cells, with GENCODE transcript IDs as row names</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts</a></span><span class="op">(</span></span>
-<span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  transcript_counts <span class="op">=</span> <span class="va">transcript_counts</span>,</span>
-<span>  ioe_files         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"events_SE.ioe"</span>, <span class="st">"events_RI.ioe"</span><span class="op">)</span>,</span>
-<span>  min_coverage      <span class="op">=</span> <span class="fl">5L</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>From here, all QC, filtering, and visualization steps are identical to the junction-count workflow above.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
-</h2>
-<p>Full vignettes and function reference are at <strong><a href="https://avisrilab.github.io/Matisse" class="uri">https://avisrilab.github.io/Matisse</a></strong>.</p>
-</div>
-<div class="section level2">
-<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
-</h2>
-<p>If you use Matisse in your research, please cite:</p>
-<blockquote>
-<p>Srivastava A. (2026). <em>Matisse: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments</em>. R package version 0.1.0. <a href="https://github.com/avisrilab/Matisse" class="external-link uri">https://github.com/avisrilab/Matisse</a></p>
-</blockquote>
-</div>
-</div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

@@ -1,107 +1,86 @@
-# Matisse
+# See how your cells splice genes
 
-**Understand how genes are spliced differently across individual cells**
+Matisse measures alternative splicing at single-cell resolution and
+layers it on top of your existing Seurat workflow — no re-processing, no
+new object format to learn.
 
-When a gene is expressed, its pre-mRNA can be spliced in multiple ways —
-different exons can be included or skipped, producing different protein
-isoforms. Matisse lets you measure this **alternative splicing** at
-single-cell resolution, so you can ask questions like:
+[Install](#installation) [View walkthrough
+→](https://avisrilab.github.io/Matisse/articles/intro.md)
 
-- Do neurons splice *PTBP1* differently from astrocytes?
-- Is the splicing change I see in bulk RNA-seq driven by one cell type
-  or many?
-- Which cells are switching isoforms along a developmental trajectory?
+What you can discover
 
-Matisse works alongside your existing
-[Seurat](https://satijalab.org/seurat/) workflow — your gene expression
-analysis stays intact, and splicing information is layered on top.
+Biological questions Matisse is built to answer
 
-## What Matisse measures
+``` R
+<div class="mat-card-num">1</div>
+<h3>Cell-type-specific splicing</h3>
+<p>Do my neurons and astrocytes process this exon differently?</p>
+```
 
-For each cell and each splicing event, Matisse computes a **PSI value**
-(Percent Spliced In): the fraction of transcripts that *include* a given
-exon, ranging from 0 (exon always skipped) to 1 (exon always included).
-A PSI of 0.5 means half the transcripts in that cell include the exon.
+``` R
+<div class="mat-card-num">2</div>
+<h3>Isoform switches along a trajectory</h3>
+<p>Is there a coordinated splicing change as my cells differentiate?</p>
+```
 
-## Installation
+``` R
+<div class="mat-card-num">3</div>
+<h3>Context for bulk RNA-seq</h3>
+<p>I see a splicing difference in bulk data — which cell type is driving it?</p>
+```
+
+``` R
+<div class="mat-card-num">4</div>
+<h3>Dataset-wide survey</h3>
+<p>Which of the hundreds of alternative exons in my data vary across clusters?</p>
+```
+
+![PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells.
+Neurons consistently skip this exon; astrocytes include
+it.](reference/figures/ptbp1_umap.png)
+
+PSI values for *Ptbp1* exon 9 on a UMAP of mouse cortex cells. Neurons
+(left) consistently skip this exon (low PSI); astrocytes (right) include
+it (high PSI). Same gene — different splicing. Visible at single-cell
+resolution.
+
+Works with your existing setup
+
+Matisse layers on top of Seurat — your clusters, UMAP, and cell labels
+stay intact
+
+``` R
+<span class="mat-compat-label">Short-read (10x)</span>
+<span class="mat-badge">STAR / STARsolo</span>
+<span class="mat-badge">junction count matrix</span>
+```
+
+``` R
+<span class="mat-compat-label">Long-read / isoform</span>
+<span class="mat-badge">Bagpiper</span>
+<span class="mat-badge">FLAMES</span>
+<span class="mat-badge">LIQA</span>
+<span class="mat-badge">PacBio MAS-seq</span>
+```
+
+``` R
+<span class="mat-compat-label">Event annotations</span>
+<span class="mat-badge">SUPPA2 generateEvents</span>
+<span class="mat-badge">rMATS</span>
+<span class="mat-badge">BuildSimpleEvents()</span>
+```
+
+Installation
 
 ``` r
-# install.packages("remotes")
+install.packages("remotes")
 remotes::install_github("avisrilab/Matisse")
 ```
 
-## Quick start
+Ready to explore your splicing data?
 
-### Starting from junction counts (short-read 10x data)
-
-If you ran STAR or STARsolo for alignment, you already have junction
-counts — a table recording how many reads span each exon-exon junction
-in each cell.
-
-``` r
-library(Matisse)
-library(Seurat)
-
-# 1. Load your existing Seurat object (gene expression, UMAP, clusters, etc.)
-seu <- readRDS("my_seurat.rds")
-
-# 2. Load junction counts from STARsolo (cells × junctions)
-jxn_counts <- readRDS("junction_counts.rds")
-
-# 3. Load splice event definitions (from rMATS, SUPPA2, or BuildSimpleEvents)
-event_data <- read.csv("events.csv")
-
-# 4. Combine everything into a Matisse object
-obj <- CreateMatisseObject(
-  seurat          = seu,
-  junction_counts = jxn_counts,
-  event_data      = event_data
-)
-
-# 5. Calculate the PSI (splicing ratio) for each cell and each event
-obj <- CalculatePSI(obj, min_coverage = 5)
-
-# 6. Run quality control and remove low-quality cells and events
-obj <- ComputeIsoformQC(obj)
-obj <- FilterCells(obj, min_junctions = 5, min_pct_covered = 10)
-obj <- FilterEvents(obj, min_cells_covered = 20)
-
-# 7. Visualize — overlay splicing on your UMAP
-PlotPSIUMAP(obj, event_id = "SE_PTBP1_e9")
-PlotPSIViolin(obj, event_id = "SE_PTBP1_e9", group_by = "seurat_clusters")
-```
-
-### Starting from transcript counts (Bagpiper or long-read data)
-
-If your quantifier reports counts per transcript isoform rather than per
-junction, use this path instead. Provide your transcript count table and
-SUPPA2 annotation files — Matisse handles the rest.
-
-``` r
-# transcript_counts: transcripts × cells, with GENCODE transcript IDs as row names
-obj <- CreateMatisseObjectFromTranscripts(
-  seurat            = seu,
-  transcript_counts = transcript_counts,
-  ioe_files         = c("events_SE.ioe", "events_RI.ioe"),
-  min_coverage      = 5L
-)
-```
-
-From here, all QC, filtering, and visualization steps are identical to
-the junction-count workflow above.
-
-## Documentation
-
-Full vignettes and function reference are at
-**<https://avisrilab.github.io/Matisse>**.
-
-## Citation
-
-If you use Matisse in your research, please cite:
-
-> Srivastava A. (2026). *Matisse: Multi-modal Analysis of Transcript
-> Isoforms in Single-Cell Sequencing Experiments*. R package version
-> 0.1.0. <https://github.com/avisrilab/Matisse>
+[View the full walkthrough
+→](https://avisrilab.github.io/Matisse/articles/intro.md)
 
 # Package index
 

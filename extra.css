@@ -1,0 +1,249 @@
+/* ============================================================
+   Matisse pkgdown theme — custom styles
+   Built on Bootstrap 5 / Bootswatch flatly
+   Primary: #2c6e8a
+   ============================================================ */
+
+/* ── Hero ─────────────────────────────────────────────────── */
+.mat-hero {
+  background: linear-gradient(135deg, #1b4f6a 0%, #2c6e8a 55%, #3e8fa0 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 4rem 2.5rem 3.5rem;
+  text-align: center;
+  margin: 1.5rem 0 3rem;
+}
+
+.mat-hero h1 {
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 1rem;
+  border-bottom: none;
+}
+
+.mat-hero-sub {
+  font-size: 1.15rem;
+  opacity: 0.88;
+  max-width: 560px;
+  margin: 0 auto 2rem;
+  line-height: 1.55;
+}
+
+.mat-btn-primary {
+  background: #fff;
+  color: #1b4f6a;
+  border: 2px solid #fff;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.55rem 1.6rem;
+  margin: 0.3rem;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.mat-btn-primary:hover {
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+}
+
+.mat-btn-outline {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.55rem 1.6rem;
+  margin: 0.3rem;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.mat-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ── Section layout ───────────────────────────────────────── */
+.mat-section {
+  padding: 1rem 0 2.5rem;
+}
+
+.mat-section-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #1b4f6a;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  border-bottom: none;
+}
+
+.mat-section-sub {
+  text-align: center;
+  color: #6c757d;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Feature cards ────────────────────────────────────────── */
+.mat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.mat-card {
+  background: #f4f9fc;
+  border: 1px solid #cce3ef;
+  border-top: 3px solid #2c6e8a;
+  border-radius: 8px;
+  padding: 1.4rem 1.3rem 1.2rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.mat-card:hover {
+  box-shadow: 0 6px 20px rgba(44, 110, 138, 0.14);
+  transform: translateY(-3px);
+}
+
+.mat-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1b4f6a;
+  margin-bottom: 0.45rem;
+  border-bottom: none;
+}
+
+.mat-card p {
+  font-size: 0.875rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mat-card-num {
+  display: inline-block;
+  background: #2c6e8a;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Figure showcase ──────────────────────────────────────── */
+.mat-figure {
+  text-align: center;
+  margin: 0.5rem 0 3rem;
+}
+
+.mat-figure img {
+  max-width: 680px;
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.13);
+  border: 1px solid #e0eef4;
+}
+
+.mat-figure figcaption {
+  margin-top: 0.9rem;
+  font-size: 0.86rem;
+  color: #6c757d;
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.55;
+  font-style: italic;
+}
+
+/* ── Platform compatibility badges ───────────────────────── */
+.mat-compat {
+  max-width: 680px;
+  margin: 0 auto 2.5rem;
+}
+
+.mat-compat-group {
+  margin-bottom: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.mat-compat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #888;
+  white-space: nowrap;
+  min-width: 11rem;
+}
+
+.mat-badge {
+  display: inline-block;
+  background: #e6f3f8;
+  color: #1b4f6a;
+  border: 1px solid #b5d9e8;
+  border-radius: 20px;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Installation box ─────────────────────────────────────── */
+.mat-install {
+  background: #f4f9fc;
+  border-left: 4px solid #2c6e8a;
+  border-radius: 0 8px 8px 0;
+  padding: 1.4rem 1.8rem;
+  margin: 0 auto 1rem;
+  max-width: 560px;
+}
+
+.mat-install pre {
+  background: transparent;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+/* ── Footer CTA ───────────────────────────────────────────── */
+.mat-cta-footer {
+  text-align: center;
+  padding: 2.5rem 1rem 3rem;
+  border-top: 1px solid #dee2e6;
+  margin-top: 1rem;
+}
+
+.mat-cta-footer p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+/* ── General polish ───────────────────────────────────────── */
+
+/* Tighter top padding so hero sits closer to the navbar */
+#pkgdown-sidebar ~ .col-md-9 .row,
+.row.mat-hero-row {
+  padding-top: 0;
+}
+
+/* Remove default bottom border on h2 headings on the home page */
+.template-home h2 {
+  border-bottom: none;
+}
+
+/* Give the home page sidebar a little breathing room */
+.template-home #pkgdown-sidebar {
+  padding-top: 0.5rem;
+}
