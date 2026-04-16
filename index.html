@@ -5,16 +5,16 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Matisse — See how your cells splice genes • Matisse</title>
+<title>Matisse — Splicing and chromatin, one cell at a time • Matisse</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
-<meta property="og:title" content="Matisse — See how your cells splice genes">
-<meta name="description" content="Matisse adds alternative splicing analysis to your existing Seurat workflow. For each cell in your dataset, it measures which version of a transcript that cell is making — then lets you visualise those differences on your UMAP, across clusters, or along a trajectory. Works with 10x Chromium (STARsolo junction counts) and long-read or isoform-resolved data (Bagpiper, FLAMES, LIQA).
+<meta property="og:title" content="Matisse — Splicing and chromatin, one cell at a time">
+<meta name="description" content="Matisse adds isoform-resolved splicing and chromatin accessibility layers to your Seurat/Signac workflow. For each cell, measure which transcript isoform is being made and compare that directly with chromatin accessibility at the same loci — all within one object, on the same UMAP, across the same clusters. Works with 10x Chromium (STARsolo junction counts), long-read isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac for paired ATAC + RNA.
 ">
-<meta property="og:description" content="Matisse adds alternative splicing analysis to your existing Seurat workflow. For each cell in your dataset, it measures which version of a transcript that cell is making — then lets you visualise those differences on your UMAP, across clusters, or along a trajectory. Works with 10x Chromium (STARsolo junction counts) and long-read or isoform-resolved data (Bagpiper, FLAMES, LIQA).
+<meta property="og:description" content="Matisse adds isoform-resolved splicing and chromatin accessibility layers to your Seurat/Signac workflow. For each cell, measure which transcript isoform is being made and compare that directly with chromatin accessibility at the same loci — all within one object, on the same UMAP, across the same clusters. Works with 10x Chromium (STARsolo junction counts), long-read isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac for paired ATAC + RNA.
 ">
 </head>
 <body>
@@ -59,80 +59,103 @@
   <main id="main" class="col-md-9">
 <div class="mat-hero">
 <div class="page-header"><h1>
-See how your cells<br>splice genes
+Understand your cells,<br>layer by layer
 </h1></div>
 <p class="mat-hero-sub">
-Matisse measures alternative splicing at single-cell resolution and layers it on top of your existing Seurat workflow — no re-processing, no new object format to learn.
+Matisse brings isoform-resolved splicing and chromatin accessibility into your single-cell workflow — on top of Seurat and Signac, using the same cells, the same clusters, the same UMAP.
 </p>
-<p><a href="#installation" class="btn mat-btn-primary">Install</a> <a href="articles/intro.html" class="btn mat-btn-outline">View walkthrough →</a></p>
+<p><a href="#installation" class="btn mat-btn-primary">Install</a> <a href="articles/intro.html" class="btn mat-btn-outline">View walkthrough →</a></p>
 </div>
-<section class="mat-section"><p class="mat-section-title">
+<div class="mat-section">
+<p class="mat-section-title">
 What you can discover
 </p>
 <p class="mat-section-sub">
-Biological questions Matisse is built to answer
+Questions Matisse is built to answer
 </p>
 <div class="mat-cards">
 <div class="mat-card">
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">1</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Cell<span class="sc">-</span>type<span class="sc">-</span>specific splicing<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Do my neurons and astrocytes process this exon differently?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+<div class="mat-card-num">
+1
+</div>
+<h3>
+Cell-type-specific splicing
+</h3>
+<p>
+Do my neurons and astrocytes process this exon differently — and by how much?
+</p>
 </div>
 <div class="mat-card">
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">2</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Isoform switches along a trajectory<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Is there a coordinated splicing change as my cells differentiate?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+<div class="mat-card-num">
+2
+</div>
+<h3>
+Chromatin shapes isoforms
+</h3>
+<p>
+Is the splicing switch I see linked to chromatin accessibility changes at the same locus?
+</p>
 </div>
 <div class="mat-card">
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">3</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Context <span class="cf">for</span> bulk RNA<span class="sc">-</span>seq<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>I see a splicing difference <span class="cf">in</span> bulk data — which cell type is driving it?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+<div class="mat-card-num">
+3
+</div>
+<h3>
+Isoform switches along a trajectory
+</h3>
+<p>
+Is there a coordinated splicing change as my cells differentiate or respond to a stimulus?
+</p>
 </div>
 <div class="mat-card">
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="sc">&lt;</span>div class<span class="ot">=</span><span class="st">"mat-card-num"</span><span class="sc">&gt;</span><span class="dv">4</span><span class="sc">&lt;</span><span class="er">/</span>div<span class="sc">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="er">&lt;</span>h3<span class="sc">&gt;</span>Dataset<span class="sc">-</span>wide survey<span class="sc">&lt;</span><span class="er">/</span>h3<span class="sc">&gt;</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="er">&lt;</span>p<span class="sc">&gt;</span>Which of the hundreds of alternative exons <span class="cf">in</span> my data vary across clusters?<span class="sc">&lt;</span><span class="er">/</span>p<span class="sc">&gt;</span></span></code></pre></div>
+<div class="mat-card-num">
+4
+</div>
+<h3>
+Context for bulk RNA-seq
+</h3>
+<p>
+I see a splicing difference in bulk data — which cell type is responsible?
+</p>
 </div>
 </div>
-</section><figure class="mat-figure"><img src="reference/figures/ptbp1_umap.png" alt="PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells. Neurons consistently skip this exon; astrocytes include it."><figcaption>
-PSI values for <em>Ptbp1</em> exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon (low PSI); astrocytes (right) include it (high PSI). Same gene — different splicing. Visible at single-cell resolution.
-</figcaption></figure><section class="mat-section"><p class="mat-section-title">
+</div>
+<figure class="mat-figure"><img src="reference/figures/ptbp1_umap.png" alt="PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells. Neurons skip this exon; astrocytes include it."><figcaption>
+PSI values for <em>Ptbp1</em> exon 9 on a UMAP of mouse cortex cells. Neurons (blue) consistently skip this exon (low PSI); astrocytes (red) include it (high PSI). Same gene — different isoforms — visible at single-cell resolution.
+</figcaption></figure><div class="mat-section">
+<p class="mat-section-title">
 Works with your existing setup
 </p>
 <p class="mat-section-sub">
-Matisse layers on top of Seurat — your clusters, UMAP, and cell labels stay intact
+Matisse layers on top of Seurat and Signac — your clusters, UMAP, and cell labels stay intact
 </p>
 <div class="mat-compat">
 <div class="mat-compat-group">
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Short<span class="sc">-</span><span class="fu">read</span> (<span class="dv">10</span>x)<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>STAR <span class="sc">/</span> STARsolo<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>junction count matrix<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+<p><span class="mat-compat-label">Short-read RNA (10x)</span> <span class="mat-badge">STAR / STARsolo</span> <span class="mat-badge">junction count matrix</span></p>
 </div>
 <div class="mat-compat-group">
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Long<span class="sc">-</span>read <span class="sc">/</span> isoform<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>Bagpiper<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>FLAMES<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>LIQA<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>PacBio MAS<span class="sc">-</span>seq<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+<p><span class="mat-compat-label">Long-read / isoform</span> <span class="mat-badge">Bagpiper</span> <span class="mat-badge">FLAMES</span> <span class="mat-badge">LIQA</span> <span class="mat-badge">PacBio MAS-seq</span></p>
 </div>
 <div class="mat-compat-group">
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-compat-label"</span><span class="sc">&gt;</span>Event annotations<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>SUPPA2 generateEvents<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span>rMATS<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="er">&lt;</span>span class<span class="ot">=</span><span class="st">"mat-badge"</span><span class="sc">&gt;</span><span class="fu">BuildSimpleEvents</span>()<span class="sc">&lt;</span><span class="er">/</span>span<span class="sc">&gt;</span></span></code></pre></div>
+<p><span class="mat-compat-label">ATAC / chromatin</span> <span class="mat-badge">10x Multiome</span> <span class="mat-badge">Signac</span> <span class="mat-badge">ArchR</span></p>
+</div>
+<div class="mat-compat-group">
+<p><span class="mat-compat-label">Event annotations</span> <span class="mat-badge">SUPPA2 generateEvents</span> <span class="mat-badge">rMATS</span> <span class="mat-badge">BuildSimpleEvents()</span></p>
 </div>
 </div>
-</section><section class="mat-section" id="installation"><p class="mat-section-title">
+</div>
+<div id="installation" class="mat-section">
+<p class="mat-section-title">
 Installation
 </p>
 <div class="mat-install">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"avisrilab/Matisse"</span><span class="op">)</span></span></code></pre></div>
+<pre><code class="language-r"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"avisrilab/Matisse"</span><span class="op">)</span></span></code></pre>
 </div>
-</section><div class="mat-cta-footer">
+</div>
+<div class="mat-cta-footer">
 <p>
-Ready to explore your splicing data?
+Ready to explore your data?
 </p>
 <p><a href="articles/intro.html" class="btn mat-btn-primary">View the full walkthrough →</a></p>
 </div>
