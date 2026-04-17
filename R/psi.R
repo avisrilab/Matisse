@@ -102,7 +102,7 @@ setMethod("CalculatePSI", "MatisseObject",
 
   if (verbose) {
     pct <- round(100 * sum(.n_covered_per_event(result$psi)) /
-                   (nrow(result$psi) * ncol(result$psi)), 1)
+                   (as.numeric(nrow(result$psi)) * ncol(result$psi)), 1)
     cli::cli_alert_success(
       "PSI calculated for {ncol(result$psi)} events; {pct}% entries covered.")
   }
