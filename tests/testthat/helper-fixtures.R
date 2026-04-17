@@ -124,10 +124,62 @@ make_matisse_object <- function() {
   jd_data <- make_junction_data()
 
   CreateMatisseObject(
-    seurat        = seu,
+    seurat          = seu,
     junction_counts = jxn_mat,
-    event_data    = ev_data,
-    junction_data = jd_data,
-    verbose       = FALSE
+    event_data      = ev_data,
+    junction_data   = jd_data,
+    verbose         = FALSE
   )
+}
+
+# ---- Seurat object with a fake UMAP reduction ------------------------------
+
+#' Build a minimal Seurat object that also carries a UMAP embedding and a
+#' 'cell_type' metadata column (needed by visualization tests).
+make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
+  seu <- make_seurat(n_cells = n_cells, n_genes = n_genes, seed = seed)
+  set.seed(seed + 100L)
+  coords <- matrix(
+    stats::rnorm(n_cells * 2L),
+    nrow     = n_cells,
+    ncol     = 2L,
+    dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2"))
+  )
+  seu[["umap"]] <- SeuratObject::CreateDimReducObject(
+    embeddings = coords,
+    key        = "UMAP_"
+  )
+  seu$cell_type      <- rep(c("TypeA", "TypeB"), length.out = n_cells)
+  # Mimic FindClusters() output so default group_by = "seurat_clusters" works
+  seu$seurat_clusters <- factor(rep(0L, n_cells))
+  seu
+}
+
+# ---- MatisseObject with UMAP and PSI already computed ----------------------
+
+#' Returns a MatisseObject whose embedded Seurat has a UMAP reduction and
+#' whose PSI matrix has been calculated (min_coverage = 1).
+make_matisse_with_umap <- function() {
+  skip_if_not_installed("Seurat")
+  seu     <- make_seurat_with_umap()
+  jxn_mat <- make_junction_counts()
+  ev_data <- make_event_data()
+  jd_data <- make_junction_data()
+
+  obj <- CreateMatisseObject(
+    seurat          = seu,
+    junction_counts = jxn_mat,
+    event_data      = ev_data,
+    junction_data   = jd_data,
+    verbose         = FALSE
+  )
+  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
+}
+
+# ---- MatisseObject with QC computed ----------------------------------------
+
+#' Returns make_matisse_with_umap() after also running ComputeIsoformQC.
+make_matisse_with_qc <- function() {
+  obj <- make_matisse_with_umap()
+  ComputeIsoformQC(obj, verbose = FALSE)
 }
