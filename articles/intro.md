@@ -225,6 +225,82 @@ The heatmap reveals the overall splicing landscape:
 
 ------------------------------------------------------------------------
 
+## Workflow 2: long-read and transcript-resolved data
+
+The junction-count workflow above works with **short-read** data (10x
+Chromium, STARsolo). If you have **long-read** data — or short-read data
+quantified at the full-transcript level — Matisse provides a second
+entry point that works directly from transcript counts.
+
+### What you need
+
+| Input                       | Description                                                                                                                                                                                                                                                     |
+|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Seurat object**           | Your existing clustering and UMAP — same as above                                                                                                                                                                                                               |
+| **Transcript count matrix** | *Transcripts × cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation (e.g. GENCODE/Ensembl). Compatible quantifiers include **Bagpiper**, **FLAMES**, **LIQA**, or any tool that produces per-transcript per-cell counts. |
+| **SUPPA2 IOE files**        | One or more `.ioe` files produced by SUPPA2’s `generateEvents` command. Each file covers one event type (SE, SS, MX, RI, FL). Matisse parses these to map transcripts to inclusion/exclusion sets for each splicing event.                                      |
+
+### How PSI is calculated
+
+For each cell and each event, Matisse sums the counts for transcripts in
+the **inclusion set** and the **exclusion set** and computes:
+
+$$PSI_{c,e} = \frac{\sum\text{inclusion transcript counts}}{\sum\text{inclusion counts} + \sum\text{exclusion counts}}$$
+
+Cells below `min_coverage` total counts for an event are left as `NA`.
+
+### Building the object
+
+``` r
+library(Matisse)
+
+# transcript_counts: a matrix (transcripts x cells) — e.g. from Bagpiper
+# ioe_files: SUPPA2 .ioe output files, one per event type
+obj <- CreateMatisseObjectFromTranscripts(
+  seurat            = seu,
+  transcript_counts = transcript_counts,
+  ioe_files         = c(
+    "events_SE.ioe",   # skipped exons
+    "events_RI.ioe",   # retained introns
+    "events_SS.ioe"    # alternative splice sites
+  ),
+  min_coverage      = 5L
+)
+```
+
+PSI is computed automatically during construction — there is no separate
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+call needed. The `junction_counts` slot is `NULL` for transcript-based
+objects (junction-level plots are not available), but all QC, filtering,
+and visualisation functions work identically.
+
+### Downstream steps (identical to the junction workflow)
+
+``` r
+# QC and filtering
+obj <- ComputeIsoformQC(obj)
+PlotQCMetrics(obj, group_by = "cell_type")
+
+obj <- FilterCells(obj, min_pct_covered = 10)
+obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
+
+# Visualisation — same functions, same arguments
+PlotPSIUMAP(obj,    event_id = "SE:chr18:3433647-3436055:PTBP1",
+                    title    = "PTBP1 exon 9 — long-read PSI")
+PlotPSIViolin(obj,  event_id = "SE:chr18:3433647-3436055:PTBP1",
+                    group_by = "cell_type")
+PlotPSIHeatmap(obj, group_by = "cell_type", max_cells = 400)
+```
+
+> **Note on event IDs:** SUPPA2 event IDs use the format
+> `TYPE:chr:coords:strand` (e.g. `SE:chr18:100-200:300-400:+`). These
+> become the column names of the PSI matrix, so use the same format when
+> calling
+> [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md)
+> or subsetting with `obj[, event_id]`.
+
+------------------------------------------------------------------------
+
 ## Accessing your data at any point
 
 The Seurat object and all metadata remain fully accessible alongside the
