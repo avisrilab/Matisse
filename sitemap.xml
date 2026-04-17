@@ -15,6 +15,8 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterCells.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterEvents.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/FindPSIClusters.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/FindVariablePSIEvents.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetEventData.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetExclusionCounts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetInclusionCounts.html</loc></url>
@@ -27,12 +29,16 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/MatisseObject-class.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/MergeMatisse.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotJunctionCoverage.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/PlotPSIDimPlot.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotPSIHeatmap.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotPSIViolin.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/RunPSIPCA.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/RunPSIUMAP.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/SetPSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/SummarizePSI.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/VariablePSIEvents.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/dot-aggregate_transcript_counts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/dot-calculate_psi_matrix.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/dot-parse_ioe_files.html</loc></url>

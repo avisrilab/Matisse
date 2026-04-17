@@ -199,6 +199,57 @@
         </dt>
         <dd>Filter splice events by coverage or variance</dd>
       </dl></div><div class="section level2">
+      <h2 id="psi-dimensionality-reduction-and-clustering">PSI dimensionality reduction and clustering<a class="anchor" aria-label="anchor" href="#psi-dimensionality-reduction-and-clustering"></a></h2>
+
+      <div class="section-desc"><p>Reduce the PSI matrix to a low-dimensional embedding and cluster cells by their splicing profiles — independently of gene expression. The workflow mirrors Seurat: select variable events, run PCA, project to UMAP, and find communities with the Louvain algorithm.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="FindVariablePSIEvents.html">FindVariablePSIEvents()</a></code>
+
+        </dt>
+        <dd>Select highly variable PSI events</dd>
+
+        <dt>
+
+          <code><a href="VariablePSIEvents.html">VariablePSIEvents()</a></code>
+
+        </dt>
+        <dd>Retrieve variable PSI event IDs</dd>
+
+        <dt>
+
+          <code><a href="RunPSIPCA.html">RunPSIPCA()</a></code>
+
+        </dt>
+        <dd>Run PCA on the PSI matrix</dd>
+
+        <dt>
+
+          <code><a href="RunPSIUMAP.html">RunPSIUMAP()</a></code>
+
+        </dt>
+        <dd>Run UMAP on PSI principal components</dd>
+
+        <dt>
+
+          <code><a href="FindPSIClusters.html">FindPSIClusters()</a></code>
+
+        </dt>
+        <dd>Find clusters in PSI space</dd>
+
+        <dt>
+
+          <code><a href="PlotPSIDimPlot.html">PlotPSIDimPlot()</a></code>
+
+        </dt>
+        <dd>Scatter plot of a PSI dimensionality reduction</dd>
+      </dl></div><div class="section level2">
       <h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a></h2>
 
       <div class="section-desc"><p>Plot splicing patterns across your cells. Overlay PSI values on a UMAP, compare splicing between cell types, or inspect junction usage for a gene of interest.</p></div>

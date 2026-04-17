@@ -146,6 +146,26 @@ for reliable analysis.
 - [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
   : Filter splice events by coverage or variance
 
+## PSI dimensionality reduction and clustering
+
+Reduce the PSI matrix to a low-dimensional embedding and cluster cells
+by their splicing profiles — independently of gene expression. The
+workflow mirrors Seurat: select variable events, run PCA, project to
+UMAP, and find communities with the Louvain algorithm.
+
+- [`FindVariablePSIEvents()`](https://avisrilab.github.io/Matisse/reference/FindVariablePSIEvents.md)
+  : Select highly variable PSI events
+- [`VariablePSIEvents()`](https://avisrilab.github.io/Matisse/reference/VariablePSIEvents.md)
+  : Retrieve variable PSI event IDs
+- [`RunPSIPCA()`](https://avisrilab.github.io/Matisse/reference/RunPSIPCA.md)
+  : Run PCA on the PSI matrix
+- [`RunPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/RunPSIUMAP.md)
+  : Run UMAP on PSI principal components
+- [`FindPSIClusters()`](https://avisrilab.github.io/Matisse/reference/FindPSIClusters.md)
+  : Find clusters in PSI space
+- [`PlotPSIDimPlot()`](https://avisrilab.github.io/Matisse/reference/PlotPSIDimPlot.md)
+  : Scatter plot of a PSI dimensionality reduction
+
 ## Visualisation
 
 Plot splicing patterns across your cells. Overlay PSI values on a UMAP,
