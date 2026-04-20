@@ -67,11 +67,19 @@ reference:
       - GetJunctionCounts
       - GetInclusionCounts
       - GetExclusionCounts
+      - GetTranscriptCounts
       - GetEventData
       - GetJunctionData
       - MatisseMeta
       - "MatisseMeta<-"
       - AddIsoformMetadata
+
+  - title: "Normalisation"
+    desc: >
+      Normalise transcript-level count data before clustering. These functions
+      wrap standard Seurat normalisation steps and tune them for isoform data.
+    contents:
+      - SCTransformTranscripts
 
   - title: "Calculate splicing ratios (PSI)"
     desc: >
