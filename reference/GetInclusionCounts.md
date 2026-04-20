@@ -1,7 +1,7 @@
 # Get inclusion read count matrix
 
 Retrieves inclusion counts from the `"counts"` layer of the `"psi"`
-`ChromatinAssay`.
+`Assay5`.
 
 ## Usage
 

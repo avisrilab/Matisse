@@ -13,9 +13,9 @@ live inside the embedded Seurat object:
 
 - `"psi"`:
 
-  A `ChromatinAssay` (Signac) holding PSI values in the `"data"` layer,
-  inclusion counts in `"counts"`, and exclusion counts in `"exclusion"`
-  (all features × cells). Created by
+  An `Assay5` holding PSI values in the `"data"` layer, inclusion counts
+  in `"counts"`, and exclusion counts in `"exclusion"` (all features ×
+  cells). Created by
   [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
   or
   [`CreateMatisseObjectFromTranscripts`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md).

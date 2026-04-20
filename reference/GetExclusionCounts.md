@@ -1,7 +1,7 @@
 # Get exclusion read count matrix
 
 Retrieves exclusion counts from the `"exclusion"` layer of the `"psi"`
-`ChromatinAssay`.
+`Assay5`.
 
 ## Usage
 

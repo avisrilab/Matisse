@@ -1,7 +1,7 @@
 # Set the PSI matrix
 
-Replaces the `"data"` layer of the `"psi"` `ChromatinAssay` inside the
-embedded Seurat object.
+Replaces the `"data"` layer of the `"psi"` `Assay5` inside the embedded
+Seurat object.
 
 ## Usage
 

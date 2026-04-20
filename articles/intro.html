@@ -35,7 +35,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="../articles/intro.html">Getting started with Matisse</a></li>
+<li><a class="dropdown-item" href="../articles/intro.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+    <li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -70,14 +72,13 @@
 <div class="section level2">
 <h2 id="what-does-matisse-do">What does Matisse do?<a class="anchor" aria-label="anchor" href="#what-does-matisse-do"></a>
 </h2>
-<p>Genes can be spliced in different ways: certain exons may be included
-in some transcripts but skipped in others. This is called
+<p>Genes can be spliced in different ways — certain exons may be
+included in some transcripts but skipped in others. This is called
 <strong>alternative splicing</strong>, and it means one gene can produce
-multiple protein isoforms with different functions.</p>
+multiple protein variants with different functions.</p>
 <p>Matisse measures alternative splicing <strong>one cell at a
-time</strong>. For each cell in your dataset, it calculates a
-<strong>PSI value</strong> (Percent Spliced In) for each splicing event
-you care about:</p>
+time</strong>. For each cell it calculates a <strong>PSI value</strong>
+(Percent Spliced In) for each splicing event:</p>
 <ul>
 <li>
 <strong>PSI = 1</strong> — every transcript in that cell includes
@@ -87,378 +88,95 @@ the exon</li>
 <li>
 <strong>PSI = 0.5</strong> — half include, half skip</li>
 </ul>
-<p>By comparing PSI values across your cell types, clusters, or
-conditions, you can identify which populations splice genes differently
-— and by how much.</p>
-<p>Matisse sits on top of your existing <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> workflow. Your gene
+<p>By comparing PSI values across cell types, clusters, or conditions
+you can find which populations splice genes differently — and by how
+much. Matisse sits on top of your existing <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> workflow. Your gene
 expression data, UMAP, and cluster labels stay intact; splicing
-information is simply added alongside them.</p>
+information is added alongside them.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="a-worked-example-the-ptbp1-splicing-switch-in-mouse-cortex">A worked example: the PTBP1 splicing switch in mouse cortex<a class="anchor" aria-label="anchor" href="#a-worked-example-the-ptbp1-splicing-switch-in-mouse-cortex"></a>
+<h2 id="two-entry-points">Two entry points<a class="anchor" aria-label="anchor" href="#two-entry-points"></a>
 </h2>
-<p>One of the best-studied examples of cell-type-specific splicing is
-<em>Ptbp1</em> exon 9. In non-neuronal cells (astrocytes, progenitors),
-this exon is <strong>included</strong> in most transcripts (high PSI).
-As cells differentiate into mature neurons, a neuron-specific splicing
-factor switches this off: exon 9 is <strong>skipped</strong> in almost
-all neuronal transcripts (low PSI). This switch has functional
-consequences for PTBP1 protein activity and downstream splicing
-regulation.</p>
-<p>Here we analyse 500 single cells from mouse cortex — 300 neurons and
-200 astrocytes — and use Matisse to detect this switch and survey
-splicing differences across five well-characterised alternative
-exons.</p>
-<blockquote>
-<p><strong>Note:</strong> The code below shows every step of the
-analysis. Because the data are not bundled with the package, chunks are
-set to <code>eval = FALSE</code>. The figures shown were generated from
-a simulated dataset that closely mirrors the PSI distributions observed
-in published mouse cortex scRNA-seq studies.</p>
-</blockquote>
+<p>Matisse supports two data types that require slightly different
+starting steps:</p>
+<table class="table">
+<colgroup>
+<col width="29%">
+<col width="35%">
+<col width="35%">
+</colgroup>
+<thead><tr class="header">
+<th>Data type</th>
+<th>Entry point</th>
+<th>When to use</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<strong>Short-read 10x Chromium</strong> (STARsolo junction
+counts)</td>
+<td><code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code></td>
+<td>You have a cells × junctions count matrix from STARsolo
+<code>--soloFeatures SJ</code>
+</td>
+</tr>
+<tr class="even">
+<td>
+<strong>Long-read / transcript quantification</strong> (Bagpiper,
+FLAMES, LIQA)</td>
+<td><code><a href="../reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts()</a></code></td>
+<td>You have a transcripts × cells count matrix and SUPPA2 IOE
+files</td>
+</tr>
+</tbody>
+</table>
+<p>Once the object is built, all downstream functions — QC, filtering,
+normalisation, visualisation — are identical for both data types.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="step-1-build-the-matisse-object">Step 1 — Build the Matisse object<a class="anchor" aria-label="anchor" href="#step-1-build-the-matisse-object"></a>
+<h2 id="quick-start-short-reads">Quick-start (short reads)<a class="anchor" aria-label="anchor" href="#quick-start-short-reads"></a>
 </h2>
-<p>Starting materials:</p>
-<ul>
-<li>A <strong>Seurat object</strong> (<code>seu</code>) already
-processed through clustering and UMAP</li>
-<li>A <strong>junction count table</strong> (<code>jxn_counts</code>)
-from STARsolo — one row per cell, one column per exon-exon junction,
-values = number of reads crossing each junction in that cell</li>
-<li>A <strong>splice event table</strong> (<code>event_df</code>)
-defining which junctions support inclusion versus skipping for each
-event of interest</li>
-</ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
-<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,</span>
-<span>  event_data      <span class="op">=</span> <span class="va">event_df</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="step-2-calculate-psi">Step 2 — Calculate PSI<a class="anchor" aria-label="anchor" href="#step-2-calculate-psi"></a>
-</h2>
-<p>For each cell and each splicing event, Matisse sums the reads from
-inclusion-supporting junctions and exclusion-supporting junctions, then
-computes the ratio. Cells with fewer than <code>min_coverage</code>
-total reads for an event are left as missing — not enough data to call a
-reliable splicing ratio.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="step-3-quality-control">Step 3 — Quality control<a class="anchor" aria-label="anchor" href="#step-3-quality-control"></a>
-</h2>
-<p>Before interpreting results, check that each cell has enough junction
-data to be reliable.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/PlotQCMetrics.html">PlotQCMetrics</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="figures/qc_metrics.png" class="r-plt" alt="Per-cell splicing QC metrics split by cell type. Both neurons and astrocytes show similar junction detection rates and event coverage, indicating balanced data quality across populations." width="90%"><p class="caption">
-Per-cell splicing QC metrics split by cell type. Both neurons and
-astrocytes show similar junction detection rates and event coverage,
-indicating balanced data quality across populations.
-</p>
-</div>
-<p>Both cell types show comparable data quality: nearly all cells detect
-all 10 junctions and achieve full event coverage. No filtering is needed
-here, but in a noisier real dataset you would remove low-quality cells
-at this stage:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Remove cells with too few detected junctions or too little event coverage</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCells.html">FilterCells</a></span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  min_junctions      <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  min_junction_reads <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  min_pct_covered    <span class="op">=</span> <span class="fl">10</span></span>
+<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,          <span class="co"># your existing Seurat object</span></span>
+<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,   <span class="co"># cells × junctions from STARsolo</span></span>
+<span>  event_data      <span class="op">=</span> <span class="va">event_df</span>      <span class="co"># splice event annotation</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Remove events that are measurable in too few cells or show no variation</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  min_cells_covered <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  min_psi_variance  <span class="op">=</span> <span class="fl">0.01</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span><span class="op">)</span></span></code></pre></div>
+<p>→ <strong>Full walkthrough:</strong> <a href="short-reads.html">Short-read workflow</a></p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="step-4-visualise-the-ptbp1-splicing-switch">Step 4 — Visualise the PTBP1 splicing switch<a class="anchor" aria-label="anchor" href="#step-4-visualise-the-ptbp1-splicing-switch"></a>
+<h2 id="quick-start-long-reads">Quick-start (long reads)<a class="anchor" aria-label="anchor" href="#quick-start-long-reads"></a>
 </h2>
-<div class="section level3">
-<h3 id="where-does-the-switch-happen-on-the-umap">Where does the switch happen on the UMAP?<a class="anchor" aria-label="anchor" href="#where-does-the-switch-happen-on-the-umap"></a>
-</h3>
-<p>Overlay the PTBP1 exon 9 PSI value onto the cell UMAP. Each dot is a
-cell, coloured by its PSI value: blue = exon skipped (low PSI), red =
-exon included (high PSI).</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span>,</span>
-<span>  title    <span class="op">=</span> <span class="st">"PTBP1 exon 9 — PSI per cell"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="figures/ptbp1_umap.png" class="r-plt" alt="UMAP coloured by PTBP1 exon 9 PSI. Neurons (left cluster) are uniformly blue — exon 9 is almost always skipped. Astrocytes (right cluster) are uniformly red — exon 9 is almost always included. The splicing switch perfectly mirrors the cell-type boundary." width="80%"><p class="caption">
-UMAP coloured by PTBP1 exon 9 PSI. Neurons (left cluster) are uniformly
-blue — exon 9 is almost always skipped. Astrocytes (right cluster) are
-uniformly red — exon 9 is almost always included. The splicing switch
-perfectly mirrors the cell-type boundary.
-</p>
-</div>
-<p>The two clusters are completely separated by splicing state alone —
-without using any gene expression information.</p>
-</div>
-<div class="section level3">
-<h3 id="how-large-is-the-difference">How large is the difference?<a class="anchor" aria-label="anchor" href="#how-large-is-the-difference"></a>
-</h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span>,</span>
-<span>  group_by <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
-<span>  title    <span class="op">=</span> <span class="st">"PTBP1 exon 9 — PSI by cell type"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="figures/ptbp1_violin.png" class="r-plt" alt="Distribution of PTBP1 exon 9 PSI values in neurons versus astrocytes. Neurons cluster tightly near PSI = 0 (exon nearly always skipped); astrocytes cluster near PSI = 0.8–1.0 (exon nearly always included). This near-binary switch is characteristic of a regulated developmental splicing event." width="60%"><p class="caption">
-Distribution of PTBP1 exon 9 PSI values in neurons versus astrocytes.
-Neurons cluster tightly near PSI = 0 (exon nearly always skipped);
-astrocytes cluster near PSI = 0.8–1.0 (exon nearly always included).
-This near-binary switch is characteristic of a regulated developmental
-splicing event.
-</p>
-</div>
-<p>Neurons show a tight distribution near PSI = 0 (median ~0.08);
-astrocytes show a tight distribution near PSI = 0.82. The difference is
-large, consistent, and cell-type-specific — exactly the signature of a
-developmentally regulated splicing switch.</p>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="step-5-survey-splicing-across-multiple-events">Step 5 — Survey splicing across multiple events<a class="anchor" aria-label="anchor" href="#step-5-survey-splicing-across-multiple-events"></a>
-</h2>
-<p>Use the heatmap to get an overview of all five events at once, with
-cells ordered by cell type. Rows are cells, columns are splicing
-events.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIHeatmap.html">PlotPSIHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="figures/psi_heatmap.png" class="r-plt" alt="PSI heatmap across five alternative exons. Cells are ordered by cell type (neurons top half, astrocytes bottom half); events are hierarchically clustered. PTBP1 and NRXN1/MAP2 show opposing directionality — events skipped in neurons are included in astrocytes and vice versa. FLNA exon 30 shows no difference, confirming the pattern is event-specific rather than a global shift." width="85%"><p class="caption">
-PSI heatmap across five alternative exons. Cells are ordered by cell
-type (neurons top half, astrocytes bottom half); events are
-hierarchically clustered. PTBP1 and NRXN1/MAP2 show opposing
-directionality — events skipped in neurons are included in astrocytes
-and vice versa. FLNA exon 30 shows no difference, confirming the pattern
-is event-specific rather than a global shift.
-</p>
-</div>
-<p>The heatmap reveals the overall splicing landscape:</p>
-<ul>
-<li>
-<strong>PTBP1 exon 9</strong>: low PSI in neurons, high in
-astrocytes (exon skipped in neurons)</li>
-<li>
-<strong>NRXN1 SS4</strong> and <strong>MAP2 exon 16</strong>: high
-PSI in neurons, low in astrocytes (neuron-enriched inclusion)</li>
-<li>
-<strong>FLNA exon 30</strong>: no difference between cell types — a
-useful negative control showing that not every event is regulated</li>
-<li>
-<strong>MAPT exon 10</strong>: mild difference, illustrating that
-splicing changes come in a spectrum of effect sizes</li>
-</ul>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="workflow-2-long-read-and-transcript-resolved-data">Workflow 2: long-read and transcript-resolved data<a class="anchor" aria-label="anchor" href="#workflow-2-long-read-and-transcript-resolved-data"></a>
-</h2>
-<p>The junction-count workflow above works with
-<strong>short-read</strong> data (10x Chromium, STARsolo). If you have
-<strong>long-read</strong> data — or short-read data quantified at the
-full-transcript level — Matisse provides a second entry point that works
-directly from transcript counts.</p>
-<div class="section level3">
-<h3 id="what-you-need">What you need<a class="anchor" aria-label="anchor" href="#what-you-need"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="35%">
-<col width="65%">
-</colgroup>
-<thead><tr class="header">
-<th>Input</th>
-<th>Description</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Seurat object</strong></td>
-<td>Your existing clustering and UMAP — same as above</td>
-</tr>
-<tr class="even">
-<td><strong>Transcript count matrix</strong></td>
-<td>
-<em>Transcripts × cells</em> matrix of UMI counts. Row names are
-transcript IDs matching those in your annotation (e.g. GENCODE/Ensembl).
-Compatible quantifiers include <strong>Bagpiper</strong>,
-<strong>FLAMES</strong>, <strong>LIQA</strong>, or any tool that
-produces per-transcript per-cell counts.</td>
-</tr>
-<tr class="odd">
-<td><strong>SUPPA2 IOE files</strong></td>
-<td>One or more <code>.ioe</code> files produced by SUPPA2’s
-<code>generateEvents</code> command. Each file covers one event type
-(SE, SS, MX, RI, FL). Matisse parses these to map transcripts to
-inclusion/exclusion sets for each splicing event.</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="how-psi-is-calculated">How PSI is calculated<a class="anchor" aria-label="anchor" href="#how-psi-is-calculated"></a>
-</h3>
-<p>For each cell and each event, Matisse sums the counts for transcripts
-in the <strong>inclusion set</strong> and the <strong>exclusion
-set</strong> and computes:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>S</mi><msub><mi>I</mi><mrow><mi>c</mi><mo>,</mo><mi>e</mi></mrow></msub><mo>=</mo><mfrac><mrow><mo>∑</mo><mtext mathvariant="normal">inclusion transcript counts</mtext></mrow><mrow><mo>∑</mo><mtext mathvariant="normal">inclusion counts</mtext><mo>+</mo><mo>∑</mo><mtext mathvariant="normal">exclusion counts</mtext></mrow></mfrac></mrow><annotation encoding="application/x-tex">PSI_{c,e} = \frac{\sum \text{inclusion transcript counts}}
-                   {\sum \text{inclusion counts} + \sum \text{exclusion counts}}</annotation></semantics></math></p>
-<p>Cells below <code>min_coverage</code> total counts for an event are
-left as <code>NA</code>.</p>
-</div>
-<div class="section level3">
-<h3 id="building-the-object">Building the object<a class="anchor" aria-label="anchor" href="#building-the-object"></a>
-</h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># transcript_counts: a matrix (transcripts x cells) — e.g. from Bagpiper</span></span>
-<span><span class="co"># ioe_files: SUPPA2 .ioe output files, one per event type</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts</a></span><span class="op">(</span></span>
 <span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  transcript_counts <span class="op">=</span> <span class="va">transcript_counts</span>,</span>
-<span>  ioe_files         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"events_SE.ioe"</span>,   <span class="co"># skipped exons</span></span>
-<span>    <span class="st">"events_RI.ioe"</span>,   <span class="co"># retained introns</span></span>
-<span>    <span class="st">"events_SS.ioe"</span>    <span class="co"># alternative splice sites</span></span>
-<span>  <span class="op">)</span>,</span>
+<span>  transcript_counts <span class="op">=</span> <span class="va">tx_counts</span>,    <span class="co"># transcripts × cells from Bagpiper/FLAMES</span></span>
+<span>  ioe_files         <span class="op">=</span> <span class="st">"events_SE.ioe"</span>,</span>
 <span>  min_coverage      <span class="op">=</span> <span class="fl">5L</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>PSI is computed automatically during construction — there is no
-separate <code><a href="../reference/CalculatePSI.html">CalculatePSI()</a></code> call needed. The
-<code>junction_counts</code> slot is <code>NULL</code> for
-transcript-based objects (junction-level plots are not available), but
-all QC, filtering, and visualisation functions work identically.</p>
-</div>
-<div class="section level3">
-<h3 id="downstream-steps-identical-to-the-junction-workflow">Downstream steps (identical to the junction workflow)<a class="anchor" aria-label="anchor" href="#downstream-steps-identical-to-the-junction-workflow"></a>
-</h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># QC and filtering</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/PlotQCMetrics.html">PlotQCMetrics</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCells.html">FilterCells</a></span><span class="op">(</span><span class="va">obj</span>, min_pct_covered <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span>, min_psi_variance <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualisation — same functions, same arguments</span></span>
-<span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span><span class="va">obj</span>,    event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:PTBP1"</span>,</span>
-<span>                    title    <span class="op">=</span> <span class="st">"PTBP1 exon 9 — long-read PSI"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span><span class="va">obj</span>,  event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:PTBP1"</span>,</span>
-<span>                    group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/PlotPSIHeatmap.html">PlotPSIHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
-<blockquote>
-<p><strong>Note on event IDs:</strong> SUPPA2 event IDs use the format
-<code>TYPE:chr:coords:strand</code>
-(e.g. <code>SE:chr18:100-200:300-400:+</code>). These become the column
-names of the PSI matrix, so use the same format when calling
-<code><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP()</a></code> or subsetting with
-<code>obj[, event_id]</code>.</p>
-</blockquote>
-</div>
-<div class="section level3">
-<h3 id="normalising-transcript-data-for-clustering">Normalising transcript data for clustering<a class="anchor" aria-label="anchor" href="#normalising-transcript-data-for-clustering"></a>
-</h3>
-<p>When working with transcript-level counts, <code>SCTransform</code>
-often outperforms standard log-normalisation for detecting isoform-level
-clusters. Matisse provides a convenience wrapper that runs
-<code>SCTransform</code> on the <code>"transcript"</code> assay and then
-performs PCA with a larger number of components — useful because isoform
-variation is more subtle than gene expression variation and benefits
-from more principal components.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Normalise, scale, and run PCA on transcript counts in one step.</span></span>
-<span><span class="co"># n_pca_dims = 50 is a good starting point; increase if clusters look merged.</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># PSI is already computed; normalise transcripts then cluster</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SCTransformTranscripts.html">SCTransformTranscripts</a></span><span class="op">(</span><span class="va">obj</span>, n_pca_dims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Continue with standard Seurat steps — all work directly on the Matisse object</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">RunUMAP</span><span class="op">(</span>dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">FindNeighbors</span><span class="op">(</span>dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">FindClusters</span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="using-seurat-and-signac-functions-directly-on-a-matisse-object">Using Seurat and Signac functions directly on a Matisse object<a class="anchor" aria-label="anchor" href="#using-seurat-and-signac-functions-directly-on-a-matisse-object"></a>
-</h2>
-<p>Because Matisse wraps a Seurat object, any standard Seurat or Signac
-function works directly on the Matisse object — just call it the same
-way you would on a Seurat object. If Matisse recognises the function
-name in Seurat or Signac, it runs it automatically and returns an
-updated Matisse object. You never need to extract the Seurat object, run
-the step, and put it back.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Standard Seurat normalisation and dimensionality reduction</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">NormalizeData</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">FindVariableFeatures</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">ScaleData</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">RunPCA</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">RunUMAP</span><span class="op">(</span>dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Clustering</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">FindNeighbors</span><span class="op">(</span>dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="fu">FindClusters</span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># The PSI data and all Matisse-specific slots are preserved throughout —</span></span>
-<span><span class="co"># there is no need to re-calculate PSI after running Seurat steps.</span></span></code></pre></div>
-<p>Functions that belong only to Matisse (such as
-<code>CalculatePSI</code>, <code>ComputeIsoformQC</code>,
-<code>PlotPSIUMAP</code>) are called normally as
-<code>function(obj, ...)</code>. The <code>$</code> shorthand is only
-for Seurat / Signac functions.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="accessing-your-data-at-any-point">Accessing your data at any point<a class="anchor" aria-label="anchor" href="#accessing-your-data-at-any-point"></a>
-</h2>
-<p>The Seurat object and all metadata remain fully accessible alongside
-the splicing information:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Extract the Seurat object (for any standard Seurat workflow)</span></span>
-<span><span class="va">seu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetSeurat.html">GetSeurat</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Access cell-level metadata with $</span></span>
-<span><span class="va">obj</span><span class="op">$</span><span class="va">cell_type</span></span>
-<span><span class="va">obj</span><span class="op">$</span><span class="va">seurat_clusters</span></span>
-<span></span>
-<span><span class="co"># Retrieve the full PSI matrix as a plain table</span></span>
-<span><span class="va">psi_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetPSI.html">GetPSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Subset to a specific cell type — both gene expression and PSI update together</span></span>
-<span><span class="va">neurons</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">[</span><span class="va">obj</span><span class="op">$</span><span class="va">cell_type</span> <span class="op">==</span> <span class="st">"Neuron"</span>, <span class="op">]</span></span></code></pre></div>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">obj</span>, resolution <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span><span class="op">)</span></span></code></pre></div>
+<p>→ <strong>Full walkthrough:</strong> <a href="long-reads.html">Long-read workflow</a></p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>

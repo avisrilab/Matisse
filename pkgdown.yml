@@ -3,7 +3,9 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   intro: intro.html
-last_built: 2026-04-20T20:24Z
+  long-reads: long-reads.html
+  short-reads: short-reads.html
+last_built: 2026-04-20T21:34Z
 urls:
   reference: https://avisrilab.github.io/Matisse/reference
   article: https://avisrilab.github.io/Matisse/articles

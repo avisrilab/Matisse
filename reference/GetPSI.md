@@ -1,7 +1,7 @@
 # Get the PSI matrix
 
-Retrieves the PSI (Percent Spliced In) matrix from the `"psi"`
-`ChromatinAssay` stored inside the embedded Seurat object.
+Retrieves the PSI (Percent Spliced In) matrix from the `"psi"` `Assay5`
+stored inside the embedded Seurat object.
 
 ## Usage
 

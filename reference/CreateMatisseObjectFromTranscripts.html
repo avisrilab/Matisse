@@ -23,7 +23,9 @@ transcripts to splice events using SUPPA2 IOE annotation files."></head><body>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/intro.html">Getting started with Matisse</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/intro.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+    <li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -98,7 +100,7 @@ event required to report a PSI value. Default: <code>5</code>.</p></dd>
     <p>Transcript counts are stored as a <code>Assay5</code> named <code>"transcript"</code>
 inside the Seurat object (ready for <code><a href="SCTransformTranscripts.html">SCTransformTranscripts</a></code>).
 PSI values, inclusion counts, and exclusion counts are stored inside a
-<code>ChromatinAssay</code> named <code>"psi"</code> with layers <code>"data"</code>,
+<code>Assay5</code> named <code>"psi"</code> with layers <code>"data"</code>,
 <code>"counts"</code>, and <code>"exclusion"</code>, respectively.</p>
 <p>For each splice event the PSI per cell is:
 $$PSI_{c,e} = \frac{\sum \text{inclusion transcript counts}}

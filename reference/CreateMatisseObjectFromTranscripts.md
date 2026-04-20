@@ -55,7 +55,7 @@ Transcript counts are stored as a `Assay5` named `"transcript"` inside
 the Seurat object (ready for
 [`SCTransformTranscripts`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)).
 PSI values, inclusion counts, and exclusion counts are stored inside a
-`ChromatinAssay` named `"psi"` with layers `"data"`, `"counts"`, and
+`Assay5` named `"psi"` with layers `"data"`, `"counts"`, and
 `"exclusion"`, respectively.
 
 For each splice event the PSI per cell is: \$\$PSI\_{c,e} = \frac{\sum

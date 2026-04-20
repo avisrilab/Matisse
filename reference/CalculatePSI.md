@@ -73,8 +73,8 @@ A `MatisseObject` (when given one) or a PSI matrix.
 \$\$PSI\_{c,e} = \frac{\sum \text{inclusion reads}} {\sum
 \text{inclusion reads} + \sum \text{exclusion reads}}\$\$
 
-Results are stored inside the embedded Seurat object as a
-`ChromatinAssay` named `"psi"`, with:
+Results are stored inside the embedded Seurat object as a `Assay5` named
+`"psi"`, with:
 
 - `"data"` layer: PSI values in \\\[0,1\]\\ (events × cells).
 
