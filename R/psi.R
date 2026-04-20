@@ -50,7 +50,7 @@ setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE) {
   if (is.null(object@junction_counts)) {
-    if (!is.null(object@seurat[["psi"]])) {
+    if (!is.null(.get_assay_safe(object@seurat, "psi"))) {
       rlang::warn(paste0(
         "This object was created from transcript counts and already has PSI ",
         "computed. CalculatePSI() only applies to junction-count objects. ",

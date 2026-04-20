@@ -1,0 +1,180 @@
+---
+title: "Long-read workflow: transcript-based PSI"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Long-read workflow: transcript-based PSI}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## When to use this workflow
+
+Use this workflow when your data was generated with a long-read platform
+(PacBio, Oxford Nanopore) or when you have used a short-read isoform
+quantifier such as **Bagpiper**, **FLAMES**, or **LIQA** that produces
+per-transcript per-cell counts. These tools assign each read to a specific
+full-length transcript rather than counting at the junction level.
+
+If you have STARsolo junction counts from standard 10x Chromium short reads,
+see the [Short-read workflow](short-reads.html) instead.
+
+---
+
+## What you need
+
+| Input | Description |
+|-------|-------------|
+| **Seurat object** | Already processed: gene-expression normalisation, UMAP, cluster labels. |
+| **Transcript count matrix** | *Transcripts × cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation. |
+| **SUPPA2 IOE files** | One or more `.ioe` files from SUPPA2's `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to inclusion/exclusion sets for each splicing event. |
+
+---
+
+## Step 1 — Build the Matisse object
+
+```{r build-object, eval=FALSE}
+library(Matisse)
+
+# transcript_counts: transcripts × cells sparse matrix (e.g. from Bagpiper)
+# ioe_files: SUPPA2 .ioe output files
+obj <- CreateMatisseObjectFromTranscripts(
+  seurat            = seu,
+  transcript_counts = transcript_counts,
+  ioe_files         = c(
+    "events_SE.ioe",   # skipped exons
+    "events_RI.ioe",   # retained introns
+    "events_SS.ioe"    # alternative splice sites
+  ),
+  min_coverage = 5L
+)
+```
+
+PSI is calculated automatically during construction — no separate
+`CalculatePSI()` call is needed. Each cell × event entry is the fraction of
+transcripts carrying the included form of that exon:
+
+$$PSI_{c,e} = \frac{\sum \text{inclusion transcript counts}}
+                   {\sum \text{inclusion counts} + \sum \text{exclusion counts}}$$
+
+Cells with fewer than `min_coverage` total transcript counts for a given
+event are left as `NA`.
+
+---
+
+## Step 2 — Quality control
+
+Check that each cell has enough transcript coverage before moving on to
+clustering.
+
+```{r qc, eval=FALSE}
+obj <- ComputeIsoformQC(obj)
+PlotQCMetrics(obj, group_by = "cell_type")
+```
+
+Remove low-coverage cells and uninformative events:
+
+```{r filter, eval=FALSE}
+obj <- FilterCells(obj, min_pct_covered = 10)
+obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
+```
+
+---
+
+## Step 3 — Normalise transcript counts
+
+For long-read data the transcript-level count matrix often has high technical
+variability. `SCTransformTranscripts()` runs SCTransform on the
+`"transcript"` assay and then PCA with more components than the default —
+useful because isoform variation is subtler than gene-expression variation
+and benefits from a wider PCA space.
+
+```{r sctransform, eval=FALSE}
+# Normalise, regress out sequencing depth, and run PCA in one step.
+# Increase n_pca_dims if clusters look under-resolved.
+obj <- SCTransformTranscripts(obj, n_pca_dims = 50)
+```
+
+---
+
+## Step 4 — Cluster and embed
+
+Standard Seurat clustering functions work directly on the Matisse object.
+The PSI data and all other slots are preserved throughout.
+
+```{r cluster, eval=FALSE}
+obj <- RunUMAP(obj, dims = 1:50)
+obj <- FindNeighbors(obj, dims = 1:50)
+obj <- FindClusters(obj, resolution = 0.5)
+```
+
+---
+
+## Step 5 — Visualise splicing patterns
+
+### Overlay PSI on the UMAP
+
+Each dot is a cell coloured by its PSI value for one event: blue = exon
+skipped (low PSI), red = exon included (high PSI).
+
+```{r umap, eval=FALSE}
+PlotPSIUMAP(
+  obj,
+  event_id = "SE:chr18:3433647-3436055:+",
+  title    = "PTBP1 exon 9 — PSI per cell"
+)
+```
+
+### Compare splicing between cell types
+
+```{r violin, eval=FALSE}
+PlotPSIViolin(
+  obj,
+  event_id = "SE:chr18:3433647-3436055:+",
+  group_by = "cell_type"
+)
+```
+
+### Survey all events at once
+
+```{r heatmap, eval=FALSE}
+PlotPSIHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
+```
+
+> **Note on event IDs:** SUPPA2 event IDs use the format
+> `TYPE:chr:coords:strand` (e.g. `SE:chr18:100-200:300-400:+`). These become
+> the column names in `GetPSI(obj)`, so use the same string when calling
+> `PlotPSIUMAP()` or subsetting with `obj[, event_id]`.
+
+---
+
+## Accessing data at any point
+
+```{r access, eval=FALSE}
+# Extract the underlying Seurat object
+seu <- GetSeurat(obj)
+
+# Cell metadata via $ (forwarded from Seurat)
+obj$seurat_clusters
+obj$cell_type
+
+# Full PSI matrix as a sparse matrix (cells × events)
+psi <- GetPSI(obj)
+
+# Raw transcript counts (transcripts × cells)
+tx <- GetTranscriptCounts(obj)
+
+# Subset to one cell type — PSI and gene expression stay in sync
+neurons <- obj[obj$cell_type == "Neuron", ]
+```
+
+---
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```

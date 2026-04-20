@@ -36,8 +36,12 @@ navbar:
     articles:
       text: Vignettes
       menu:
-        - text: Getting started with Matisse
+        - text: Getting started
           href: articles/intro.html
+        - text: Short-read workflow (junction counts)
+          href: articles/short-reads.html
+        - text: Long-read workflow (transcript counts)
+          href: articles/long-reads.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/avisrilab/Matisse
@@ -123,6 +127,8 @@ articles:
     navbar: "Vignettes"
     contents:
       - intro
+      - short-reads
+      - long-reads
 
 news:
   - one_page: true

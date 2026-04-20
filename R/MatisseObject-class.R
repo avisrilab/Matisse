@@ -83,7 +83,7 @@ setValidity("MatisseObject", function(object) {
 
   # If the "psi" assay exists in Seurat, its columns must match cell barcodes
   if (!is.null(object@seurat) && inherits(object@seurat, "Seurat")) {
-    psi_assay <- object@seurat[["psi"]]
+    psi_assay <- .get_assay_safe(object@seurat, "psi")
     if (!is.null(psi_assay)) {
       psi_cells <- colnames(psi_assay)
       if (!is.null(cells) && !identical(psi_cells, cells)) {
@@ -133,6 +133,14 @@ setValidity("MatisseObject", function(object) {
 # Internal helpers used inside validity and elsewhere
 # ---------------------------------------------------------------------------
 
+# Safe accessor for Seurat assays: returns NULL instead of erroring when absent.
+# SeuratObject v5 [[]] throws an error if the assay name is not found.
+.get_assay_safe <- function(seu, name) {
+  if (is.null(seu) || !inherits(seu, "Seurat")) return(NULL)
+  if (!name %in% SeuratObject::Assays(seu)) return(NULL)
+  seu[[name]]
+}
+
 .get_cells <- function(object) {
   if (is.null(object@seurat)) return(NULL)
   colnames(object@seurat)
@@ -145,7 +153,7 @@ setValidity("MatisseObject", function(object) {
 
 .n_events <- function(object) {
   if (is.null(object@seurat)) return(0L)
-  psi_assay <- object@seurat[["psi"]]
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(0L)
-  nrow(psi_assay)  # features = events (Seurat: features x cells)
+  nrow(psi_assay)
 }

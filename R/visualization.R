@@ -356,7 +356,7 @@ setMethod("PlotQCMetrics", "MatisseObject",
 # ---------------------------------------------------------------------------
 
 .require_psi <- function(object) {
-  if (is.null(object@seurat[["psi"]])) {
+  if (is.null(.get_assay_safe(object@seurat, "psi"))) {
     rlang::abort("PSI assay is NULL. Run CalculatePSI() first.")
   }
 }

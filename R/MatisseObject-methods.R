@@ -36,7 +36,7 @@ setMethod("show", "MatisseObject", function(object) {
   }
 
   # PSI coverage from the "psi" ChromatinAssay
-  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (!is.null(psi_assay) && n_events > 0L) {
     psi_ec  <- SeuratObject::GetAssayData(psi_assay, layer = "data")
     psi_csc <- as(psi_ec, "dgCMatrix")
@@ -90,7 +90,7 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
   }
 
   # Resolve event indices (only relevant if "psi" assay exists)
-  psi_assay <- if (!is.null(x@seurat)) x@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(x@seurat, "psi")
   if (!is.null(psi_assay)) {
     events_all <- rownames(psi_assay)
     if (missing(j)) {
@@ -152,7 +152,7 @@ setMethod("GetSeurat", "MatisseObject", function(object, ...) object@seurat)
 
 #' @rdname GetPSI
 setMethod("GetPSI", "MatisseObject", function(object, ...) {
-  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
   # Seurat: events x cells → return cells x events (Matisse convention)
   psi_ec <- SeuratObject::GetAssayData(psi_assay, layer = "data")
@@ -161,7 +161,7 @@ setMethod("GetPSI", "MatisseObject", function(object, ...) {
 
 #' @rdname SetPSI
 setMethod("SetPSI", "MatisseObject", function(object, value) {
-  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) {
     rlang::abort("No 'psi' assay exists. Run CalculatePSI() first.")
   }
@@ -179,7 +179,7 @@ setMethod("GetJunctionCounts", "MatisseObject",
 
 #' @rdname GetInclusionCounts
 setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
-  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
   # Seurat: events x cells → return cells x events
   inc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "counts")
@@ -188,7 +188,7 @@ setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
 
 #' @rdname GetExclusionCounts
 setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
-  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
   exc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "exclusion")
   if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
@@ -197,7 +197,7 @@ setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
 
 #' @rdname GetTranscriptCounts
 setMethod("GetTranscriptCounts", "MatisseObject", function(object, ...) {
-  tx_assay <- if (!is.null(object@seurat)) object@seurat[["transcript"]] else NULL
+  tx_assay <- .get_assay_safe(object@seurat, "transcript")
   if (is.null(tx_assay)) return(NULL)
   # Already in transcripts x cells (Seurat convention); return as-is
   SeuratObject::GetAssayData(tx_assay, layer = "counts")
