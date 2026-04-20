@@ -1,14 +1,10 @@
 # ---------------------------------------------------------------------------
 # Shared test fixtures
+# Auto-loaded by testthat before test files run.
 # ---------------------------------------------------------------------------
 
 # ---- Transcript count matrix (transcripts x cells) -------------------------
 
-#' Create a tiny transcript count matrix.
-#' Transcripts: tx1–tx8. Cells: Cell1–Cell10.
-#' tx1+tx2 = inclusion for event 1, tx3 = exclusion for event 1
-#' tx4+tx5 = inclusion for event 2, tx6+tx7 = exclusion for event 2
-#' tx8     = not part of any event (should be ignored)
 make_transcript_counts <- function(n_cells = 10L, seed = 42L) {
   set.seed(seed)
   cells <- paste0("Cell", seq_len(n_cells))
@@ -21,10 +17,7 @@ make_transcript_counts <- function(n_cells = 10L, seed = 42L) {
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
-#' Write a SUPPA2 IOE file to a temp path and return the path.
-#' Two events:
-#'   SE_gene1_t12: inclusion = tx1,tx2  exclusion = tx3
-#'   SE_gene1_t45: inclusion = tx4,tx5  exclusion = tx6,tx7
+#' Write a SUPPA2 IOE file (two SE events).
 make_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
   lines <- c(
     "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
@@ -42,19 +35,14 @@ make_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
   writeLines(lines, file)
   file
 }
-# These helpers are auto-loaded by testthat before test files run.
-# They create minimal, self-contained objects without requiring real data.
 
-# ---- Junction count matrix -------------------------------------------------
+# ---- Junction count matrix (cells x junctions) -----------------------------
 
-#' Create a tiny junction count matrix (cells x junctions)
 make_junction_counts <- function(n_cells = 10L, n_jxns = 6L, seed = 42L) {
   set.seed(seed)
   cells <- paste0("Cell", seq_len(n_cells))
-  jxns  <- paste0("jxn", seq_len(n_jxns))
-
-  # Simulate sparse-ish counts
-  mat <- matrix(
+  jxns  <- paste0("jxn",  seq_len(n_jxns))
+  mat   <- matrix(
     sample(c(0L, 0L, 0L, 1L:20L), n_cells * n_jxns, replace = TRUE),
     nrow = n_cells, ncol = n_jxns,
     dimnames = list(cells, jxns)
@@ -64,7 +52,6 @@ make_junction_counts <- function(n_cells = 10L, n_jxns = 6L, seed = 42L) {
 
 # ---- Event annotation table ------------------------------------------------
 
-#' Two simple SE-type events using jxn1–jxn4
 make_event_data <- function() {
   data.frame(
     event_id             = c("SE_gene1_e2", "SE_gene1_e3"),
@@ -92,50 +79,40 @@ make_junction_data <- function() {
   )
 }
 
-# ---- Seurat object (created only when Seurat is installed) -----------------
+# ---- Seurat object ---------------------------------------------------------
 
-#' Build a minimal Seurat object with 10 cells and 20 genes.
-#' Skips the calling test if Seurat is not installed.
 make_seurat <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
   skip_if_not_installed("Seurat")
   skip_if_not_installed("SeuratObject")
-
   set.seed(seed)
-  cells <- paste0("Cell", seq_len(n_cells))
-  genes <- paste0("Gene", seq_len(n_genes))
-
-  counts <- matrix(
-    rpois(n_genes * n_cells, lambda = 5),
-    nrow = n_genes, ncol = n_cells,
-    dimnames = list(genes, cells)
-  )
-
+  cells  <- paste0("Cell", seq_len(n_cells))
+  genes  <- paste0("Gene", seq_len(n_genes))
+  counts <- matrix(rpois(n_genes * n_cells, lambda = 5),
+                   nrow = n_genes, ncol = n_cells,
+                   dimnames = list(genes, cells))
   Seurat::CreateSeuratObject(counts = counts)
 }
 
-# ---- Full MatisseObject fixture --------------------------------------------
+# ---- Full MatisseObject fixture (junction-based, no PSI yet) ---------------
 
-#' Build a complete MatisseObject fixture with junctions, events, and QC.
 make_matisse_object <- function() {
   skip_if_not_installed("Seurat")
+  skip_if_not_installed("Signac")
   seu     <- make_seurat()
   jxn_mat <- make_junction_counts()
   ev_data <- make_event_data()
   jd_data <- make_junction_data()
-
   CreateMatisseObject(
-    seurat          = seu,
+    seurat        = seu,
     junction_counts = jxn_mat,
-    event_data      = ev_data,
-    junction_data   = jd_data,
-    verbose         = FALSE
+    event_data    = ev_data,
+    junction_data = jd_data,
+    verbose       = FALSE
   )
 }
 
-# ---- Seurat object with a fake UMAP reduction ------------------------------
+# ---- Seurat object with UMAP and cell_type metadata -----------------------
 
-#' Build a minimal Seurat object that also carries a UMAP embedding and a
-#' 'cell_type' metadata column (needed by visualization tests).
 make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
   seu <- make_seurat(n_cells = n_cells, n_genes = n_genes, seed = seed)
   set.seed(seed + 100L)
@@ -146,40 +123,52 @@ make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
     dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2"))
   )
   seu[["umap"]] <- SeuratObject::CreateDimReducObject(
-    embeddings = coords,
-    key        = "UMAP_"
+    embeddings = coords, key = "UMAP_"
   )
-  seu$cell_type      <- rep(c("TypeA", "TypeB"), length.out = n_cells)
-  # Mimic FindClusters() output so default group_by = "seurat_clusters" works
+  seu$cell_type       <- rep(c("TypeA", "TypeB"), length.out = n_cells)
   seu$seurat_clusters <- factor(rep(0L, n_cells))
   seu
 }
 
-# ---- MatisseObject with UMAP and PSI already computed ----------------------
+# ---- MatisseObject with UMAP and PSI calculated ----------------------------
 
-#' Returns a MatisseObject whose embedded Seurat has a UMAP reduction and
-#' whose PSI matrix has been calculated (min_coverage = 1).
 make_matisse_with_umap <- function() {
   skip_if_not_installed("Seurat")
+  skip_if_not_installed("Signac")
   seu     <- make_seurat_with_umap()
   jxn_mat <- make_junction_counts()
   ev_data <- make_event_data()
   jd_data <- make_junction_data()
-
   obj <- CreateMatisseObject(
-    seurat          = seu,
+    seurat        = seu,
     junction_counts = jxn_mat,
-    event_data      = ev_data,
-    junction_data   = jd_data,
-    verbose         = FALSE
+    event_data    = ev_data,
+    junction_data = jd_data,
+    verbose       = FALSE
   )
   CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
 # ---- MatisseObject with QC computed ----------------------------------------
 
-#' Returns make_matisse_with_umap() after also running ComputeIsoformQC.
 make_matisse_with_qc <- function() {
   obj <- make_matisse_with_umap()
   ComputeIsoformQC(obj, verbose = FALSE)
+}
+
+# ---- MatisseObject from transcripts ----------------------------------------
+
+make_matisse_from_transcripts <- function() {
+  skip_if_not_installed("Seurat")
+  skip_if_not_installed("Signac")
+  seu    <- make_seurat()
+  tx_mat <- make_transcript_counts()
+  f      <- make_ioe_file()
+  CreateMatisseObjectFromTranscripts(
+    seurat            = seu,
+    transcript_counts = tx_mat,
+    ioe_files         = f,
+    min_coverage      = 1L,
+    verbose           = FALSE
+  )
 }

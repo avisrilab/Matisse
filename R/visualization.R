@@ -21,8 +21,8 @@ NULL
 #' Overlays the PSI value of a single splice event on the UMAP embedding
 #' stored in the embedded Seurat object.
 #'
-#' @param object A \code{MatisseObject} with a non-\code{NULL} \code{psi}
-#'   slot. The Seurat object must contain a \code{umap} reduction.
+#' @param object A \code{MatisseObject} with a \code{"psi"} assay.
+#'   The Seurat object must contain a \code{umap} reduction.
 #' @param event_id Character. Column name in the PSI matrix.
 #' @param reduction Character. Name of the dimensionality reduction to use.
 #'   Default: \code{"umap"}.
@@ -47,10 +47,10 @@ setMethod("PlotPSIUMAP", "MatisseObject",
   .require_psi(object)
   .require_event(object, event_id)
 
-  emb <- SeuratObject::Embeddings(object@seurat, reduction = reduction)
+  emb       <- SeuratObject::Embeddings(object@seurat, reduction = reduction)
   dim_names <- colnames(emb)[dims]
-
-  psi_vals <- as.numeric(object@psi[rownames(emb), event_id])
+  psi_cx    <- GetPSI(object)  # cells x events
+  psi_vals  <- as.numeric(psi_cx[rownames(emb), event_id])
 
   df <- data.frame(
     x   = emb[, dims[1]],
@@ -83,8 +83,7 @@ setMethod("PlotPSIUMAP", "MatisseObject",
 
 #' Violin plot of PSI values split by cell group
 #'
-#' @param object A \code{MatisseObject} with a non-\code{NULL} \code{psi}
-#'   slot.
+#' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param event_id Character. Column name in the PSI matrix.
 #' @param group_by Character. Column in \code{Seurat::meta.data} to split
 #'   cells by. Default: \code{"seurat_clusters"}.
@@ -107,15 +106,12 @@ setMethod("PlotPSIViolin", "MatisseObject",
   .require_psi(object)
   .require_event(object, event_id)
 
-  cells <- .get_cells(object)
-  psi_vals <- as.numeric(object@psi[cells, event_id])
-
+  cells    <- .get_cells(object)
+  psi_cx   <- GetPSI(object)
+  psi_vals <- as.numeric(psi_cx[cells, event_id])
   group_vals <- .get_seurat_meta_col(object, group_by)
 
-  df <- data.frame(
-    psi   = psi_vals,
-    group = group_vals
-  )
+  df <- data.frame(psi = psi_vals, group = group_vals)
   df <- df[!is.na(df$psi), ]
 
   plot_title <- title %||% event_id
@@ -129,9 +125,7 @@ setMethod("PlotPSIViolin", "MatisseObject",
     ggplot2::theme(legend.position = "none") +
     .matisse_theme()
 
-  if (!is.null(colours)) {
-    p <- p + ggplot2::scale_fill_manual(values = colours)
-  }
+  if (!is.null(colours)) p <- p + ggplot2::scale_fill_manual(values = colours)
 
   if (add_points) {
     p <- p + ggplot2::geom_jitter(
@@ -148,11 +142,7 @@ setMethod("PlotPSIViolin", "MatisseObject",
 
 #' Heatmap of PSI values (cells x events)
 #'
-#' Renders a heatmap of PSI values. Cells are optionally ordered by a
-#' metadata column; events are ordered by hierarchical clustering.
-#'
-#' @param object A \code{MatisseObject} with a non-\code{NULL} \code{psi}
-#'   slot.
+#' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param events Character vector of event IDs to include.
 #'   Default: all events.
 #' @param cells Character vector of cell barcodes to include.
@@ -177,13 +167,13 @@ setMethod("PlotPSIHeatmap", "MatisseObject",
                    na_colour  = "grey90") {
   .require_psi(object)
 
+  psi_cx     <- GetPSI(object)  # cells x events
   all_cells  <- .get_cells(object)
-  all_events <- colnames(object@psi)
+  all_events <- colnames(psi_cx)
 
   cells  <- cells  %||% all_cells
   events <- events %||% all_events
 
-  # Validate
   bad_cells  <- setdiff(cells,  all_cells)
   bad_events <- setdiff(events, all_events)
   if (length(bad_cells)  > 0) rlang::warn("Some cell barcodes not found; skipping.")
@@ -191,17 +181,13 @@ setMethod("PlotPSIHeatmap", "MatisseObject",
   cells  <- intersect(cells,  all_cells)
   events <- intersect(events, all_events)
 
-  # Downsample
-  if (length(cells) > max_cells) {
-    cells <- sample(cells, max_cells)
-  }
+  if (length(cells) > max_cells) cells <- sample(cells, max_cells)
 
-  psi_sub <- as.matrix(object@psi[cells, events, drop = FALSE])
+  psi_sub <- as.matrix(psi_cx[cells, events, drop = FALSE])
 
-  # Order events by hierarchical clustering (on non-NA cells)
   finite_mask <- is.finite(psi_sub)
   if (sum(finite_mask) > 0) {
-    psi_for_clust        <- psi_sub
+    psi_for_clust           <- psi_sub
     psi_for_clust[!finite_mask] <- 0.5
     event_order <- tryCatch({
       hc <- stats::hclust(stats::dist(t(psi_for_clust)))
@@ -211,17 +197,14 @@ setMethod("PlotPSIHeatmap", "MatisseObject",
     event_order <- seq_len(ncol(psi_sub))
   }
 
-  # Order cells by group if provided
   if (!is.null(group_by)) {
-    grp <- .get_seurat_meta_col(object, group_by)[
-      match(cells, all_cells)]
+    grp   <- .get_seurat_meta_col(object, group_by)[match(cells, all_cells)]
     cells <- cells[order(grp)]
   }
 
-  # Melt to long format for ggplot
   df <- data.frame(
-    cell  = rep(cells,          each  = length(events)),
-    event = rep(events[event_order], times = length(cells)),
+    cell  = rep(cells,                 each  = length(events)),
+    event = rep(events[event_order],   times = length(cells)),
     psi   = as.vector(psi_sub[cells, events[event_order]])
   )
   df$cell  <- factor(df$cell,  levels = cells)
@@ -253,9 +236,6 @@ setMethod("PlotPSIHeatmap", "MatisseObject",
 
 #' Junction coverage bar plot for a gene
 #'
-#' Displays total junction read counts across all cells for each junction in
-#' the specified gene, grouped by event type.
-#'
 #' @param object A \code{MatisseObject} with non-\code{NULL}
 #'   \code{junction_counts} and \code{junction_data} slots.
 #' @param gene Character. Gene name to plot.
@@ -276,9 +256,8 @@ setMethod("PlotJunctionCoverage", "MatisseObject",
     rlang::abort("junction_data is empty.")
   }
 
-  jd <- object@junction_data
+  jd        <- object@junction_data
   gene_jxns <- jd$junction_id[jd$gene_id == gene]
-
   if (length(gene_jxns) == 0) {
     rlang::abort(paste0("No junctions found for gene: ", gene))
   }
@@ -293,19 +272,13 @@ setMethod("PlotJunctionCoverage", "MatisseObject",
   sub_mat   <- object@junction_counts[sub_cells, present, drop = FALSE]
   totals    <- Matrix::colSums(sub_mat)
 
-  df <- data.frame(
-    junction = names(totals),
-    count    = as.numeric(totals)
-  )
-
-  # Annotate with genomic coordinates for x-axis ordering
+  df         <- data.frame(junction = names(totals), count = as.numeric(totals))
   coord_info <- jd[match(df$junction, jd$junction_id), ]
   df$start   <- coord_info$start
   df         <- df[order(df$start), ]
   df$junction <- factor(df$junction, levels = df$junction)
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(
-    x = .data$junction, y = .data$count)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$junction, y = .data$count)) +
     ggplot2::geom_col(fill = "#4393c3") +
     ggplot2::labs(
       title = paste0("Junction coverage: ", gene),
@@ -317,10 +290,7 @@ setMethod("PlotJunctionCoverage", "MatisseObject",
     ) +
     .matisse_theme()
 
-  if (log_scale) {
-    p <- p + ggplot2::scale_y_log10()
-  }
-
+  if (log_scale) p <- p + ggplot2::scale_y_log10()
   p
 })
 
@@ -330,8 +300,7 @@ setMethod("PlotJunctionCoverage", "MatisseObject",
 
 #' Violin plots of isoform QC metrics
 #'
-#' @param object A \code{MatisseObject} with populated
-#'   \code{isoform_metadata}.
+#' @param object A \code{MatisseObject} with populated \code{isoform_metadata}.
 #' @param features Character vector of QC metric names. Must be columns in
 #'   \code{isoform_metadata}. Default: all numeric columns.
 #' @param group_by Character. Column in \code{Seurat::meta.data} to split
@@ -361,14 +330,9 @@ setMethod("PlotQCMetrics", "MatisseObject",
   cells <- .get_cells(object)
   df    <- meta[cells, features, drop = FALSE]
   df$cell <- rownames(df)
+  df$group <- if (!is.null(group_by))
+    .get_seurat_meta_col(object, group_by) else "All cells"
 
-  if (!is.null(group_by)) {
-    df$group <- .get_seurat_meta_col(object, group_by)
-  } else {
-    df$group <- "All cells"
-  }
-
-  # Pivot to long format
   df_long <- tidyr::pivot_longer(
     df,
     cols      = dplyr::all_of(features),
@@ -391,26 +355,22 @@ setMethod("PlotQCMetrics", "MatisseObject",
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-# Abort if PSI slot is NULL
 .require_psi <- function(object) {
-  if (is.null(object@psi)) {
-    rlang::abort("PSI matrix is NULL. Run CalculatePSI() first.")
+  if (is.null(object@seurat[["psi"]])) {
+    rlang::abort("PSI assay is NULL. Run CalculatePSI() first.")
   }
 }
 
-# Abort if an event ID is not in the PSI matrix
 .require_event <- function(object, event_id) {
-  if (!event_id %in% colnames(object@psi)) {
+  psi_cx <- GetPSI(object)
+  if (!event_id %in% colnames(psi_cx)) {
     rlang::abort(paste0("Event '", event_id,
-                        "' not found in PSI matrix column names."))
+                        "' not found in PSI assay feature names."))
   }
 }
 
-# Extract a metadata column from the embedded Seurat object
 .get_seurat_meta_col <- function(object, col) {
-  if (is.null(object@seurat)) {
-    rlang::abort("No Seurat object embedded.")
-  }
+  if (is.null(object@seurat)) rlang::abort("No Seurat object embedded.")
   meta <- object@seurat@meta.data
   if (!col %in% colnames(meta)) {
     rlang::abort(paste0("Column '", col, "' not found in Seurat meta.data."))
@@ -418,5 +378,4 @@ setMethod("PlotQCMetrics", "MatisseObject",
   meta[[col]]
 }
 
-# NULL-coalescing operator (only define if not already present)
 `%||%` <- function(x, y) if (!is.null(x)) x else y

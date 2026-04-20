@@ -7,9 +7,10 @@ Authors@R: person("k3yavi", role = c("aut", "cre"),
 Description: Integrative analysis of single-cell transcriptomics with isoform
     resolution. Matisse extends Seurat and Signac to support PSI (Percent Spliced
     In) matrix calculation, isoform-aware quality control, and visualization for
-    long-read and splice-resolved single-cell RNA-seq data. It provides a
-    dedicated S4 object that wraps a Seurat object, keeping gene expression and
-    isoform layers synchronized throughout an analysis.
+    long-read and splice-resolved single-cell RNA-seq data. PSI values are stored
+    as a Signac ChromatinAssay ('psi') and transcript counts as a Seurat Assay5
+    ('transcript') inside the embedded Seurat object, enabling seamless use of
+    the full Seurat and Signac ecosystem on isoform data.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -20,14 +21,16 @@ Imports:
     methods,
     Matrix (>= 1.5.0),
     SeuratObject (>= 5.0.0),
+    Seurat (>= 5.0.0),
+    Signac (>= 2.0.0),
+    GenomicRanges,
+    IRanges,
     ggplot2 (>= 3.4.0),
     dplyr (>= 1.1.0),
     rlang (>= 1.1.0),
     cli (>= 3.6.0),
     tidyr (>= 1.3.0)
 Suggests:
-    Seurat (>= 5.0.0),
-    Signac (>= 1.12.0),
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
@@ -42,10 +45,12 @@ Collate:
     'MatisseObject-class.R'
     'generics.R'
     'MatisseObject-methods.R'
+    'dispatch.R'
     'constructors.R'
     'psi.R'
     'qc.R'
     'transcript_psi.R'
+    'normalization.R'
     'utils.R'
     'visualization.R'
 URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse

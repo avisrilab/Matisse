@@ -17,27 +17,32 @@ setMethod("show", "MatisseObject", function(object) {
   cat("  Cells        :", n_cells, "\n")
   cat("  Splice events:", n_events, "\n")
 
-  # Seurat summary line
   if (!is.null(object@seurat)) {
     n_features <- nrow(object@seurat)
     cat("  Gene features:", n_features, "\n")
+
+    assay_names <- SeuratObject::Assays(object@seurat)
+    if (length(assay_names) > 0) {
+      cat("  Assays       :", paste(assay_names, collapse = ", "), "\n")
+    }
     if (length(SeuratObject::Reductions(object@seurat)) > 0) {
       cat("  Reductions   :",
           paste(SeuratObject::Reductions(object@seurat), collapse = ", "), "\n")
     }
   }
 
-  # Junction layer
   if (!is.null(object@junction_counts)) {
     cat("  Junctions    :", ncol(object@junction_counts), "\n")
   }
 
-  # PSI coverage — count non-NA stored entries without dense coercion
-  if (!is.null(object@psi)) {
-    psi_csc     <- as(object@psi, "dgCMatrix")
+  # PSI coverage from the "psi" ChromatinAssay
+  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  if (!is.null(psi_assay) && n_events > 0L) {
+    psi_ec  <- SeuratObject::GetAssayData(psi_assay, layer = "data")
+    psi_csc <- as(psi_ec, "dgCMatrix")
     n_covered   <- sum(!is.na(psi_csc@x))
     pct_covered <- if (n_cells > 0L && n_events > 0L)
-      round(100 * n_covered / (n_cells * n_events), 1) else 0
+      round(100 * n_covered / (as.double(n_cells) * n_events), 1) else 0
     cat("  PSI coverage :", pct_covered, "% entries covered\n")
   }
 
@@ -67,73 +72,69 @@ setMethod("dim", "MatisseObject", function(x) {
 #' @param drop Ignored.
 #' @export
 setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
-  # Resolve cell indices
   cells_all <- .get_cells(x)
+
+  # Resolve cell indices
   if (missing(i)) {
-    cell_idx <- seq_along(cells_all)
+    cell_idx   <- seq_along(cells_all)
+    cell_names <- cells_all
   } else if (is.character(i)) {
     cell_idx <- match(i, cells_all)
     if (any(is.na(cell_idx))) {
       rlang::abort("Some cell barcodes not found in the object.")
     }
+    cell_names <- cells_all[cell_idx]
   } else {
-    cell_idx <- i
+    cell_idx   <- i
+    cell_names <- cells_all[cell_idx]
   }
 
-  # Resolve event indices
-  if (!is.null(x@psi)) {
-    events_all <- colnames(x@psi)
+  # Resolve event indices (only relevant if "psi" assay exists)
+  psi_assay <- if (!is.null(x@seurat)) x@seurat[["psi"]] else NULL
+  if (!is.null(psi_assay)) {
+    events_all <- rownames(psi_assay)
     if (missing(j)) {
-      event_idx <- seq_along(events_all)
+      event_ids <- events_all
     } else if (is.character(j)) {
-      event_idx <- match(j, events_all)
-      if (any(is.na(event_idx))) {
-        rlang::abort("Some event IDs not found in the PSI matrix.")
+      bad <- setdiff(j, events_all)
+      if (length(bad) > 0) {
+        rlang::abort("Some event IDs not found in the PSI assay.")
       }
+      event_ids <- j
     } else {
-      event_idx <- j
+      event_ids <- events_all[j]
     }
   } else {
-    event_idx <- integer(0)
+    event_ids <- character(0)
   }
 
-  # Subset Seurat object
-  new_seurat <- if (!is.null(x@seurat)) {
-    x@seurat[, cell_idx]
-  } else {
-    NULL
+  # Subset Seurat (handles all assays, including "psi" and "transcript", by cell)
+  new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
+
+  # Additionally subset the "psi" assay features (events) if needed
+  if (!is.null(new_seurat) && !is.null(new_seurat[["psi"]]) &&
+      length(event_ids) > 0 &&
+      !identical(event_ids, rownames(new_seurat[["psi"]]))) {
+    new_seurat[["psi"]] <- new_seurat[["psi"]][event_ids, ]
   }
 
-  # Subset matrices
-  subset_mat <- function(m) {
-    if (is.null(m)) return(NULL)
-    m[cell_idx, event_idx, drop = FALSE]
-  }
-  subset_jxn <- function(m) {
-    if (is.null(m)) return(NULL)
-    m[cell_idx, , drop = FALSE]
-  }
+  # Subset junction_counts (cells x junctions)
+  new_jxn <- if (!is.null(x@junction_counts))
+    x@junction_counts[cell_idx, , drop = FALSE] else NULL
 
-  # Subset isoform metadata
-  new_meta <- if (nrow(x@isoform_metadata) > 0) {
-    x@isoform_metadata[cell_idx, , drop = FALSE]
-  } else {
-    data.frame()
-  }
+  # Subset isoform_metadata
+  new_meta <- if (nrow(x@isoform_metadata) > 0)
+    x@isoform_metadata[cell_idx, , drop = FALSE] else data.frame()
 
   # Subset event_data
-  new_event_data <- if (nrow(x@event_data) > 0 && length(event_idx) > 0) {
-    x@event_data[event_idx, , drop = FALSE]
-  } else {
+  new_event_data <- if (nrow(x@event_data) > 0 && length(event_ids) > 0)
+    x@event_data[match(event_ids, x@event_data$event_id), , drop = FALSE]
+  else
     x@event_data
-  }
 
   methods::new("MatisseObject",
     seurat           = new_seurat,
-    psi              = subset_mat(x@psi),
-    inclusion_counts = subset_mat(x@inclusion_counts),
-    exclusion_counts = subset_mat(x@exclusion_counts),
-    junction_counts  = subset_jxn(x@junction_counts),
+    junction_counts  = new_jxn,
     event_data       = new_event_data,
     junction_data    = x@junction_data,
     isoform_metadata = new_meta,
@@ -148,33 +149,70 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
 
 #' @rdname GetSeurat
 setMethod("GetSeurat", "MatisseObject", function(object, ...) object@seurat)
+
 #' @rdname GetPSI
-setMethod("GetPSI",    "MatisseObject", function(object, ...) object@psi)
+setMethod("GetPSI", "MatisseObject", function(object, ...) {
+  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  if (is.null(psi_assay)) return(NULL)
+  # Seurat: events x cells → return cells x events (Matisse convention)
+  psi_ec <- SeuratObject::GetAssayData(psi_assay, layer = "data")
+  Matrix::t(psi_ec)
+})
 
 #' @rdname SetPSI
 setMethod("SetPSI", "MatisseObject", function(object, value) {
-  object@psi <- value
+  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  if (is.null(psi_assay)) {
+    rlang::abort("No 'psi' assay exists. Run CalculatePSI() first.")
+  }
+  # value is cells x events; transpose to events x cells for Seurat
+  object@seurat[["psi"]] <- SeuratObject::SetAssayData(
+    psi_assay, layer = "data", new.data = Matrix::t(value)
+  )
   methods::validObject(object)
   object
 })
 
 #' @rdname GetJunctionCounts
-setMethod("GetJunctionCounts",  "MatisseObject",
+setMethod("GetJunctionCounts", "MatisseObject",
           function(object, ...) object@junction_counts)
+
 #' @rdname GetInclusionCounts
-setMethod("GetInclusionCounts", "MatisseObject",
-          function(object, ...) object@inclusion_counts)
+setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
+  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  if (is.null(psi_assay)) return(NULL)
+  # Seurat: events x cells → return cells x events
+  inc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "counts")
+  Matrix::t(inc_ec)
+})
+
 #' @rdname GetExclusionCounts
-setMethod("GetExclusionCounts", "MatisseObject",
-          function(object, ...) object@exclusion_counts)
+setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
+  psi_assay <- if (!is.null(object@seurat)) object@seurat[["psi"]] else NULL
+  if (is.null(psi_assay)) return(NULL)
+  exc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "exclusion")
+  if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
+  Matrix::t(exc_ec)
+})
+
+#' @rdname GetTranscriptCounts
+setMethod("GetTranscriptCounts", "MatisseObject", function(object, ...) {
+  tx_assay <- if (!is.null(object@seurat)) object@seurat[["transcript"]] else NULL
+  if (is.null(tx_assay)) return(NULL)
+  # Already in transcripts x cells (Seurat convention); return as-is
+  SeuratObject::GetAssayData(tx_assay, layer = "counts")
+})
+
 #' @rdname GetEventData
-setMethod("GetEventData",       "MatisseObject",
+setMethod("GetEventData", "MatisseObject",
           function(object, ...) object@event_data)
+
 #' @rdname GetJunctionData
-setMethod("GetJunctionData",    "MatisseObject",
+setMethod("GetJunctionData", "MatisseObject",
           function(object, ...) object@junction_data)
+
 #' @rdname MatisseMeta
-setMethod("MatisseMeta",        "MatisseObject",
+setMethod("MatisseMeta", "MatisseObject",
           function(object, ...) object@isoform_metadata)
 
 #' @rdname MatisseMeta
@@ -196,25 +234,19 @@ setMethod("AddIsoformMetadata", "MatisseObject",
     if (is.null(names(metadata))) {
       rlang::abort("'metadata' vector must be named with cell barcodes.")
     }
-    # as.data.frame() on a named vector produces N-row x 1-col with row names
     new_cols <- as.data.frame(metadata)
   } else {
     rlang::abort("'metadata' must be a data.frame or named vector.")
   }
 
-  # Align rows by barcode
   if (!is.null(rownames(new_cols))) {
     new_cols <- new_cols[cells, , drop = FALSE]
   }
 
   current <- object@isoform_metadata
-  if (nrow(current) == 0) {
-    current <- data.frame(row.names = cells)
-  }
+  if (nrow(current) == 0) current <- data.frame(row.names = cells)
 
-  for (col in colnames(new_cols)) {
-    current[[col]] <- new_cols[[col]]
-  }
+  for (col in colnames(new_cols)) current[[col]] <- new_cols[[col]]
 
   object@isoform_metadata <- current
   object
@@ -232,26 +264,55 @@ setMethod("AddIsoformMetadata", "MatisseObject",
 #' @export
 setMethod("[[", "MatisseObject", function(x, i, j, ...) {
   meta <- x@isoform_metadata
-  if (nrow(meta) > 0 && i %in% colnames(meta)) {
-    return(meta[[i]])
-  }
-  if (!is.null(x@seurat)) {
-    return(x@seurat[[i]])
-  }
+  if (nrow(meta) > 0 && i %in% colnames(meta)) return(meta[[i]])
+  if (!is.null(x@seurat)) return(x@seurat[[i]])
   rlang::abort(paste0(
     "'", i, "' not found in isoform_metadata or the embedded Seurat object."))
 })
 
 # ---------------------------------------------------------------------------
-# $ operator: forwards to Seurat
+# $ operator: hybrid dispatch (Seurat metadata → Seurat/Signac fn → Seurat [[)
 # ---------------------------------------------------------------------------
 
 #' @rdname MatisseObject-class
-#' @param name Column name in the Seurat \code{meta.data} (used by \code{$}).
+#' @param name Metadata column name or Seurat/Signac function name.
 #' @export
 setMethod("$", "MatisseObject", function(x, name) {
-  if (is.null(x@seurat)) {
-    rlang::abort("No Seurat object is embedded in this MatisseObject.")
+  # Priority 1: Seurat cell metadata (most common use: obj$seurat_clusters)
+  if (!is.null(x@seurat) && name %in% colnames(x@seurat@meta.data)) {
+    return(x@seurat@meta.data[[name]])
   }
-  x@seurat[[name]]
+
+  # Priority 2: Seurat or Signac exported function → return a forwarding closure
+  fn <- .find_package_function(name)
+  if (!is.null(fn)) {
+    force(x)
+    force(fn)
+    return(function(...) {
+      result <- fn(x@seurat, ...)
+      if (inherits(result, "Seurat")) {
+        x@seurat <- result
+        return(x)
+      }
+      result
+    })
+  }
+
+  # Priority 3: delegate to Seurat's [[ (handles assays, reductions, etc.)
+  if (!is.null(x@seurat)) return(x@seurat[[name]])
+
+  rlang::abort(paste0("'", name, "' not found in Seurat metadata, \\
+    Seurat/Signac functions, or the Seurat object."))
 })
+
+# Look up an exported function from Seurat or Signac
+.find_package_function <- function(name, pkgs = c("Seurat", "Signac")) {
+  for (pkg in pkgs) {
+    fn <- tryCatch(
+      getExportedValue(pkg, name),
+      error = function(e) NULL
+    )
+    if (is.function(fn)) return(fn)
+  }
+  NULL
+}

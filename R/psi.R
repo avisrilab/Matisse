@@ -15,11 +15,18 @@ NULL
 #'                        {\sum \text{inclusion reads} +
 #'                         \sum \text{exclusion reads}}}
 #'
-#' Entries where the total coverage (inclusion + exclusion) falls below
-#' \code{min_coverage} are set to \code{na_fill} (default \code{NA}).
+#' Results are stored inside the embedded Seurat object as a
+#' \code{ChromatinAssay} named \code{"psi"}, with:
+#' \itemize{
+#'   \item \code{"data"} layer: PSI values in \eqn{[0,1]} (events × cells).
+#'   \item \code{"counts"} layer: inclusion read counts (events × cells).
+#'   \item \code{"exclusion"} layer: exclusion read counts (events × cells).
+#' }
+#' Entries where total coverage falls below \code{min_coverage} are set to
+#' \code{NA} in the \code{"data"} layer.
 #'
-#' @param object A \code{\linkS4class{MatisseObject}} that has a non-\code{NULL}
-#'   \code{junction_counts} slot, or a sparse matrix (cells x junctions).
+#' @param object A \code{\linkS4class{MatisseObject}} with a non-\code{NULL}
+#'   \code{junction_counts} slot, or a sparse matrix (cells × junctions).
 #' @param events When \code{object} is a matrix: a \code{data.frame} with
 #'   columns \code{event_id}, \code{inclusion_junctions}, and
 #'   \code{exclusion_junctions}. When \code{object} is a
@@ -31,37 +38,11 @@ NULL
 #' @param verbose Logical. Print progress. Default: \code{TRUE}.
 #'
 #' @return
-#' * \code{MatisseObject}: the input object with \code{psi},
-#'   \code{inclusion_counts}, and \code{exclusion_counts} slots populated.
-#' * matrix: a dense matrix (cells x events) of PSI values.
+#' * \code{MatisseObject}: the input object with the \code{"psi"} assay
+#'   populated inside the embedded Seurat object.
+#' * matrix: a dense matrix (cells × events) of PSI values.
 #'
 #' @seealso \code{\link{ComputeIsoformQC}}, \code{\link{PlotPSIHeatmap}}
-#'
-#' @examples
-#' \dontrun{
-#' # Build a small toy junction matrix
-#' jxn_mat <- Matrix::sparseMatrix(
-#'   i = c(1,1,2,2),
-#'   j = c(1,2,2,3),
-#'   x = c(10, 5, 8, 3),
-#'   dims = c(3, 4),
-#'   dimnames = list(
-#'     paste0("Cell", 1:3),
-#'     c("jxn1","jxn2","jxn3","jxn4")
-#'   )
-#' )
-#' events <- data.frame(
-#'   event_id             = "SE_gene1",
-#'   gene_id              = "gene1",
-#'   chr                  = "chr1",
-#'   strand               = "+",
-#'   event_type           = "SE",
-#'   inclusion_junctions  = "jxn1;jxn2",
-#'   exclusion_junctions  = "jxn3",
-#'   stringsAsFactors     = FALSE
-#' )
-#' psi_mat <- CalculatePSI(jxn_mat, events, min_coverage = 3)
-#' }
 #'
 #' @rdname CalculatePSI
 #' @export
@@ -69,19 +50,17 @@ setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE) {
   if (is.null(object@junction_counts)) {
-    if (!is.null(object@psi)) {
+    if (!is.null(object@seurat[["psi"]])) {
       rlang::warn(paste0(
-        "This object was created from transcript counts and already has PSI computed. ",
-        "CalculatePSI() only applies to junction-count objects (from CreateMatisseObject()). ",
+        "This object was created from transcript counts and already has PSI ",
+        "computed. CalculatePSI() only applies to junction-count objects. ",
         "Returning the object unchanged."))
       return(object)
     }
     rlang::abort(
       "junction_counts slot is NULL. Provide junction counts via CreateMatisseObject().")
   }
-  if (is.null(events)) {
-    events <- object@event_data
-  }
+  if (is.null(events)) events <- object@event_data
   if (nrow(events) == 0) {
     rlang::abort(
       "No splice events defined. Provide event_data either via \\
@@ -89,22 +68,28 @@ setMethod("CalculatePSI", "MatisseObject",
   }
 
   result <- .calculate_psi_matrix(
-    jxn_counts    = object@junction_counts,
-    events        = events,
-    min_coverage  = min_coverage,
-    na_fill       = na_fill,
-    verbose       = verbose
+    jxn_counts   = object@junction_counts,
+    events       = events,
+    min_coverage = min_coverage,
+    na_fill      = na_fill,
+    verbose      = verbose
   )
 
-  object@psi              <- result$psi
-  object@inclusion_counts <- result$inclusion
-  object@exclusion_counts <- result$exclusion
+  # Store PSI, inclusion, and exclusion in a ChromatinAssay named "psi"
+  object@seurat[["psi"]] <- .create_psi_chromatin_assay(
+    psi_mat      = result$psi,
+    inc_mat      = result$inclusion,
+    exc_mat      = result$exclusion,
+    event_data   = events,
+    junction_data = object@junction_data
+  )
 
   if (verbose) {
-    pct <- round(100 * sum(.n_covered_per_event(result$psi)) /
-                   (as.numeric(nrow(result$psi)) * ncol(result$psi)), 1)
+    psi_sp <- result$psi
+    pct <- round(100 * sum(.n_covered_per_event(psi_sp)) /
+                   (as.double(nrow(psi_sp)) * ncol(psi_sp)), 1)
     cli::cli_alert_success(
-      "PSI calculated for {ncol(result$psi)} events; {pct}% entries covered.")
+      "PSI calculated for {ncol(psi_sp)} events; {pct}% entries covered.")
   }
 
   methods::validObject(object)
@@ -137,16 +122,6 @@ setMethod("CalculatePSI", "ANY",
 # Core PSI computation (internal)
 # ---------------------------------------------------------------------------
 
-#' Compute PSI matrix from a junction count matrix
-#'
-#' @param jxn_counts Sparse matrix (cells x junctions).
-#' @param events data.frame with event definitions.
-#' @param min_coverage Integer threshold.
-#' @param na_fill Fill value for low-coverage entries.
-#' @param verbose Logical.
-#'
-#' @return A list with elements \code{psi}, \code{inclusion}, \code{exclusion}.
-#' @keywords internal
 .calculate_psi_matrix <- function(jxn_counts, events,
                                    min_coverage, na_fill, verbose) {
   .check_required_columns(
@@ -165,20 +140,16 @@ setMethod("CalculatePSI", "ANY",
       "Calculating PSI for {n_events} events across {n_cells} cells...")
   }
 
-  # Parse all junction lists upfront (vectorised)
   inc_lists <- lapply(strsplit(events$inclusion_junctions, ";", fixed = TRUE),
                       trimws)
   exc_lists <- lapply(strsplit(events$exclusion_junctions, ";", fixed = TRUE),
                       trimws)
 
-  # Build sparse indicator matrices: junctions x events
   A_inc <- .build_indicator_matrix(inc_lists, jxn_names)
   A_exc <- .build_indicator_matrix(exc_lists, jxn_names)
   colnames(A_inc) <- colnames(A_exc) <- events$event_id
 
-  # Single matrix multiply replaces the per-event loop:
-  #   (cells x junctions) %*% (junctions x events) → (cells x events)
-  inc_mat <- jxn_counts %*% A_inc   # cells x events
+  inc_mat <- jxn_counts %*% A_inc
   exc_mat <- jxn_counts %*% A_exc
   dimnames(inc_mat) <- dimnames(exc_mat) <- list(cells, events$event_id)
 
@@ -191,19 +162,18 @@ setMethod("CalculatePSI", "ANY",
   )
 }
 
-# Split a semicolon-delimited junction string into a character vector
 .parse_junction_list <- function(x) {
   if (is.na(x) || nchar(trimws(x)) == 0) return(character(0))
   trimws(strsplit(x, ";", fixed = TRUE)[[1]])
 }
 
 # ---------------------------------------------------------------------------
-# Convenience: get per-event PSI summary statistics
+# SummarizePSI
 # ---------------------------------------------------------------------------
 
 #' Summarize PSI distribution across cells for each event
 #'
-#' @param object A \code{MatisseObject} with a non-\code{NULL} \code{psi} slot.
+#' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param cells Optional character vector of cell barcodes to subset.
 #'
 #' @return A \code{data.frame} with one row per event and columns:
@@ -215,24 +185,21 @@ SummarizePSI <- function(object, cells = NULL) {
   if (!inherits(object, "MatisseObject")) {
     rlang::abort("`object` must be a MatisseObject.")
   }
-  if (is.null(object@psi)) {
+  psi_cx <- GetPSI(object)  # cells x events
+  if (is.null(psi_cx)) {
     rlang::abort("PSI matrix is empty. Run CalculatePSI() first.")
   }
 
-  psi_sp <- object@psi
-  if (!is.null(cells)) {
-    psi_sp <- psi_sp[cells, , drop = FALSE]
-  }
-  # Convert to dense NA matrix for na.rm-aware statistics.
-  # Absent entries in the sparse matrix = not covered = NA.
-  psi <- .psi_to_dense_na(psi_sp)
+  if (!is.null(cells)) psi_cx <- psi_cx[cells, , drop = FALSE]
+
+  psi <- .psi_to_dense_na(psi_cx)
 
   data.frame(
     event_id        = colnames(psi),
     mean_psi        = colMeans(psi, na.rm = TRUE),
     median_psi      = apply(psi, 2, stats::median, na.rm = TRUE),
     sd_psi          = apply(psi, 2, stats::sd,     na.rm = TRUE),
-    n_cells_covered = .n_covered_per_event(psi_sp),
+    n_cells_covered = .n_covered_per_event(psi_cx),
     stringsAsFactors = FALSE,
     row.names        = NULL
   )

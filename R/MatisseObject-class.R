@@ -1,20 +1,25 @@
 #' The MatisseObject S4 class
 #'
 #' The central data structure for Matisse. It wraps a \code{\link[Seurat]{Seurat}}
-#' object and augments it with isoform-resolved layers: raw junction counts, per-
-#' event PSI matrices, and splice event annotations. All isoform matrices use the
-#' same cell barcodes as the embedded Seurat object, keeping the two layers
-#' synchronized.
+#' object and augments it with isoform-resolved layers. Two fixed assays live
+#' inside the embedded Seurat object:
+#' \describe{
+#'   \item{\code{"transcript"}}{A standard \code{Assay5} holding raw
+#'     transcript-level counts (transcripts × cells). Created by
+#'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
+#'   \item{\code{"psi"}}{A \code{ChromatinAssay} (Signac) holding PSI values
+#'     in the \code{"data"} layer, inclusion counts in \code{"counts"}, and
+#'     exclusion counts in \code{"exclusion"} (all features × cells). Created
+#'     by \code{\link{CalculatePSI}} or
+#'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
+#' }
+#' Raw junction counts and splice-event annotations are kept as slots on the
+#' MatisseObject itself.
 #'
 #' @slot seurat A \code{Seurat} object carrying gene-level expression,
-#'   dimensionality reductions, and cell metadata.
-#' @slot psi A sparse matrix (dgCMatrix, cells x events) of PSI values in
-#'   \eqn{[0, 1]}. \code{NA} entries indicate insufficient read coverage.
-#' @slot inclusion_counts A sparse matrix (dgCMatrix, cells x events) of
-#'   aggregated inclusion-junction read counts per event.
-#' @slot exclusion_counts A sparse matrix (dgCMatrix, cells x events) of
-#'   aggregated exclusion-junction read counts per event.
-#' @slot junction_counts A sparse matrix (dgCMatrix, cells x junctions) of raw
+#'   dimensionality reductions, cell metadata, and the \code{"transcript"} /
+#'   \code{"psi"} assays.
+#' @slot junction_counts A sparse matrix (dgCMatrix, cells × junctions) of raw
 #'   per-junction read counts.
 #' @slot event_data A \code{data.frame} with one row per splice event. Required
 #'   columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
@@ -34,28 +39,22 @@
 setClass(
   "MatisseObject",
   slots = c(
-    seurat            = "ANY",        # Seurat object
-    psi               = "ANY",        # dgCMatrix | NULL
-    inclusion_counts  = "ANY",        # dgCMatrix | NULL
-    exclusion_counts  = "ANY",        # dgCMatrix | NULL
-    junction_counts   = "ANY",        # dgCMatrix | NULL
-    event_data        = "data.frame",
-    junction_data     = "data.frame",
-    isoform_metadata  = "data.frame",
-    version           = "character",
-    misc              = "list"
+    seurat           = "ANY",        # Seurat object (contains "transcript" Assay5 and "psi" ChromatinAssay)
+    junction_counts  = "ANY",        # dgCMatrix | NULL (cells x junctions)
+    event_data       = "data.frame",
+    junction_data    = "data.frame",
+    isoform_metadata = "data.frame",
+    version          = "character",
+    misc             = "list"
   ),
   prototype = list(
-    seurat            = NULL,
-    psi               = NULL,
-    inclusion_counts  = NULL,
-    exclusion_counts  = NULL,
-    junction_counts   = NULL,
-    event_data        = data.frame(),
-    junction_data     = data.frame(),
-    isoform_metadata  = data.frame(),
-    version           = as.character(utils::packageVersion("Matisse")),
-    misc              = list()
+    seurat           = NULL,
+    junction_counts  = NULL,
+    event_data       = data.frame(),
+    junction_data    = data.frame(),
+    isoform_metadata = data.frame(),
+    version          = as.character(utils::packageVersion("Matisse")),
+    misc             = list()
   )
 )
 
@@ -66,40 +65,39 @@ setClass(
 setValidity("MatisseObject", function(object) {
   errors <- character()
 
-  # seurat slot must be a Seurat object if non-NULL
   if (!is.null(object@seurat)) {
     if (!inherits(object@seurat, "Seurat")) {
-      errors <- c(errors,
-        "'seurat' slot must be a Seurat object or NULL.")
+      errors <- c(errors, "'seurat' slot must be a Seurat object or NULL.")
     }
   }
 
   cells <- .get_cells(object)
 
-  # If a PSI matrix exists, its row names must match cell barcodes
-  if (!is.null(object@psi)) {
-    if (!is.null(cells) && !identical(rownames(object@psi), cells)) {
+  # If junction_counts exists, its rows must match cell barcodes
+  if (!is.null(object@junction_counts)) {
+    if (!is.null(cells) && !identical(rownames(object@junction_counts), cells)) {
       errors <- c(errors,
-        "Row names of 'psi' must match cell barcodes in the Seurat object.")
+        "Row names of 'junction_counts' must match cell barcodes in the Seurat object.")
     }
   }
 
-  # inclusion_counts and exclusion_counts must have the same dimensions as psi
-  if (!is.null(object@psi) && !is.null(object@inclusion_counts)) {
-    if (!identical(dim(object@psi), dim(object@inclusion_counts))) {
-      errors <- c(errors,
-        "'inclusion_counts' must have the same dimensions as 'psi'.")
-    }
-    if (!identical(colnames(object@psi), colnames(object@inclusion_counts))) {
-      errors <- c(errors,
-        "Column names of 'inclusion_counts' must match those of 'psi'.")
-    }
-  }
-
-  if (!is.null(object@psi) && !is.null(object@exclusion_counts)) {
-    if (!identical(dim(object@psi), dim(object@exclusion_counts))) {
-      errors <- c(errors,
-        "'exclusion_counts' must have the same dimensions as 'psi'.")
+  # If the "psi" assay exists in Seurat, its columns must match cell barcodes
+  if (!is.null(object@seurat) && inherits(object@seurat, "Seurat")) {
+    psi_assay <- object@seurat[["psi"]]
+    if (!is.null(psi_assay)) {
+      psi_cells <- colnames(psi_assay)
+      if (!is.null(cells) && !identical(psi_cells, cells)) {
+        errors <- c(errors,
+          "Cell barcodes of the 'psi' assay must match those in the Seurat object.")
+      }
+      # Event IDs in "psi" assay must match event_data if both are present
+      if (nrow(object@event_data) > 0) {
+        psi_features <- rownames(psi_assay)
+        if (!identical(sort(psi_features), sort(object@event_data$event_id))) {
+          errors <- c(errors,
+            "Features of the 'psi' assay must match 'event_id' in event_data.")
+        }
+      }
     }
   }
 
@@ -135,20 +133,19 @@ setValidity("MatisseObject", function(object) {
 # Internal helpers used inside validity and elsewhere
 # ---------------------------------------------------------------------------
 
-# Extract cell barcodes from the embedded Seurat object (or NULL)
 .get_cells <- function(object) {
   if (is.null(object@seurat)) return(NULL)
   colnames(object@seurat)
 }
 
-# Number of cells
 .n_cells <- function(object) {
   cells <- .get_cells(object)
   if (is.null(cells)) 0L else length(cells)
 }
 
-# Number of splice events
 .n_events <- function(object) {
-  if (is.null(object@psi)) return(0L)
-  ncol(object@psi)
+  if (is.null(object@seurat)) return(0L)
+  psi_assay <- object@seurat[["psi"]]
+  if (is.null(psi_assay)) return(0L)
+  nrow(psi_assay)  # features = events (Seurat: features x cells)
 }

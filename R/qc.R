@@ -42,29 +42,30 @@ setMethod("ComputeIsoformQC", "MatisseObject",
   # --- junction-level metrics ------------------------------------------------
   if (!is.null(object@junction_counts)) {
     jxn <- object@junction_counts
-    qc$n_junctions_detected  <- as.integer(Matrix::rowSums(jxn > 0))
-    qc$total_junction_reads  <- as.integer(Matrix::rowSums(jxn))
+    qc$n_junctions_detected <- as.integer(Matrix::rowSums(jxn > 0))
+    qc$total_junction_reads <- as.integer(Matrix::rowSums(jxn))
   } else {
     rlang::warn(
       "junction_counts is NULL; junction QC metrics will not be computed.")
   }
 
-  # --- PSI-level metrics — all sparse, no dense conversion ------------------
-  if (!is.null(object@psi)) {
-    n_events <- ncol(object@psi)
+  # --- PSI-level metrics — retrieve from the "psi" assay --------------------
+  psi_cx <- GetPSI(object)  # cells x events
+  if (!is.null(psi_cx)) {
+    n_events <- ncol(psi_cx)
+    inc_cx   <- GetInclusionCounts(object)  # cells x events
+    exc_cx   <- GetExclusionCounts(object)  # cells x events
 
-    if (!is.null(object@inclusion_counts) && !is.null(object@exclusion_counts)) {
-      # Coverage: sum inclusion + exclusion sparse matrices, threshold per cell
-      total_csc    <- as(object@inclusion_counts + object@exclusion_counts, "dgCMatrix")
-      total_csc@x  <- as.numeric(total_csc@x >= min_coverage)
-      covered_sp   <- Matrix::drop0(total_csc)
-      n_cov        <- as.integer(Matrix::rowSums(covered_sp))
+    if (!is.null(inc_cx) && !is.null(exc_cx)) {
+      total_csc   <- as(inc_cx + exc_cx, "dgCMatrix")
+      total_csc@x <- as.numeric(total_csc@x >= min_coverage)
+      covered_sp  <- Matrix::drop0(total_csc)
+      n_cov       <- as.integer(Matrix::rowSums(covered_sp))
       qc$n_events_covered   <- n_cov
       qc$pct_events_covered <- round(100 * n_cov / n_events, 2)
     }
 
-    # Mean PSI across covered events — sparse row means, no dense conversion
-    qc$mean_psi <- .psi_rowmeans_sparse(object@psi)
+    qc$mean_psi <- .psi_rowmeans_sparse(psi_cx)
   } else {
     if (verbose) {
       rlang::warn(
@@ -90,7 +91,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #' Filter cells by isoform QC thresholds
 #'
 #' Removes cells that do not pass the specified thresholds on columns in the
-#' \code{isoform_metadata} slot. Pass named minimum and/or maximum bounds.
+#' \code{isoform_metadata} slot.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param min_junctions Integer. Minimum \code{n_junctions_detected}.
@@ -105,8 +106,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #'   Default: \code{NULL}.
 #' @param custom_filters Named list of two-element numeric vectors
 #'   \code{c(min, max)} applied to arbitrary \code{isoform_metadata} columns.
-#'   Use \code{NA} for a one-sided bound, e.g. \code{list(mean_psi = c(0.1, NA))}.
-#'   Default: \code{NULL}.
+#'   Use \code{NA} for a one-sided bound. Default: \code{NULL}.
 #' @param verbose Logical. Default: \code{TRUE}.
 #'
 #' @return The filtered \code{MatisseObject}.
@@ -124,15 +124,15 @@ setMethod("FilterCells", "MatisseObject",
                    min_pct_covered    = NULL,
                    custom_filters     = NULL,
                    verbose            = TRUE) {
-  meta   <- object@isoform_metadata
-  cells  <- .get_cells(object)
-  keep   <- rep(TRUE, length(cells))
+  meta  <- object@isoform_metadata
+  cells <- .get_cells(object)
+  keep  <- rep(TRUE, length(cells))
   names(keep) <- cells
 
   apply_bound <- function(col, lo, hi) {
     if (!col %in% colnames(meta)) {
-      rlang::warn(paste0("Column '", col, "' not found in isoform_metadata. ",
-                         "Run ComputeIsoformQC() first."))
+      rlang::warn(paste0("Column '", col,
+                         "' not found in isoform_metadata. Run ComputeIsoformQC() first."))
       return()
     }
     vals <- meta[[col]]
@@ -168,15 +168,12 @@ setMethod("FilterCells", "MatisseObject",
 #' Filter splice events by coverage or variability
 #'
 #' Removes events that do not pass minimum coverage or variance thresholds.
-#' Operates on the PSI matrix.
 #'
-#' @param object A \code{MatisseObject} with a non-\code{NULL} \code{psi}
-#'   slot.
+#' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param min_cells_covered Integer. Minimum number of cells in which the
 #'   event must have a non-\code{NA} PSI value. Default: \code{10}.
 #' @param min_psi_variance Numeric. Minimum variance of PSI across covered
-#'   cells. Filters out constitutively spliced (near PSI = 0 or 1) events.
-#'   Default: \code{NULL} (no variance filter).
+#'   cells. Default: \code{NULL} (no variance filter).
 #' @param verbose Logical. Default: \code{TRUE}.
 #'
 #' @return The filtered \code{MatisseObject}.
@@ -188,16 +185,16 @@ setMethod("FilterEvents", "MatisseObject",
                    min_cells_covered = 10L,
                    min_psi_variance  = NULL,
                    verbose           = TRUE) {
-  if (is.null(object@psi)) {
+  psi_cx <- GetPSI(object)  # cells x events
+  if (is.null(psi_cx)) {
     rlang::abort("PSI matrix is NULL. Run CalculatePSI() first.")
   }
 
-  # Absent entries in the sparse PSI = not covered; count stored entries only.
-  n_covered <- .n_covered_per_event(object@psi)
+  n_covered <- .n_covered_per_event(psi_cx)
   keep      <- n_covered >= min_cells_covered
 
   if (!is.null(min_psi_variance)) {
-    psi       <- .psi_to_dense_na(object@psi)
+    psi       <- .psi_to_dense_na(psi_cx)
     variances <- apply(psi, 2, stats::var, na.rm = TRUE)
     keep      <- keep & (variances >= min_psi_variance)
   }
@@ -209,6 +206,6 @@ setMethod("FilterEvents", "MatisseObject",
       "{sum(keep)} events remain.")
   }
 
-  event_ids <- colnames(object@psi)[keep]
+  event_ids <- colnames(psi_cx)[keep]
   object[, event_ids]
 })
