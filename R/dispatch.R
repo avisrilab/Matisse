@@ -107,23 +107,6 @@ FindMarkers.MatisseObject <- function(object, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# Signac generics (Signac is in Imports)
+# Signac generics (Signac is in Suggests; accessed via obj$RunTFIDF() etc.)
+# The $ operator in MatisseObject-methods.R handles dynamic Signac dispatch.
 # ---------------------------------------------------------------------------
-
-#' @importFrom Signac RunTFIDF
-#' @export
-RunTFIDF.MatisseObject <- function(object, ...) {
-  .seurat_forward(Signac::RunTFIDF, object, ...)
-}
-
-#' @importFrom Signac RunSVD
-#' @export
-RunSVD.MatisseObject <- function(object, ...) {
-  .seurat_forward(Signac::RunSVD, object, ...)
-}
-
-#' @importFrom Signac FindTopFeatures
-#' @export
-FindTopFeatures.MatisseObject <- function(object, ...) {
-  .seurat_forward(Signac::FindTopFeatures, object, ...)
-}

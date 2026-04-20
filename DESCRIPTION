@@ -22,15 +22,15 @@ Imports:
     Matrix (>= 1.5.0),
     SeuratObject (>= 5.0.0),
     Seurat (>= 5.0.0),
-    Signac (>= 2.0.0),
-    GenomicRanges,
-    IRanges,
     ggplot2 (>= 3.4.0),
     dplyr (>= 1.1.0),
     rlang (>= 1.1.0),
     cli (>= 3.6.0),
     tidyr (>= 1.3.0)
 Suggests:
+    Signac (>= 2.0.0),
+    GenomicRanges,
+    IRanges,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
