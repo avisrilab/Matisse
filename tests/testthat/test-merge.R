@@ -97,7 +97,7 @@ test_that("MergeMatisse: returns a valid MatisseObject", {
 test_that("MergeMatisse: warns when PSI column sets differ", {
   p    <- make_pair()
   # Subset obj2 to only one event
-  obj2_sub <- p$obj2[, "SE_gene1_e2"]
+  obj2_sub <- p$obj2[, "SE-gene1-e2"]
   expect_warning(
     MergeMatisse(p$obj1, obj2_sub, verbose = FALSE),
     regexp = "shared events"
@@ -106,12 +106,12 @@ test_that("MergeMatisse: warns when PSI column sets differ", {
 
 test_that("MergeMatisse: result contains only shared events after mismatch", {
   p        <- make_pair()
-  obj2_sub <- p$obj2[, "SE_gene1_e2"]
+  obj2_sub <- p$obj2[, "SE-gene1-e2"]
   merged   <- suppressWarnings(
     MergeMatisse(p$obj1, obj2_sub, verbose = FALSE)
   )
   expect_equal(.n_events(merged), 1L)
-  expect_equal(colnames(GetPSI(merged)), "SE_gene1_e2")
+  expect_equal(colnames(GetPSI(merged)), "SE-gene1-e2")
 })
 
 # ---- Error handling --------------------------------------------------------

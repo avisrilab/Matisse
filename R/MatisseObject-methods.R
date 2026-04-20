@@ -2,6 +2,28 @@
 #' @include generics.R
 NULL
 
+# SeuratObject v5 bug: single-cell subsetting reduces Assay5 layers to vectors.
+# This helper converts them back to sparse matrices.
+.get_assay_layer <- function(assay, layer) {
+  raw <- methods::slot(assay, "layers")[[layer]]
+  if (is.null(raw)) return(NULL)
+  if (!is.matrix(raw) && !inherits(raw, "Matrix")) {
+    n_features <- nrow(assay)
+    n_cells    <- ncol(assay)
+    mat <- matrix(raw, nrow = n_features, ncol = n_cells,
+                  dimnames = list(rownames(assay), colnames(assay)))
+    return(methods::as(mat, "CsparseMatrix"))
+  }
+  tryCatch(
+    SeuratObject::GetAssayData(assay, layer = layer),
+    error = function(e) {
+      mat <- matrix(as.numeric(raw), nrow = nrow(assay), ncol = ncol(assay),
+                    dimnames = list(rownames(assay), colnames(assay)))
+      methods::as(mat, "CsparseMatrix")
+    }
+  )
+}
+
 # ---------------------------------------------------------------------------
 # show
 # ---------------------------------------------------------------------------
@@ -35,10 +57,10 @@ setMethod("show", "MatisseObject", function(object) {
     cat("  Junctions    :", ncol(object@junction_counts), "\n")
   }
 
-  # PSI coverage from the "psi" ChromatinAssay
+  # PSI coverage from the "psi" Assay5
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (!is.null(psi_assay) && n_events > 0L) {
-    psi_ec  <- SeuratObject::GetAssayData(psi_assay, layer = "data")
+    psi_ec  <- .get_assay_layer(psi_assay, "data")
     psi_csc <- as(psi_ec, "dgCMatrix")
     n_covered   <- sum(!is.na(psi_csc@x))
     pct_covered <- if (n_cells > 0L && n_events > 0L)
@@ -108,15 +130,8 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
     event_ids <- character(0)
   }
 
-  # Subset Seurat (handles all assays, including "psi" and "transcript", by cell)
+  # Subset Seurat by cells (handles all assays including "psi" and "transcript")
   new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
-
-  # Additionally subset the "psi" assay features (events) if needed
-  if (!is.null(new_seurat) && !is.null(new_seurat[["psi"]]) &&
-      length(event_ids) > 0 &&
-      !identical(event_ids, rownames(new_seurat[["psi"]]))) {
-    new_seurat[["psi"]] <- new_seurat[["psi"]][event_ids, ]
-  }
 
   # Subset junction_counts (cells x junctions)
   new_jxn <- if (!is.null(x@junction_counts))
@@ -126,11 +141,17 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
   new_meta <- if (nrow(x@isoform_metadata) > 0)
     x@isoform_metadata[cell_idx, , drop = FALSE] else data.frame()
 
-  # Subset event_data
-  new_event_data <- if (nrow(x@event_data) > 0 && length(event_ids) > 0)
-    x@event_data[match(event_ids, x@event_data$event_id), , drop = FALSE]
-  else
-    x@event_data
+  # Subset event_data to selected events (PSI assay keeps all features;
+  # GetPSI/GetInclusionCounts/GetExclusionCounts filter by event_data)
+  if (missing(j)) {
+    new_event_data <- x@event_data
+  } else if (length(event_ids) == 0L) {
+    new_event_data <- x@event_data[integer(0), , drop = FALSE]
+  } else if (nrow(x@event_data) > 0) {
+    new_event_data <- x@event_data[match(event_ids, x@event_data$event_id), , drop = FALSE]
+  } else {
+    new_event_data <- x@event_data
+  }
 
   methods::new("MatisseObject",
     seurat           = new_seurat,
@@ -155,8 +176,14 @@ setMethod("GetPSI", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
   # Seurat: events x cells → return cells x events (Matisse convention)
-  psi_ec <- SeuratObject::GetAssayData(psi_assay, layer = "data")
-  Matrix::t(psi_ec)
+  psi_ec  <- .get_assay_layer(psi_assay, "data")
+  psi_ce  <- Matrix::t(psi_ec)
+  # Filter to events active in event_data (assay may hold a superset)
+  if (nrow(object@event_data) > 0) {
+    active <- intersect(object@event_data$event_id, colnames(psi_ce))
+    psi_ce <- psi_ce[, active, drop = FALSE]
+  }
+  psi_ce
 })
 
 #' @rdname SetPSI
@@ -181,18 +208,27 @@ setMethod("GetJunctionCounts", "MatisseObject",
 setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
-  # Seurat: events x cells → return cells x events
-  inc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "counts")
-  Matrix::t(inc_ec)
+  inc_ec <- .get_assay_layer(psi_assay, "counts")
+  inc_ce <- Matrix::t(inc_ec)
+  if (nrow(object@event_data) > 0) {
+    active <- intersect(object@event_data$event_id, colnames(inc_ce))
+    inc_ce <- inc_ce[, active, drop = FALSE]
+  }
+  inc_ce
 })
 
 #' @rdname GetExclusionCounts
 setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
-  exc_ec <- SeuratObject::GetAssayData(psi_assay, layer = "exclusion")
+  exc_ec <- .get_assay_layer(psi_assay, "exclusion")
   if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
-  Matrix::t(exc_ec)
+  exc_ce <- Matrix::t(exc_ec)
+  if (nrow(object@event_data) > 0) {
+    active <- intersect(object@event_data$event_id, colnames(exc_ce))
+    exc_ce <- exc_ce[, active, drop = FALSE]
+  }
+  exc_ce
 })
 
 #' @rdname GetTranscriptCounts

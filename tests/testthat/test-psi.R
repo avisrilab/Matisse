@@ -98,8 +98,8 @@ test_that("CalculatePSI (matrix): min_coverage threshold is respected", {
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 5L, verbose = FALSE)
-  expect_true(is.na(result["Cell1", "SE_gene1_e2"]))
-  expect_false(is.na(result["Cell2", "SE_gene1_e2"]))
+  expect_true(is.na(result["Cell1", "SE-gene1-e2"]))
+  expect_false(is.na(result["Cell2", "SE-gene1-e2"]))
 })
 
 test_that("CalculatePSI (matrix): handles missing junctions gracefully", {
@@ -120,13 +120,12 @@ test_that("CalculatePSI (matrix): errors when events arg is missing", {
 
 # ---- PSI on a MatisseObject ------------------------------------------------
 
-test_that("CalculatePSI (MatisseObject): populates 'psi' ChromatinAssay in Seurat", {
-  skip_if_not_installed("Signac")
+test_that("CalculatePSI (MatisseObject): populates 'psi' Assay5 in Seurat", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
   psi_assay <- GetSeurat(obj)[["psi"]]
   expect_false(is.null(psi_assay))
-  expect_true(inherits(psi_assay, "ChromatinAssay"))
+  expect_true(inherits(psi_assay, "Assay5"))
 })
 
 test_that("CalculatePSI (MatisseObject): GetPSI returns cells x events with correct dims", {

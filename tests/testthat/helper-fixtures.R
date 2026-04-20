@@ -54,7 +54,7 @@ make_junction_counts <- function(n_cells = 10L, n_jxns = 6L, seed = 42L) {
 
 make_event_data <- function() {
   data.frame(
-    event_id             = c("SE_gene1_e2", "SE_gene1_e3"),
+    event_id             = c("SE-gene1-e2", "SE-gene1-e3"),
     gene_id              = c("gene1",        "gene1"),
     chr                  = c("chr1",          "chr1"),
     strand               = c("+",             "+"),
@@ -97,7 +97,6 @@ make_seurat <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
 
 make_matisse_object <- function() {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu     <- make_seurat()
   jxn_mat <- make_junction_counts()
   ev_data <- make_event_data()
@@ -134,7 +133,6 @@ make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
 
 make_matisse_with_umap <- function() {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu     <- make_seurat_with_umap()
   jxn_mat <- make_junction_counts()
   ev_data <- make_event_data()
@@ -160,7 +158,6 @@ make_matisse_with_qc <- function() {
 
 make_matisse_from_transcripts <- function() {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()

@@ -16,7 +16,7 @@ NULL
 #'                         \sum \text{exclusion reads}}}
 #'
 #' Results are stored inside the embedded Seurat object as a
-#' \code{ChromatinAssay} named \code{"psi"}, with:
+#' \code{Assay5} named \code{"psi"}, with:
 #' \itemize{
 #'   \item \code{"data"} layer: PSI values in \eqn{[0,1]} (events × cells).
 #'   \item \code{"counts"} layer: inclusion read counts (events × cells).
@@ -75,14 +75,19 @@ setMethod("CalculatePSI", "MatisseObject",
     verbose      = verbose
   )
 
-  # Store PSI, inclusion, and exclusion in a ChromatinAssay named "psi"
-  object@seurat[["psi"]] <- .create_psi_chromatin_assay(
-    psi_mat      = result$psi,
-    inc_mat      = result$inclusion,
-    exc_mat      = result$exclusion,
-    event_data   = events,
-    junction_data = object@junction_data
+  # Store PSI, inclusion, and exclusion in an Assay5 named "psi"
+  psi_result <- .create_psi_assay(
+    psi_mat = result$psi,
+    inc_mat = result$inclusion,
+    exc_mat = result$exclusion
   )
+  object@seurat[["psi"]] <- psi_result$assay
+  # Sync event_data$event_id with the names actually stored (SeuratObject may sanitize)
+  if (nrow(object@event_data) > 0) {
+    idx <- match(events$event_id, object@event_data$event_id)
+    idx <- idx[!is.na(idx)]
+    object@event_data$event_id[idx] <- psi_result$feature_names
+  }
 
   if (verbose) {
     psi_sp <- result$psi

@@ -174,13 +174,12 @@ test_that("CreateMatisseObjectFromTranscripts: GetTranscriptCounts returns trans
   expect_equal(nrow(tx), 8L)    # transcripts
 })
 
-test_that("CreateMatisseObjectFromTranscripts: 'psi' ChromatinAssay stored in Seurat", {
+test_that("CreateMatisseObjectFromTranscripts: 'psi' Assay5 stored in Seurat", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj       <- make_matisse_from_transcripts()
   psi_assay <- GetSeurat(obj)[["psi"]]
   expect_false(is.null(psi_assay))
-  expect_true(inherits(psi_assay, "ChromatinAssay"))
+  expect_true(inherits(psi_assay, "Assay5"))
 })
 
 test_that("CreateMatisseObjectFromTranscripts: GetPSI returns cells x events", {

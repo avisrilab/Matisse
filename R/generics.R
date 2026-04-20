@@ -15,7 +15,7 @@ setGeneric("GetSeurat", function(object, ...) standardGeneric("GetSeurat"))
 #' Get the PSI matrix
 #'
 #' Retrieves the PSI (Percent Spliced In) matrix from the \code{"psi"}
-#' \code{ChromatinAssay} stored inside the embedded Seurat object.
+#' \code{Assay5} stored inside the embedded Seurat object.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
@@ -26,7 +26,7 @@ setGeneric("GetPSI", function(object, ...) standardGeneric("GetPSI"))
 
 #' Set the PSI matrix
 #'
-#' Replaces the \code{"data"} layer of the \code{"psi"} \code{ChromatinAssay}
+#' Replaces the \code{"data"} layer of the \code{"psi"} \code{Assay5}
 #' inside the embedded Seurat object.
 #'
 #' @param object A \code{MatisseObject}.
@@ -46,7 +46,7 @@ setGeneric("GetJunctionCounts",
 #' Get inclusion read count matrix
 #'
 #' Retrieves inclusion counts from the \code{"counts"} layer of the
-#' \code{"psi"} \code{ChromatinAssay}.
+#' \code{"psi"} \code{Assay5}.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
@@ -58,7 +58,7 @@ setGeneric("GetInclusionCounts",
 #' Get exclusion read count matrix
 #'
 #' Retrieves exclusion counts from the \code{"exclusion"} layer of the
-#' \code{"psi"} \code{ChromatinAssay}.
+#' \code{"psi"} \code{Assay5}.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).

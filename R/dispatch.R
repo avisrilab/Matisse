@@ -5,10 +5,9 @@ NULL
 # ---------------------------------------------------------------------------
 # Hybrid method dispatch: Seurat and Signac generics on MatisseObject
 #
-# Seurat/Signac generics are registered as both S3 methods (via @method) and
-# S4 methods (via setMethod) so that direct calls like RunPCA(obj, ...) work
-# regardless of which dispatch path is taken.  When the result is a Seurat
-# object it is wrapped back into the MatisseObject transparently.
+# Each function is registered as an S3 method via @method so that direct
+# calls like RunPCA(obj, ...) dispatch here automatically.  When the result
+# is a Seurat object it is wrapped back into the MatisseObject transparently.
 # ---------------------------------------------------------------------------
 
 .seurat_forward <- function(FUN, object, ...) {
@@ -24,29 +23,26 @@ NULL
 # SeuratObject generics
 # ---------------------------------------------------------------------------
 
-#' @importFrom SeuratObject NormalizeData
+#' @importFrom Seurat NormalizeData
 #' @method NormalizeData MatisseObject
 #' @export
 NormalizeData.MatisseObject <- function(object, ...) {
-  .seurat_forward(SeuratObject::NormalizeData, object, ...)
+  .seurat_forward(Seurat::NormalizeData, object, ...)
 }
-setMethod("NormalizeData", "MatisseObject", NormalizeData.MatisseObject)
 
-#' @importFrom SeuratObject ScaleData
+#' @importFrom Seurat ScaleData
 #' @method ScaleData MatisseObject
 #' @export
 ScaleData.MatisseObject <- function(object, ...) {
-  .seurat_forward(SeuratObject::ScaleData, object, ...)
+  .seurat_forward(Seurat::ScaleData, object, ...)
 }
-setMethod("ScaleData", "MatisseObject", ScaleData.MatisseObject)
 
-#' @importFrom SeuratObject FindVariableFeatures
+#' @importFrom Seurat FindVariableFeatures
 #' @method FindVariableFeatures MatisseObject
 #' @export
 FindVariableFeatures.MatisseObject <- function(object, ...) {
-  .seurat_forward(SeuratObject::FindVariableFeatures, object, ...)
+  .seurat_forward(Seurat::FindVariableFeatures, object, ...)
 }
-setMethod("FindVariableFeatures", "MatisseObject", FindVariableFeatures.MatisseObject)
 
 #' @importFrom SeuratObject AddMetaData
 #' @method AddMetaData MatisseObject
@@ -60,7 +56,6 @@ AddMetaData.MatisseObject <- function(object, metadata, col.name = NULL, ...) {
   }
   result
 }
-setMethod("AddMetaData", "MatisseObject", AddMetaData.MatisseObject)
 
 # ---------------------------------------------------------------------------
 # Seurat generics
@@ -72,7 +67,6 @@ setMethod("AddMetaData", "MatisseObject", AddMetaData.MatisseObject)
 RunPCA.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::RunPCA, object, ...)
 }
-setMethod("RunPCA", "MatisseObject", RunPCA.MatisseObject)
 
 #' @importFrom Seurat RunUMAP
 #' @method RunUMAP MatisseObject
@@ -80,7 +74,6 @@ setMethod("RunPCA", "MatisseObject", RunPCA.MatisseObject)
 RunUMAP.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::RunUMAP, object, ...)
 }
-setMethod("RunUMAP", "MatisseObject", RunUMAP.MatisseObject)
 
 #' @importFrom Seurat RunTSNE
 #' @method RunTSNE MatisseObject
@@ -88,7 +81,6 @@ setMethod("RunUMAP", "MatisseObject", RunUMAP.MatisseObject)
 RunTSNE.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::RunTSNE, object, ...)
 }
-setMethod("RunTSNE", "MatisseObject", RunTSNE.MatisseObject)
 
 #' @importFrom Seurat FindNeighbors
 #' @method FindNeighbors MatisseObject
@@ -96,7 +88,6 @@ setMethod("RunTSNE", "MatisseObject", RunTSNE.MatisseObject)
 FindNeighbors.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::FindNeighbors, object, ...)
 }
-setMethod("FindNeighbors", "MatisseObject", FindNeighbors.MatisseObject)
 
 #' @importFrom Seurat FindClusters
 #' @method FindClusters MatisseObject
@@ -104,7 +95,6 @@ setMethod("FindNeighbors", "MatisseObject", FindNeighbors.MatisseObject)
 FindClusters.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::FindClusters, object, ...)
 }
-setMethod("FindClusters", "MatisseObject", FindClusters.MatisseObject)
 
 #' @importFrom Seurat SCTransform
 #' @method SCTransform MatisseObject
@@ -112,7 +102,6 @@ setMethod("FindClusters", "MatisseObject", FindClusters.MatisseObject)
 SCTransform.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::SCTransform, object, ...)
 }
-setMethod("SCTransform", "MatisseObject", SCTransform.MatisseObject)
 
 #' @importFrom Seurat FindMarkers
 #' @method FindMarkers MatisseObject
@@ -120,7 +109,6 @@ setMethod("SCTransform", "MatisseObject", SCTransform.MatisseObject)
 FindMarkers.MatisseObject <- function(object, ...) {
   Seurat::FindMarkers(object@seurat, ...)
 }
-setMethod("FindMarkers", "MatisseObject", FindMarkers.MatisseObject)
 
 # ---------------------------------------------------------------------------
 # Signac generics
@@ -132,7 +120,6 @@ setMethod("FindMarkers", "MatisseObject", FindMarkers.MatisseObject)
 RunTFIDF.MatisseObject <- function(object, ...) {
   .seurat_forward(Signac::RunTFIDF, object, ...)
 }
-setMethod("RunTFIDF", "MatisseObject", RunTFIDF.MatisseObject)
 
 #' @importFrom Signac RunSVD
 #' @method RunSVD MatisseObject
@@ -140,7 +127,6 @@ setMethod("RunTFIDF", "MatisseObject", RunTFIDF.MatisseObject)
 RunSVD.MatisseObject <- function(object, ...) {
   .seurat_forward(Signac::RunSVD, object, ...)
 }
-setMethod("RunSVD", "MatisseObject", RunSVD.MatisseObject)
 
 #' @importFrom Signac FindTopFeatures
 #' @method FindTopFeatures MatisseObject
@@ -148,4 +134,3 @@ setMethod("RunSVD", "MatisseObject", RunSVD.MatisseObject)
 FindTopFeatures.MatisseObject <- function(object, ...) {
   .seurat_forward(Signac::FindTopFeatures, object, ...)
 }
-setMethod("FindTopFeatures", "MatisseObject", FindTopFeatures.MatisseObject)

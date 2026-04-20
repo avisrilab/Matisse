@@ -42,12 +42,10 @@ test_that("BuildSimpleEvents: exclusion_junctions contains every other junction 
     exc_str <- result$exclusion_junctions[i]
     if (nchar(exc_str) == 0) next
     exc_ids <- strsplit(exc_str, ";", fixed = TRUE)[[1]]
-    expect_false(focal %in% exc_ids,
-                 info = paste("focal junction", focal, "appeared in its own exclusion set"))
+    expect_false(focal %in% exc_ids)
     expect_setequal(
       sort(c(focal, exc_ids)),
-      sort(junctions$junction_id),
-      info  = paste("event for", focal, "- union of inc+exc differs from all junctions")
+      sort(junctions$junction_id)
     )
   }
 })

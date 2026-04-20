@@ -81,11 +81,15 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     }
   }
 
-  # Merge Seurat objects (handles "psi" ChromatinAssay and "transcript" Assay5)
+  # Merge Seurat objects (handles "psi" Assay5 and "transcript" Assay5)
   merged_seurat <- merge(
     x@seurat, y@seurat,
     add.cell.ids = add_cell_ids
   )
+  # SeuratObject v5 splits layers per sample on merge; join them back
+  for (assay_name in SeuratObject::Assays(merged_seurat)) {
+    merged_seurat <- SeuratObject::JoinLayers(merged_seurat, assay = assay_name)
+  }
 
   # Merge junction_counts (still a MatisseObject slot)
   rbind_sparse <- function(m1, m2, prefix1, prefix2) {

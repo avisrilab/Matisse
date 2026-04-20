@@ -7,10 +7,10 @@
 #'   \item{\code{"transcript"}}{A standard \code{Assay5} holding raw
 #'     transcript-level counts (transcripts × cells). Created by
 #'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
-#'   \item{\code{"psi"}}{A \code{ChromatinAssay} (Signac) holding PSI values
-#'     in the \code{"data"} layer, inclusion counts in \code{"counts"}, and
-#'     exclusion counts in \code{"exclusion"} (all features × cells). Created
-#'     by \code{\link{CalculatePSI}} or
+#'   \item{\code{"psi"}}{An \code{Assay5} holding PSI values in the
+#'     \code{"data"} layer, inclusion counts in \code{"counts"}, and exclusion
+#'     counts in \code{"exclusion"} (all features × cells). Created by
+#'     \code{\link{CalculatePSI}} or
 #'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
 #' }
 #' Raw junction counts and splice-event annotations are kept as slots on the
@@ -39,7 +39,7 @@
 setClass(
   "MatisseObject",
   slots = c(
-    seurat           = "ANY",        # Seurat object (contains "transcript" Assay5 and "psi" ChromatinAssay)
+    seurat           = "ANY",        # Seurat object (contains "transcript" Assay5 and "psi" Assay5)
     junction_counts  = "ANY",        # dgCMatrix | NULL (cells x junctions)
     event_data       = "data.frame",
     junction_data    = "data.frame",
@@ -90,12 +90,15 @@ setValidity("MatisseObject", function(object) {
         errors <- c(errors,
           "Cell barcodes of the 'psi' assay must match those in the Seurat object.")
       }
-      # Event IDs in "psi" assay must match event_data if both are present
+      # All event_data event_ids must exist as features in the PSI assay
+      # (the assay may hold a superset — e.g. after event-level subsetting)
       if (nrow(object@event_data) > 0) {
         psi_features <- rownames(psi_assay)
-        if (!identical(sort(psi_features), sort(object@event_data$event_id))) {
+        missing_ids  <- setdiff(object@event_data$event_id, psi_features)
+        if (length(missing_ids) > 0) {
           errors <- c(errors,
-            "Features of the 'psi' assay must match 'event_id' in event_data.")
+            paste0("Some event_data event_ids are missing from the 'psi' assay: ",
+                   paste(head(missing_ids, 3), collapse = ", ")))
         }
       }
     }
@@ -155,5 +158,6 @@ setValidity("MatisseObject", function(object) {
   if (is.null(object@seurat)) return(0L)
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(0L)
-  nrow(psi_assay)
+  # event_data is authoritative for active events (assay may hold a superset)
+  nrow(object@event_data)
 }

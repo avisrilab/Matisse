@@ -104,17 +104,17 @@ test_that("subsetting [: reduces cell count", {
 test_that("subsetting [: reduces event count in 'psi' assay", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  sub <- obj[, "SE_gene1_e2"]
+  sub <- obj[, "SE-gene1-e2"]
   expect_equal(.n_events(sub), 1L)
 })
 
 test_that("subsetting [: PSI still accessible after event subset", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  sub <- obj[, "SE_gene1_e2"]
+  sub <- obj[, "SE-gene1-e2"]
   psi <- GetPSI(sub)
   expect_equal(ncol(psi), 1L)
-  expect_equal(colnames(psi), "SE_gene1_e2")
+  expect_equal(colnames(psi), "SE-gene1-e2")
 })
 
 test_that("subsetting [: errors on unknown cell barcode", {
@@ -167,13 +167,13 @@ test_that("GetExclusionCounts: returns cells x events matrix after CalculatePSI"
   expect_equal(dim(exc), dim(GetPSI(obj)))
 })
 
-test_that("PSI stored as 'psi' ChromatinAssay in Seurat object", {
+test_that("PSI stored as 'psi' Assay5 in Seurat object", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
   seu <- GetSeurat(obj)
   psi_assay <- seu[["psi"]]
   expect_false(is.null(psi_assay))
-  expect_true(inherits(psi_assay, "ChromatinAssay"))
+  expect_true(inherits(psi_assay, "Assay5"))
 })
 
 test_that("MatisseMeta<-: assignment updates isoform_metadata", {

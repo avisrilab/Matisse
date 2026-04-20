@@ -9,31 +9,31 @@
 
 test_that("PlotPSIUMAP: returns a ggplot object", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIUMAP(obj, event_id = "SE_gene1_e2")
+  p   <- PlotPSIUMAP(obj, event_id = "SE-gene1-e2")
   expect_s3_class(p, "gg")
 })
 
 test_that("PlotPSIUMAP: custom title is applied", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIUMAP(obj, event_id = "SE_gene1_e2", title = "My Title")
+  p   <- PlotPSIUMAP(obj, event_id = "SE-gene1-e2", title = "My Title")
   expect_equal(p$labels$title, "My Title")
 })
 
 test_that("PlotPSIUMAP: default title is the event_id", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIUMAP(obj, event_id = "SE_gene1_e2")
-  expect_equal(p$labels$title, "SE_gene1_e2")
+  p   <- PlotPSIUMAP(obj, event_id = "SE-gene1-e2")
+  expect_equal(p$labels$title, "SE-gene1-e2")
 })
 
 test_that("PlotPSIUMAP: data has the same number of rows as the cell count", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIUMAP(obj, event_id = "SE_gene1_e2")
+  p   <- PlotPSIUMAP(obj, event_id = "SE-gene1-e2")
   expect_equal(nrow(p$data), .n_cells(obj))
 })
 
 test_that("PlotPSIUMAP: PSI values are in [0, 1] or NA in the plot data", {
   obj  <- make_matisse_with_umap()
-  p    <- PlotPSIUMAP(obj, event_id = "SE_gene1_e2")
+  p    <- PlotPSIUMAP(obj, event_id = "SE-gene1-e2")
   vals <- p$data$psi
   finite_vals <- vals[!is.na(vals)]
   expect_true(all(finite_vals >= 0 & finite_vals <= 1))
@@ -41,8 +41,8 @@ test_that("PlotPSIUMAP: PSI values are in [0, 1] or NA in the plot data", {
 
 test_that("PlotPSIUMAP: errors if PSI matrix is NULL", {
   obj <- make_matisse_object()   # PSI not yet calculated
-  expect_error(PlotPSIUMAP(obj, event_id = "SE_gene1_e2"),
-               regexp = "PSI matrix is NULL")
+  expect_error(PlotPSIUMAP(obj, event_id = "SE-gene1-e2"),
+               regexp = "PSI assay is NULL")
 })
 
 test_that("PlotPSIUMAP: errors for an event_id not present in the PSI matrix", {
@@ -54,7 +54,7 @@ test_that("PlotPSIUMAP: errors for an event_id not present in the PSI matrix", {
 test_that("PlotPSIUMAP: errors if the requested reduction is absent from the Seurat object", {
   # make_matisse_object uses a seurat WITHOUT a umap reduction
   obj <- CalculatePSI(make_matisse_object(), min_coverage = 1L, verbose = FALSE)
-  expect_error(PlotPSIUMAP(obj, event_id = "SE_gene1_e2"))
+  expect_error(PlotPSIUMAP(obj, event_id = "SE-gene1-e2"))
 })
 
 # ============================================================
@@ -63,7 +63,7 @@ test_that("PlotPSIUMAP: errors if the requested reduction is absent from the Seu
 
 test_that("PlotPSIViolin: returns a ggplot object", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIViolin(obj, event_id = "SE_gene1_e2", group_by = "cell_type")
+  p   <- PlotPSIViolin(obj, event_id = "SE-gene1-e2", group_by = "cell_type")
   expect_s3_class(p, "gg")
 })
 
@@ -71,12 +71,12 @@ test_that("PlotPSIViolin: default group_by 'seurat_clusters' is used when not sp
   skip_if_not_installed("Seurat")
   # Seurat always creates seurat_clusters (set to 0 by default) in CreateSeuratObject
   obj <- make_matisse_with_umap()
-  expect_no_error(PlotPSIViolin(obj, event_id = "SE_gene1_e2"))
+  expect_no_error(PlotPSIViolin(obj, event_id = "SE-gene1-e2"))
 })
 
 test_that("PlotPSIViolin: add_points = TRUE still returns a ggplot", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIViolin(obj, event_id = "SE_gene1_e2",
+  p   <- PlotPSIViolin(obj, event_id = "SE-gene1-e2",
                         group_by = "cell_type", add_points = TRUE)
   expect_s3_class(p, "gg")
 })
@@ -84,22 +84,22 @@ test_that("PlotPSIViolin: add_points = TRUE still returns a ggplot", {
 test_that("PlotPSIViolin: custom colour vector is accepted", {
   obj    <- make_matisse_with_umap()
   colors <- c(TypeA = "#E41A1C", TypeB = "#377EB8")
-  p      <- PlotPSIViolin(obj, event_id = "SE_gene1_e2",
+  p      <- PlotPSIViolin(obj, event_id = "SE-gene1-e2",
                            group_by = "cell_type", colours = colors)
   expect_s3_class(p, "gg")
 })
 
 test_that("PlotPSIViolin: custom title is applied", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIViolin(obj, event_id = "SE_gene1_e2",
+  p   <- PlotPSIViolin(obj, event_id = "SE-gene1-e2",
                         group_by = "cell_type", title = "Splicing switch")
   expect_equal(p$labels$title, "Splicing switch")
 })
 
 test_that("PlotPSIViolin: errors if PSI matrix is NULL", {
   obj <- make_matisse_object()
-  expect_error(PlotPSIViolin(obj, event_id = "SE_gene1_e2"),
-               regexp = "PSI matrix is NULL")
+  expect_error(PlotPSIViolin(obj, event_id = "SE-gene1-e2"),
+               regexp = "PSI assay is NULL")
 })
 
 test_that("PlotPSIViolin: errors for an unknown event_id", {
@@ -111,7 +111,7 @@ test_that("PlotPSIViolin: errors for an unknown event_id", {
 test_that("PlotPSIViolin: errors for an unknown group_by column", {
   obj <- make_matisse_with_umap()
   expect_error(
-    PlotPSIViolin(obj, event_id = "SE_gene1_e2", group_by = "no_such_col"),
+    PlotPSIViolin(obj, event_id = "SE-gene1-e2", group_by = "no_such_col"),
     regexp = "not found"
   )
 })
@@ -134,7 +134,7 @@ test_that("PlotPSIHeatmap: max_cells downsampling is respected", {
 
 test_that("PlotPSIHeatmap: subsetting to specific events works", {
   obj <- make_matisse_with_umap()
-  p   <- PlotPSIHeatmap(obj, events = "SE_gene1_e2")
+  p   <- PlotPSIHeatmap(obj, events = "SE-gene1-e2")
   expect_equal(length(unique(p$data$event)), 1L)
 })
 
@@ -153,14 +153,14 @@ test_that("PlotPSIHeatmap: group_by orders cells without error", {
 test_that("PlotPSIHeatmap: warns on unknown event IDs (does not error)", {
   obj <- make_matisse_with_umap()
   expect_warning(
-    PlotPSIHeatmap(obj, events = c("SE_gene1_e2", "bad_event_99")),
+    PlotPSIHeatmap(obj, events = c("SE-gene1-e2", "bad_event_99")),
     regexp = "not found"
   )
 })
 
 test_that("PlotPSIHeatmap: errors if PSI matrix is NULL", {
   obj <- make_matisse_object()
-  expect_error(PlotPSIHeatmap(obj), regexp = "PSI matrix is NULL")
+  expect_error(PlotPSIHeatmap(obj), regexp = "PSI assay is NULL")
 })
 
 # ============================================================

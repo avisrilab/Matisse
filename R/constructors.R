@@ -150,66 +150,29 @@ CreateMatisseObject <- function(
   seurat
 }
 
-# Build a ChromatinAssay ("psi") from PSI, inclusion, and exclusion matrices.
-# All matrices are in cells x events (Matisse) convention; we transpose to
-# events x cells (Seurat) before creating the assay.
-.create_psi_chromatin_assay <- function(psi_mat, inc_mat, exc_mat,
-                                         event_data, junction_data = NULL) {
-  # Transpose: cells x events → events x cells (Seurat convention)
+# Build an Assay5 ("psi") from PSI, inclusion, and exclusion matrices.
+# Assay5 (SeuratObject v5) supports arbitrary named layers, so we store
+# inclusion counts in "counts", PSI values in "data", and exclusion counts
+# in "exclusion" without any Signac/Bioconductor dependency.
+# All input matrices are in cells x events (Matisse) convention; we
+# transpose to events x cells (Seurat convention) before storing.
+# Returns a list: $assay (Assay5) and $feature_names (character) — the names
+# as stored, which may differ from the input if SeuratObject sanitized them.
+.create_psi_assay <- function(psi_mat, inc_mat, exc_mat) {
   psi_ec <- Matrix::t(psi_mat)
   inc_ec <- Matrix::t(inc_mat)
   exc_ec <- Matrix::t(exc_mat)
 
-  gr <- .make_event_granges(event_data, junction_data)
+  assay <- SeuratObject::CreateAssay5Object(counts = inc_ec)
+  # SeuratObject may sanitize feature names (e.g. underscore → dash); read
+  # back the stored names and align the other layers so they match exactly.
+  stored_names <- rownames(assay)
+  rownames(psi_ec) <- stored_names
+  rownames(exc_ec) <- stored_names
 
-  assay <- Signac::CreateChromatinAssay(
-    counts  = inc_ec,
-    data    = psi_ec,
-    ranges  = gr
-  )
-  # Store exclusion counts as an additional named layer (Seurat v5 / Assay5)
-  assay <- SeuratObject::SetAssayData(assay, layer = "exclusion",
-                                       new.data = exc_ec)
-  assay
-}
-
-# Build a GRanges object for splice events, using junction_data coordinates
-# where available and placeholder ranges (start=1, width=100) otherwise.
-.make_event_granges <- function(event_data, junction_data = NULL) {
-  n        <- nrow(event_data)
-  seqnames <- event_data$chr
-  strand   <- event_data$strand
-  starts   <- rep(1L, n)
-  ends     <- rep(100L, n)
-
-  if (!is.null(junction_data) && nrow(junction_data) > 0 &&
-      all(c("junction_id", "start", "end") %in% colnames(junction_data))) {
-    jxn_s <- stats::setNames(junction_data$start, junction_data$junction_id)
-    jxn_e <- stats::setNames(junction_data$end,   junction_data$junction_id)
-
-    for (i in seq_len(n)) {
-      jxn_ids <- unlist(strsplit(
-        paste(event_data$inclusion_junctions[i],
-              event_data$exclusion_junctions[i], sep = ";"),
-        ";", fixed = TRUE
-      ))
-      jxn_ids <- jxn_ids[nchar(trimws(jxn_ids)) > 0]
-      s <- stats::na.omit(jxn_s[jxn_ids])
-      e <- stats::na.omit(jxn_e[jxn_ids])
-      if (length(s) > 0) {
-        starts[i] <- min(as.integer(s))
-        ends[i]   <- max(as.integer(e))
-      }
-    }
-  }
-
-  gr <- GenomicRanges::GRanges(
-    seqnames = seqnames,
-    ranges   = IRanges::IRanges(start = starts, end = ends),
-    strand   = strand
-  )
-  names(gr) <- event_data$event_id
-  gr
+  assay <- SeuratObject::SetAssayData(assay, layer = "data",      new.data = psi_ec)
+  assay <- SeuratObject::SetAssayData(assay, layer = "exclusion", new.data = exc_ec)
+  list(assay = assay, feature_names = stored_names)
 }
 
 # Coerce to dgCMatrix and check row names align with cell barcodes

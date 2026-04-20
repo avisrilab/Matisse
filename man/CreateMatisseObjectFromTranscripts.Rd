@@ -16,29 +16,21 @@ CreateMatisseObjectFromTranscripts(
 \item{seurat}{A \code{Seurat} object. Provides cell barcodes and gene-level
 metadata.}
 
-\item{transcript_counts}{A matrix or sparse matrix (\strong{transcripts x
+\item{transcript_counts}{A matrix or sparse matrix (\strong{transcripts ×
 cells}) of transcript-level counts. Row names must be transcript IDs
-matching those in the IOE files (e.g. GENCODE/Ensembl IDs). Column names
-must be cell barcodes.}
+matching those in the IOE files. Column names must be cell barcodes.}
 
 \item{ioe_files}{Character vector of paths to SUPPA2 \code{.ioe} files.
-Multiple files (one per event type: SE, SS, MX, RI, FL) can be supplied
-and will be combined. Each file must have the standard four-column SUPPA2
-IOE format: \code{seqname}, \code{gene_id;event_id},
-\code{inclusion_transcripts}, \code{total_transcripts}.}
+Multiple files (one per event type: SE, SS, MX, RI, FL) can be supplied.}
 
-\item{min_coverage}{Integer. Minimum total transcript counts (inclusion +
-exclusion) per cell per event required to report a PSI value. Cells below
-this threshold receive \code{NA}. Default: \code{5}.}
+\item{min_coverage}{Integer. Minimum total transcript counts per cell per
+event required to report a PSI value. Default: \code{5}.}
 
 \item{verbose}{Logical. Print progress messages. Default: \code{TRUE}.}
 }
 \value{
-A \code{\linkS4class{MatisseObject}} with \code{psi},
-\code{inclusion_counts}, and \code{exclusion_counts} slots populated.
-The \code{junction_counts} slot is \code{NULL} (not applicable for
-transcript-based input). The \code{event_data} slot uses transcript IDs
-in the \code{inclusion_junctions} and \code{exclusion_junctions} columns.
+A \code{\linkS4class{MatisseObject}} with \code{"transcript"} and
+\code{"psi"} assays populated inside the embedded Seurat object.
 }
 \description{
 Constructs a \code{MatisseObject} directly from a transcript-by-cell count
@@ -46,6 +38,12 @@ matrix (e.g. from Bagpiper or other transcript-aware quantifiers) by mapping
 transcripts to splice events using SUPPA2 IOE annotation files.
 }
 \details{
+Transcript counts are stored as a \code{Assay5} named \code{"transcript"}
+inside the Seurat object (ready for \code{\link{SCTransformTranscripts}}).
+PSI values, inclusion counts, and exclusion counts are stored inside a
+\code{Assay5} named \code{"psi"} with layers \code{"data"},
+\code{"counts"}, and \code{"exclusion"}, respectively.
+
 For each splice event the PSI per cell is:
 \deqn{PSI_{c,e} = \frac{\sum \text{inclusion transcript counts}}
                        {\sum \text{inclusion transcript counts} +
@@ -54,21 +52,7 @@ For each splice event the PSI per cell is:
 Cells where the total count (inclusion + exclusion) falls below
 \code{min_coverage} are set to \code{NA}.
 }
-\examples{
-\dontrun{
-# Assuming you have:
-#   - a Seurat object `seu`
-#   - a transcripts-x-cells matrix `tx_mat` with GENCODE transcript IDs
-#   - SUPPA2 IOE files for SE and RI events
-obj <- CreateMatisseObjectFromTranscripts(
-  seurat            = seu,
-  transcript_counts = tx_mat,
-  ioe_files         = c("events_SE.ioe", "events_RI.ioe"),
-  min_coverage      = 5L
-)
-}
-
-}
 \seealso{
-\code{\link{CreateMatisseObject}}, \code{\link{CalculatePSI}}
+\code{\link{CreateMatisseObject}}, \code{\link{CalculatePSI}},
+\code{\link{SCTransformTranscripts}}
 }

@@ -14,7 +14,7 @@ NULL
 #' Transcript counts are stored as a \code{Assay5} named \code{"transcript"}
 #' inside the Seurat object (ready for \code{\link{SCTransformTranscripts}}).
 #' PSI values, inclusion counts, and exclusion counts are stored inside a
-#' \code{ChromatinAssay} named \code{"psi"} with layers \code{"data"},
+#' \code{Assay5} named \code{"psi"} with layers \code{"data"},
 #' \code{"counts"}, and \code{"exclusion"}, respectively.
 #'
 #' For each splice event the PSI per cell is:
@@ -126,14 +126,15 @@ CreateMatisseObjectFromTranscripts <- function(
   tx_csc <- methods::as(transcript_counts, "CsparseMatrix")
   seurat_sub[["transcript"]] <- SeuratObject::CreateAssay5Object(counts = tx_csc)
 
-  # Store PSI as "psi" ChromatinAssay (data/counts/exclusion layers)
-  seurat_sub[["psi"]] <- .create_psi_chromatin_assay(
-    psi_mat      = result$psi,
-    inc_mat      = result$inclusion,
-    exc_mat      = result$exclusion,
-    event_data   = event_data,
-    junction_data = NULL
+  # Store PSI as "psi" Assay5 (data/counts/exclusion layers)
+  psi_result <- .create_psi_assay(
+    psi_mat = result$psi,
+    inc_mat = result$inclusion,
+    exc_mat = result$exclusion
   )
+  seurat_sub[["psi"]] <- psi_result$assay
+  # Sync event_data$event_id with the names actually stored (SeuratObject may sanitize)
+  event_data$event_id <- psi_result$feature_names
 
   obj <- methods::new(
     "MatisseObject",
