@@ -155,11 +155,6 @@ CreateMatisseObject <- function(
 # events x cells (Seurat) before creating the assay.
 .create_psi_chromatin_assay <- function(psi_mat, inc_mat, exc_mat,
                                          event_data, junction_data = NULL) {
-  rlang::check_installed(
-    c("Signac", "GenomicRanges", "IRanges"),
-    reason = "to store PSI values as a ChromatinAssay"
-  )
-
   # Transpose: cells x events → events x cells (Seurat convention)
   psi_ec <- Matrix::t(psi_mat)
   inc_ec <- Matrix::t(inc_mat)
