@@ -2,10 +2,26 @@
 
 The central data structure for Matisse. It wraps a
 [`Seurat`](https://satijalab.org/seurat/reference/Seurat-package.html)
-object and augments it with isoform-resolved layers: raw junction
-counts, per- event PSI matrices, and splice event annotations. All
-isoform matrices use the same cell barcodes as the embedded Seurat
-object, keeping the two layers synchronized.
+object and augments it with isoform-resolved layers. Two fixed assays
+live inside the embedded Seurat object:
+
+- `"transcript"`:
+
+  A standard `Assay5` holding raw transcript-level counts (transcripts ×
+  cells). Created by
+  [`CreateMatisseObjectFromTranscripts`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md).
+
+- `"psi"`:
+
+  A `ChromatinAssay` (Signac) holding PSI values in the `"data"` layer,
+  inclusion counts in `"counts"`, and exclusion counts in `"exclusion"`
+  (all features × cells). Created by
+  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  or
+  [`CreateMatisseObjectFromTranscripts`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md).
+
+Raw junction counts and splice-event annotations are kept as slots on
+the MatisseObject itself.
 
 ## Usage
 
@@ -54,7 +70,7 @@ x$name
 
 - name:
 
-  Column name in the Seurat `meta.data` (used by `$`).
+  Metadata column name or Seurat/Signac function name.
 
 ## Functions
 
@@ -69,26 +85,11 @@ x$name
 - `seurat`:
 
   A `Seurat` object carrying gene-level expression, dimensionality
-  reductions, and cell metadata.
-
-- `psi`:
-
-  A sparse matrix (dgCMatrix, cells x events) of PSI values in \\\[0,
-  1\]\\. `NA` entries indicate insufficient read coverage.
-
-- `inclusion_counts`:
-
-  A sparse matrix (dgCMatrix, cells x events) of aggregated
-  inclusion-junction read counts per event.
-
-- `exclusion_counts`:
-
-  A sparse matrix (dgCMatrix, cells x events) of aggregated
-  exclusion-junction read counts per event.
+  reductions, cell metadata, and the `"transcript"` / `"psi"` assays.
 
 - `junction_counts`:
 
-  A sparse matrix (dgCMatrix, cells x junctions) of raw per-junction
+  A sparse matrix (dgCMatrix, cells × junctions) of raw per-junction
   read counts.
 
 - `event_data`:

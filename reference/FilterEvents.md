@@ -1,7 +1,6 @@
 # Filter splice events by coverage or variance
 
 Removes events that do not pass minimum coverage or variance thresholds.
-Operates on the PSI matrix.
 
 ## Usage
 
@@ -21,7 +20,7 @@ FilterEvents(
 
 - object:
 
-  A `MatisseObject` with a non-`NULL` `psi` slot.
+  A `MatisseObject` with a `"psi"` assay.
 
 - ...:
 
@@ -34,9 +33,8 @@ FilterEvents(
 
 - min_psi_variance:
 
-  Numeric. Minimum variance of PSI across covered cells. Filters out
-  constitutively spliced (near PSI = 0 or 1) events. Default: `NULL` (no
-  variance filter).
+  Numeric. Minimum variance of PSI across covered cells. Default: `NULL`
+  (no variance filter).
 
 - verbose:
 

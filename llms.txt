@@ -113,6 +113,8 @@ or putting updated tables back in.
   : Get inclusion read count matrix
 - [`GetExclusionCounts()`](https://avisrilab.github.io/Matisse/reference/GetExclusionCounts.md)
   : Get exclusion read count matrix
+- [`GetTranscriptCounts()`](https://avisrilab.github.io/Matisse/reference/GetTranscriptCounts.md)
+  : Get transcript count matrix
 - [`GetEventData()`](https://avisrilab.github.io/Matisse/reference/GetEventData.md)
   : Get splice event annotation table
 - [`GetJunctionData()`](https://avisrilab.github.io/Matisse/reference/GetJunctionData.md)
@@ -122,6 +124,14 @@ or putting updated tables back in.
   : Get or set cell-level isoform metadata
 - [`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
   : Add columns to the isoform metadata
+
+## Normalisation
+
+Normalise transcript-level count data before clustering. These functions
+wrap standard Seurat normalisation steps and tune them for isoform data.
+
+- [`SCTransformTranscripts()`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)
+  : SCTransform normalization for the transcript assay
 
 ## Calculate splicing ratios (PSI)
 
@@ -145,26 +155,6 @@ for reliable analysis.
   : Filter cells by isoform QC thresholds
 - [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
   : Filter splice events by coverage or variance
-
-## PSI dimensionality reduction and clustering
-
-Reduce the PSI matrix to a low-dimensional embedding and cluster cells
-by their splicing profiles — independently of gene expression. The
-workflow mirrors Seurat: select variable events, run PCA, project to
-UMAP, and find communities with the Louvain algorithm.
-
-- [`FindVariablePSIEvents()`](https://avisrilab.github.io/Matisse/reference/FindVariablePSIEvents.md)
-  : Select highly variable PSI events
-- [`VariablePSIEvents()`](https://avisrilab.github.io/Matisse/reference/VariablePSIEvents.md)
-  : Retrieve variable PSI event IDs
-- [`RunPSIPCA()`](https://avisrilab.github.io/Matisse/reference/RunPSIPCA.md)
-  : Run PCA on the PSI matrix
-- [`RunPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/RunPSIUMAP.md)
-  : Run UMAP on PSI principal components
-- [`FindPSIClusters()`](https://avisrilab.github.io/Matisse/reference/FindPSIClusters.md)
-  : Find clusters in PSI space
-- [`PlotPSIDimPlot()`](https://avisrilab.github.io/Matisse/reference/PlotPSIDimPlot.md)
-  : Scatter plot of a PSI dimensionality reduction
 
 ## Visualisation
 

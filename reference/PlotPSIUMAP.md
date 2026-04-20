@@ -24,8 +24,8 @@ PlotPSIUMAP(
 
 - object:
 
-  A `MatisseObject` with a non-`NULL` `psi` slot. The Seurat object must
-  contain a `umap` reduction.
+  A `MatisseObject` with a `"psi"` assay. The Seurat object must contain
+  a `umap` reduction.
 
 - event_id:
 

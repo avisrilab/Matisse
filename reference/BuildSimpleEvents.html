@@ -71,18 +71,6 @@ table of per-junction metadata.</p>
     <p>A <code>data.frame</code> suitable for the <code>event_data</code> argument
 of <code><a href="CreateMatisseObject.html">CreateMatisseObject</a></code>.</p>
     </div>
-    <div class="section level2">
-    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Each row in <code>junctions</code> defines one junction. Events are then built
-by pairing junctions from the same gene according to <code>event_type</code>:</p><dl><dt>simple</dt>
-<dd><p>Each junction is treated as its own event. Inclusion =
-the junction itself; exclusion = all other junctions for the same gene.</p></dd>
-
-
-</dl><p>This is a convenience function for exploratory use. For production
-analyses, supply a fully annotated <code>event_data</code> table (e.g. from
-rMATS or SUPPA2).</p>
-    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

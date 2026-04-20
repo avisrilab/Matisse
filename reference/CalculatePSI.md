@@ -33,8 +33,8 @@ CalculatePSI(
 
   A
   [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  that has a non-`NULL` `junction_counts` slot, or a sparse matrix
-  (cells x junctions).
+  with a non-`NULL` `junction_counts` slot, or a sparse matrix (cells ×
+  junctions).
 
 - events:
 
@@ -63,49 +63,29 @@ CalculatePSI(
 
 A `MatisseObject` (when given one) or a PSI matrix.
 
-- `MatisseObject`: the input object with `psi`, `inclusion_counts`, and
-  `exclusion_counts` slots populated.
+- `MatisseObject`: the input object with the `"psi"` assay populated
+  inside the embedded Seurat object.
 
-- matrix: a dense matrix (cells x events) of PSI values.
+- matrix: a dense matrix (cells × events) of PSI values.
 
 ## Details
 
 \$\$PSI\_{c,e} = \frac{\sum \text{inclusion reads}} {\sum
 \text{inclusion reads} + \sum \text{exclusion reads}}\$\$
 
-Entries where the total coverage (inclusion + exclusion) falls below
-`min_coverage` are set to `na_fill` (default `NA`).
+Results are stored inside the embedded Seurat object as a
+`ChromatinAssay` named `"psi"`, with:
+
+- `"data"` layer: PSI values in \\\[0,1\]\\ (events × cells).
+
+- `"counts"` layer: inclusion read counts (events × cells).
+
+- `"exclusion"` layer: exclusion read counts (events × cells).
+
+Entries where total coverage falls below `min_coverage` are set to `NA`
+in the `"data"` layer.
 
 ## See also
 
 [`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md),
 [`PlotPSIHeatmap`](https://avisrilab.github.io/Matisse/reference/PlotPSIHeatmap.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-# Build a small toy junction matrix
-jxn_mat <- Matrix::sparseMatrix(
-  i = c(1,1,2,2),
-  j = c(1,2,2,3),
-  x = c(10, 5, 8, 3),
-  dims = c(3, 4),
-  dimnames = list(
-    paste0("Cell", 1:3),
-    c("jxn1","jxn2","jxn3","jxn4")
-  )
-)
-events <- data.frame(
-  event_id             = "SE_gene1",
-  gene_id              = "gene1",
-  chr                  = "chr1",
-  strand               = "+",
-  event_type           = "SE",
-  inclusion_junctions  = "jxn1;jxn2",
-  exclusion_junctions  = "jxn3",
-  stringsAsFactors     = FALSE
-)
-psi_mat <- CalculatePSI(jxn_mat, events, min_coverage = 3)
-} # }
-```

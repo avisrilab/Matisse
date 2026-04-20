@@ -24,7 +24,7 @@ PlotPSIViolin(
 
 - object:
 
-  A `MatisseObject` with a non-`NULL` `psi` slot.
+  A `MatisseObject` with a `"psi"` assay.
 
 - event_id:
 

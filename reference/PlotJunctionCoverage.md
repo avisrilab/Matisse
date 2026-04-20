@@ -1,7 +1,8 @@
 # Per-cell junction coverage plot for a gene
 
-Displays total junction read counts across all cells for each junction
-in the specified gene, grouped by event type.
+Per-cell junction coverage plot for a gene
+
+Junction coverage bar plot for a gene
 
 ## Usage
 

@@ -1,7 +1,7 @@
 # Filter cells by isoform QC thresholds
 
 Removes cells that do not pass the specified thresholds on columns in
-the `isoform_metadata` slot. Pass named minimum and/or maximum bounds.
+the `isoform_metadata` slot.
 
 ## Usage
 
@@ -54,8 +54,8 @@ FilterCells(
 - custom_filters:
 
   Named list of two-element numeric vectors `c(min, max)` applied to
-  arbitrary `isoform_metadata` columns. Use `NA` for a one-sided bound,
-  e.g. `list(mean_psi = c(0.1, NA))`. Default: `NULL`.
+  arbitrary `isoform_metadata` columns. Use `NA` for a one-sided bound.
+  Default: `NULL`.
 
 - verbose:
 

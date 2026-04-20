@@ -3,6 +3,9 @@
 The primary constructor for
 [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md).
 Combines a `Seurat` object with optional isoform-resolved data layers.
+When `transcript_counts` is supplied the matrix is stored as a `Assay5`
+named `"transcript"` inside the embedded Seurat object, ready for
+downstream SCTransform normalisation.
 
 ## Usage
 
@@ -10,6 +13,7 @@ Combines a `Seurat` object with optional isoform-resolved data layers.
 CreateMatisseObject(
   seurat,
   junction_counts = NULL,
+  transcript_counts = NULL,
   event_data = NULL,
   junction_data = NULL,
   verbose = TRUE
@@ -20,26 +24,31 @@ CreateMatisseObject(
 
 - seurat:
 
-  A `Seurat` object. Required; provides cell barcodes, gene expression,
-  and cell-level metadata.
+  A `Seurat` object. Required.
 
 - junction_counts:
 
-  A sparse matrix (dgCMatrix, cells x junctions) of raw per-junction
+  A sparse matrix (dgCMatrix, cells × junctions) of raw per-junction
   read counts. Row names must match `colnames(seurat)`. Default: `NULL`.
+
+- transcript_counts:
+
+  A matrix or sparse matrix (transcripts × cells) of raw
+  transcript-level counts. When supplied it is added to the Seurat
+  object as a `Assay5` named `"transcript"`. Column names must overlap
+  with `colnames(seurat)`. Default: `NULL`.
 
 - event_data:
 
   A `data.frame` defining splice events. Required columns: `event_id`,
-  `gene_id`, `chr`, `strand`, `event_type`, `inclusion_junctions`
-  (semicolon-separated junction IDs), `exclusion_junctions`
-  (semicolon-separated junction IDs). Default: `NULL` (empty table).
+  `gene_id`, `chr`, `strand`, `event_type`, `inclusion_junctions`,
+  `exclusion_junctions`. Default: `NULL`.
 
 - junction_data:
 
   A `data.frame` of junction annotations. Required columns:
   `junction_id`, `chr`, `start`, `end`, `strand`, `gene_id`. Default:
-  `NULL` (empty table).
+  `NULL`.
 
 - verbose:
 

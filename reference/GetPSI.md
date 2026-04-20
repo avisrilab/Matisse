@@ -1,6 +1,7 @@
 # Get the PSI matrix
 
-Get the PSI matrix
+Retrieves the PSI (Percent Spliced In) matrix from the `"psi"`
+`ChromatinAssay` stored inside the embedded Seurat object.
 
 ## Usage
 
@@ -23,4 +24,5 @@ GetPSI(object, ...)
 
 ## Value
 
-A sparse matrix (cells x events) of PSI values.
+A sparse matrix (cells × events) of PSI values in \\\[0,1\]\\. `NULL` if
+no `"psi"` assay exists yet.

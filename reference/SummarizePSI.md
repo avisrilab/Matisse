@@ -12,7 +12,7 @@ SummarizePSI(object, cells = NULL)
 
 - object:
 
-  A `MatisseObject` with a non-`NULL` `psi` slot.
+  A `MatisseObject` with a `"psi"` assay.
 
 - cells:
 

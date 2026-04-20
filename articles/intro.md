@@ -299,6 +299,58 @@ PlotPSIHeatmap(obj, group_by = "cell_type", max_cells = 400)
 > [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md)
 > or subsetting with `obj[, event_id]`.
 
+### Normalising transcript data for clustering
+
+When working with transcript-level counts, `SCTransform` often
+outperforms standard log-normalisation for detecting isoform-level
+clusters. Matisse provides a convenience wrapper that runs `SCTransform`
+on the `"transcript"` assay and then performs PCA with a larger number
+of components — useful because isoform variation is more subtle than
+gene expression variation and benefits from more principal components.
+
+``` r
+# Normalise, scale, and run PCA on transcript counts in one step.
+# n_pca_dims = 50 is a good starting point; increase if clusters look merged.
+obj <- SCTransformTranscripts(obj, n_pca_dims = 50)
+
+# Continue with standard Seurat steps — all work directly on the Matisse object
+obj <- obj$RunUMAP(dims = 1:50)
+obj <- obj$FindNeighbors(dims = 1:50)
+obj <- obj$FindClusters(resolution = 0.5)
+```
+
+------------------------------------------------------------------------
+
+## Using Seurat and Signac functions directly on a Matisse object
+
+Because Matisse wraps a Seurat object, any standard Seurat or Signac
+function works directly on the Matisse object — just call it the same
+way you would on a Seurat object. If Matisse recognises the function
+name in Seurat or Signac, it runs it automatically and returns an
+updated Matisse object. You never need to extract the Seurat object, run
+the step, and put it back.
+
+``` r
+# Standard Seurat normalisation and dimensionality reduction
+obj <- obj$NormalizeData()
+obj <- obj$FindVariableFeatures()
+obj <- obj$ScaleData()
+obj <- obj$RunPCA()
+obj <- obj$RunUMAP(dims = 1:30)
+
+# Clustering
+obj <- obj$FindNeighbors(dims = 1:30)
+obj <- obj$FindClusters(resolution = 0.5)
+
+# The PSI data and all Matisse-specific slots are preserved throughout —
+# there is no need to re-calculate PSI after running Seurat steps.
+```
+
+Functions that belong only to Matisse (such as `CalculatePSI`,
+`ComputeIsoformQC`, `PlotPSIUMAP`) are called normally as
+`function(obj, ...)`. The `$` shorthand is only for Seurat / Signac
+functions.
+
 ------------------------------------------------------------------------
 
 ## Accessing your data at any point
@@ -354,5 +406,5 @@ sessionInfo()
 #> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.5.3    tools_4.5.3       ragg_1.5.2        bslib_0.10.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-#> [25] rlang_1.2.0       fs_2.0.1          htmlwidgets_1.6.4
+#> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
 ```

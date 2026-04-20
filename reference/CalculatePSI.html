@@ -73,8 +73,8 @@ event_data. For each cell \(c\) and event \(e\):"></head><body>
 
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>A <code><a href="MatisseObject-class.html">MatisseObject</a></code> that has a non-<code>NULL</code>
-<code>junction_counts</code> slot, or a sparse matrix (cells x junctions).</p></dd>
+<dd><p>A <code><a href="MatisseObject-class.html">MatisseObject</a></code> with a non-<code>NULL</code>
+<code>junction_counts</code> slot, or a sparse matrix (cells × junctions).</p></dd>
 
 
 <dt id="arg-events">events<a class="anchor" aria-label="anchor" href="#arg-events"></a></dt>
@@ -105,52 +105,27 @@ report a PSI value. Default: <code>5</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>MatisseObject</code> (when given one) or a PSI matrix.</p>
-<ul><li><p><code>MatisseObject</code>: the input object with <code>psi</code>,
-<code>inclusion_counts</code>, and <code>exclusion_counts</code> slots populated.</p></li>
-<li><p>matrix: a dense matrix (cells x events) of PSI values.</p></li>
+<ul><li><p><code>MatisseObject</code>: the input object with the <code>"psi"</code> assay
+populated inside the embedded Seurat object.</p></li>
+<li><p>matrix: a dense matrix (cells × events) of PSI values.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>$$PSI_{c,e} = \frac{\sum \text{inclusion reads}}
                        {\sum \text{inclusion reads} +
                         \sum \text{exclusion reads}}$$</p>
-<p>Entries where the total coverage (inclusion + exclusion) falls below
-<code>min_coverage</code> are set to <code>na_fill</code> (default <code>NA</code>).</p>
+<p>Results are stored inside the embedded Seurat object as a
+<code>ChromatinAssay</code> named <code>"psi"</code>, with:</p><ul><li><p><code>"data"</code> layer: PSI values in \([0,1]\) (events × cells).</p></li>
+<li><p><code>"counts"</code> layer: inclusion read counts (events × cells).</p></li>
+<li><p><code>"exclusion"</code> layer: exclusion read counts (events × cells).</p></li>
+</ul><p>Entries where total coverage falls below <code>min_coverage</code> are set to
+<code>NA</code> in the <code>"data"</code> layer.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="ComputeIsoformQC.html">ComputeIsoformQC</a></code>, <code><a href="PlotPSIHeatmap.html">PlotPSIHeatmap</a></code></p></div>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Build a small toy junction matrix</span></span></span>
-<span class="r-in"><span><span class="va">jxn_mat</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/sparseMatrix.html" class="external-link">sparseMatrix</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  i <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Cell"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"jxn1"</span>,<span class="st">"jxn2"</span>,<span class="st">"jxn3"</span>,<span class="st">"jxn4"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">events</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  event_id             <span class="op">=</span> <span class="st">"SE_gene1"</span>,</span></span>
-<span class="r-in"><span>  gene_id              <span class="op">=</span> <span class="st">"gene1"</span>,</span></span>
-<span class="r-in"><span>  chr                  <span class="op">=</span> <span class="st">"chr1"</span>,</span></span>
-<span class="r-in"><span>  strand               <span class="op">=</span> <span class="st">"+"</span>,</span></span>
-<span class="r-in"><span>  event_type           <span class="op">=</span> <span class="st">"SE"</span>,</span></span>
-<span class="r-in"><span>  inclusion_junctions  <span class="op">=</span> <span class="st">"jxn1;jxn2"</span>,</span></span>
-<span class="r-in"><span>  exclusion_junctions  <span class="op">=</span> <span class="st">"jxn3"</span>,</span></span>
-<span class="r-in"><span>  stringsAsFactors     <span class="op">=</span> <span class="cn">FALSE</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">psi_mat</span> <span class="op">&lt;-</span> <span class="fu">CalculatePSI</span><span class="op">(</span><span class="va">jxn_mat</span>, <span class="va">events</span>, min_coverage <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

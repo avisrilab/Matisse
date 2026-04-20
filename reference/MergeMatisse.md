@@ -1,9 +1,10 @@
 # Merge two MatisseObjects by cells
 
 Concatenates two `MatisseObject`s that share the same set of splice
-events. All matrices are row-bound; the embedded Seurat objects are
-merged via [`merge()`](https://rdrr.io/r/base/merge.html) (dispatches to
-Seurat's merge method).
+events. The embedded Seurat objects are merged via
+[`merge()`](https://rdrr.io/r/base/merge.html) (which dispatches to
+Seurat's merge method, combining all assays including `"psi"` and
+`"transcript"`).
 
 ## Usage
 

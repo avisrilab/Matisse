@@ -23,4 +23,4 @@ GetJunctionCounts(object, ...)
 
 ## Value
 
-A sparse matrix (cells x junctions) of read counts.
+A sparse matrix (cells × junctions) of read counts.

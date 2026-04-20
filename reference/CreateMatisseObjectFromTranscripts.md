@@ -24,24 +24,19 @@ CreateMatisseObjectFromTranscripts(
 
 - transcript_counts:
 
-  A matrix or sparse matrix (**transcripts x cells**) of
+  A matrix or sparse matrix (**transcripts × cells**) of
   transcript-level counts. Row names must be transcript IDs matching
-  those in the IOE files (e.g. GENCODE/Ensembl IDs). Column names must
-  be cell barcodes.
+  those in the IOE files. Column names must be cell barcodes.
 
 - ioe_files:
 
   Character vector of paths to SUPPA2 `.ioe` files. Multiple files (one
-  per event type: SE, SS, MX, RI, FL) can be supplied and will be
-  combined. Each file must have the standard four-column SUPPA2 IOE
-  format: `seqname`, `gene_id;event_id`, `inclusion_transcripts`,
-  `total_transcripts`.
+  per event type: SE, SS, MX, RI, FL) can be supplied.
 
 - min_coverage:
 
-  Integer. Minimum total transcript counts (inclusion + exclusion) per
-  cell per event required to report a PSI value. Cells below this
-  threshold receive `NA`. Default: `5`.
+  Integer. Minimum total transcript counts per cell per event required
+  to report a PSI value. Default: `5`.
 
 - verbose:
 
@@ -51,12 +46,17 @@ CreateMatisseObjectFromTranscripts(
 
 A
 [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-with `psi`, `inclusion_counts`, and `exclusion_counts` slots populated.
-The `junction_counts` slot is `NULL` (not applicable for
-transcript-based input). The `event_data` slot uses transcript IDs in
-the `inclusion_junctions` and `exclusion_junctions` columns.
+with `"transcript"` and `"psi"` assays populated inside the embedded
+Seurat object.
 
 ## Details
+
+Transcript counts are stored as a `Assay5` named `"transcript"` inside
+the Seurat object (ready for
+[`SCTransformTranscripts`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)).
+PSI values, inclusion counts, and exclusion counts are stored inside a
+`ChromatinAssay` named `"psi"` with layers `"data"`, `"counts"`, and
+`"exclusion"`, respectively.
 
 For each splice event the PSI per cell is: \$\$PSI\_{c,e} = \frac{\sum
 \text{inclusion transcript counts}} {\sum \text{inclusion transcript
@@ -68,21 +68,5 @@ Cells where the total count (inclusion + exclusion) falls below
 ## See also
 
 [`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md),
-[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-# Assuming you have:
-#   - a Seurat object `seu`
-#   - a transcripts-x-cells matrix `tx_mat` with GENCODE transcript IDs
-#   - SUPPA2 IOE files for SE and RI events
-obj <- CreateMatisseObjectFromTranscripts(
-  seurat            = seu,
-  transcript_counts = tx_mat,
-  ioe_files         = c("events_SE.ioe", "events_RI.ioe"),
-  min_coverage      = 5L
-)
-} # }
-```
+[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md),
+[`SCTransformTranscripts`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)

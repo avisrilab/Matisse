@@ -1,6 +1,7 @@
 # Set the PSI matrix
 
-Set the PSI matrix
+Replaces the `"data"` layer of the `"psi"` `ChromatinAssay` inside the
+embedded Seurat object.
 
 ## Usage
 
@@ -19,7 +20,7 @@ SetPSI(object, value)
 
 - value:
 
-  A sparse matrix (cells x events) of PSI values.
+  A sparse matrix (cells × events) of PSI values.
 
 ## Value
 

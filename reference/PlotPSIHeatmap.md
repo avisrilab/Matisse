@@ -1,7 +1,8 @@
 # Heatmap of PSI values across cells and events
 
-Renders a heatmap of PSI values. Cells are optionally ordered by a
-metadata column; events are ordered by hierarchical clustering.
+Heatmap of PSI values across cells and events
+
+Heatmap of PSI values (cells x events)
 
 ## Usage
 
@@ -23,7 +24,7 @@ PlotPSIHeatmap(
 
 - object:
 
-  A `MatisseObject` with a non-`NULL` `psi` slot.
+  A `MatisseObject` with a `"psi"` assay.
 
 - ...:
 
