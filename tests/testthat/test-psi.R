@@ -155,12 +155,12 @@ test_that("CalculatePSI (MatisseObject): PSI values in [0,1] for covered entries
   expect_true(all(vals >= 0 & vals <= 1))
 })
 
-test_that("CalculatePSI (MatisseObject): errors without junction_counts", {
+test_that("CalculatePSI (MatisseObject): errors without junction assay", {
   skip_if_not_installed("Seurat")
   seu <- make_seurat()
   obj <- CreateMatisseObject(seu, verbose = FALSE)
   expect_error(CalculatePSI(obj, verbose = FALSE),
-               regexp = "junction_counts slot is NULL")
+               regexp = "No junction assay found")
 })
 
 test_that("CalculatePSI (MatisseObject): errors without event_data", {
@@ -188,16 +188,15 @@ test_that("SummarizePSI: errors if 'psi' assay is absent", {
   expect_error(SummarizePSI(obj), regexp = "PSI matrix is empty")
 })
 
-# ---- CalculatePSI on transcript-based object (already has PSI) -------------
+# ---- CalculatePSI on event-mode object (already has PSI) ------------------
 
-test_that("CalculatePSI: warns and returns unchanged when PSI already computed from transcripts", {
+test_that("CalculatePSI: warns and returns unchanged on event-mode object", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   psi_before <- GetPSI(obj)
   expect_warning(
     obj2 <- CalculatePSI(obj, verbose = FALSE),
-    regexp = "already has PSI computed"
+    regexp = "event mode"
   )
   # PSI should be unchanged
   expect_equal(as.matrix(GetPSI(obj2)), as.matrix(psi_before))

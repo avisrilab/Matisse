@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Tests for CreateMatisseObjectFromTranscripts and its internal helpers
+# Tests for event-mode construction and its internal helpers
 # ---------------------------------------------------------------------------
 
 # ---- .parse_ioe_files -------------------------------------------------------
@@ -148,33 +148,36 @@ test_that(".aggregate_transcript_counts: missing transcripts treated as zero", {
   expect_equal(as.numeric(res$psi[1, 1]), 0.0)
 })
 
-# ---- CreateMatisseObjectFromTranscripts -------------------------------------
+# ---- CreateMatisseObject (event mode) ---------------------------------------
 
-test_that("CreateMatisseObjectFromTranscripts: returns a MatisseObject", {
+test_that("CreateMatisseObject (event mode): returns a MatisseObject", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   expect_s4_class(obj, "MatisseObject")
 })
 
-test_that("CreateMatisseObjectFromTranscripts: 'transcript' assay stored in Seurat", {
+test_that("CreateMatisseObject (event mode): mode slot is 'event'", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
+  obj <- make_matisse_from_transcripts()
+  expect_equal(obj@mode, "event")
+})
+
+test_that("CreateMatisseObject (event mode): 'transcript' assay stored in Seurat", {
+  skip_if_not_installed("Seurat")
   obj      <- make_matisse_from_transcripts()
   tx_assay <- GetSeurat(obj)[["transcript"]]
   expect_false(is.null(tx_assay))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: GetTranscriptCounts returns transcripts x cells", {
+test_that("CreateMatisseObject (event mode): GetTranscriptCounts returns transcripts x cells", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   tx  <- GetTranscriptCounts(obj)
   expect_equal(ncol(tx), 10L)   # cells
   expect_equal(nrow(tx), 8L)    # transcripts
 })
 
-test_that("CreateMatisseObjectFromTranscripts: 'psi' Assay5 stored in Seurat", {
+test_that("CreateMatisseObject (event mode): 'psi' Assay5 stored in Seurat", {
   skip_if_not_installed("Seurat")
   obj       <- make_matisse_from_transcripts()
   psi_assay <- GetSeurat(obj)[["psi"]]
@@ -182,27 +185,24 @@ test_that("CreateMatisseObjectFromTranscripts: 'psi' Assay5 stored in Seurat", {
   expect_true(inherits(psi_assay, "Assay5"))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: GetPSI returns cells x events", {
+test_that("CreateMatisseObject (event mode): GetPSI returns cells x events", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   psi <- GetPSI(obj)
   expect_equal(nrow(psi), 10L)
   expect_equal(ncol(psi), 2L)
 })
 
-test_that("CreateMatisseObjectFromTranscripts: PSI values are in [0,1] or NA", {
+test_that("CreateMatisseObject (event mode): PSI values are in [0,1] or NA", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj    <- make_matisse_from_transcripts()
   vals   <- as.numeric(GetPSI(obj))
   finite <- vals[!is.na(vals)]
   expect_true(all(finite >= 0 & finite <= 1))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: event_data is populated", {
+test_that("CreateMatisseObject (event mode): event_data is populated", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   ed  <- GetEventData(obj)
   expect_equal(nrow(ed), 2L)
@@ -211,20 +211,18 @@ test_that("CreateMatisseObjectFromTranscripts: event_data is populated", {
                     "exclusion_junctions") %in% colnames(ed)))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: junction_counts slot is NULL", {
+test_that("CreateMatisseObject (event mode): GetJunctionCounts returns NULL", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   expect_null(GetJunctionCounts(obj))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: inclusion + exclusion sums to total for covered entries", {
+test_that("CreateMatisseObject (event mode): inclusion + exclusion sums to total for covered entries", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
-  obj    <- CreateMatisseObjectFromTranscripts(
+  obj    <- CreateMatisseObject(
     seurat = seu, transcript_counts = tx_mat,
     ioe_files = f, min_coverage = 0L, verbose = FALSE)
 
@@ -237,16 +235,16 @@ test_that("CreateMatisseObjectFromTranscripts: inclusion + exclusion sums to tot
                         psi_mat[covered]) < 1e-9))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: errors if seurat is wrong type", {
+test_that("CreateMatisseObject (event mode): errors if seurat is wrong type", {
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
   expect_error(
-    CreateMatisseObjectFromTranscripts(
+    CreateMatisseObject(
       seurat = list(), transcript_counts = tx_mat, ioe_files = f),
     regexp = "must be a Seurat object")
 })
 
-test_that("CreateMatisseObjectFromTranscripts: errors if no cell overlap", {
+test_that("CreateMatisseObject (event mode): errors if no cell overlap", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   f      <- make_ioe_file()
@@ -255,45 +253,42 @@ test_that("CreateMatisseObjectFromTranscripts: errors if no cell overlap", {
            dimnames = list(paste0("tx", 1:3), paste0("X", 1:5))),
     sparse = TRUE)
   expect_error(
-    CreateMatisseObjectFromTranscripts(
+    CreateMatisseObject(
       seurat = seu, transcript_counts = bad_mat, ioe_files = f),
     regexp = "No cell barcodes overlap")
 })
 
-test_that("CreateMatisseObjectFromTranscripts: errors if IOE file missing", {
+test_that("CreateMatisseObject (event mode): errors if IOE file missing", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   expect_error(
-    CreateMatisseObjectFromTranscripts(
+    CreateMatisseObject(
       seurat = seu, transcript_counts = tx_mat,
       ioe_files = "/nonexistent/path.ioe"),
     regexp = "not found")
 })
 
-test_that("CreateMatisseObjectFromTranscripts: warns on partial cell overlap", {
+test_that("CreateMatisseObject (event mode): warns on partial cell overlap", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu        <- make_seurat()
   tx_partial <- make_transcript_counts()[, paste0("Cell", 1:9), drop = FALSE]
   f          <- make_ioe_file()
   expect_warning(
-    CreateMatisseObjectFromTranscripts(
+    CreateMatisseObject(
       seurat = seu, transcript_counts = tx_partial,
       ioe_files = f, min_coverage = 1L, verbose = FALSE),
     regexp = "9/10")
 })
 
-test_that("CreateMatisseObjectFromTranscripts: passes validObject check", {
+test_that("CreateMatisseObject (event mode): passes validObject check", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   expect_no_error(methods::validObject(obj))
 })
 
-test_that("CreateMatisseObjectFromTranscripts: downstream QC works", {
+test_that("CreateMatisseObject (event mode): downstream QC works", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   obj <- ComputeIsoformQC(obj, verbose = FALSE)
   expect_true("mean_psi" %in% colnames(MatisseMeta(obj)))

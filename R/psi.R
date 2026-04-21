@@ -9,7 +9,10 @@ NULL
 #' Calculate PSI matrix from junction counts
 #'
 #' Computes a Percent Spliced In (PSI) matrix for all splice events defined in
-#' \code{event_data}. For each cell \eqn{c} and event \eqn{e}:
+#' \code{event_data}. Only applies to objects in \strong{junction mode}; in
+#' event mode PSI is computed at construction time.
+#'
+#' For each cell \eqn{c} and event \eqn{e}:
 #'
 #' \deqn{PSI_{c,e} = \frac{\sum \text{inclusion reads}}
 #'                        {\sum \text{inclusion reads} +
@@ -25,8 +28,8 @@ NULL
 #' Entries where total coverage falls below \code{min_coverage} are set to
 #' \code{NA} in the \code{"data"} layer.
 #'
-#' @param object A \code{\linkS4class{MatisseObject}} with a non-\code{NULL}
-#'   \code{junction_counts} slot, or a sparse matrix (cells × junctions).
+#' @param object A \code{\linkS4class{MatisseObject}} in junction mode, or a
+#'   sparse matrix (cells × junctions).
 #' @param events When \code{object} is a matrix: a \code{data.frame} with
 #'   columns \code{event_id}, \code{inclusion_junctions}, and
 #'   \code{exclusion_junctions}. When \code{object} is a
@@ -42,33 +45,40 @@ NULL
 #'   populated inside the embedded Seurat object.
 #' * matrix: a dense matrix (cells × events) of PSI values.
 #'
-#' @seealso \code{\link{ComputeIsoformQC}}, \code{\link{PlotPSIHeatmap}}
+#' @seealso \code{\link{ComputeIsoformQC}}, \code{\link{PlotHeatmap}}
 #'
 #' @rdname CalculatePSI
 #' @export
 setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE) {
-  if (is.null(object@junction_counts)) {
+  # In event mode PSI is already computed at construction — warn and return
+  if (object@mode == "event") {
     if (!is.null(.get_assay_safe(object@seurat, "psi"))) {
       rlang::warn(paste0(
-        "This object was created from transcript counts and already has PSI ",
-        "computed. CalculatePSI() only applies to junction-count objects. ",
+        "This object is in event mode and already has PSI computed at ",
+        "construction. CalculatePSI() only applies to junction-mode objects. ",
         "Returning the object unchanged."))
       return(object)
     }
-    rlang::abort(
-      "junction_counts slot is NULL. Provide junction counts via CreateMatisseObject().")
   }
+
+  jxn_counts <- GetJunctionCounts(object)
+  if (is.null(jxn_counts)) {
+    rlang::abort(paste0(
+      "No junction assay found. ",
+      "Provide junction_counts via CreateMatisseObject()."))
+  }
+
   if (is.null(events)) events <- object@event_data
   if (nrow(events) == 0) {
     rlang::abort(
-      "No splice events defined. Provide event_data either via \\
-       CreateMatisseObject() or the `events` argument.")
+      "No splice events defined. Provide event_data either via ",
+      "CreateMatisseObject() or the `events` argument.")
   }
 
   result <- .calculate_psi_matrix(
-    jxn_counts   = object@junction_counts,
+    jxn_counts   = jxn_counts,
     events       = events,
     min_coverage = min_coverage,
     na_fill      = na_fill,
@@ -82,7 +92,7 @@ setMethod("CalculatePSI", "MatisseObject",
     exc_mat = result$exclusion
   )
   object@seurat[["psi"]] <- psi_result$assay
-  # Sync event_data$event_id with the names actually stored (SeuratObject may sanitize)
+  # Sync event_data$event_id with the names actually stored
   if (nrow(object@event_data) > 0) {
     idx <- match(events$event_id, object@event_data$event_id)
     idx <- idx[!is.na(idx)]
@@ -177,6 +187,10 @@ setMethod("CalculatePSI", "ANY",
 # ---------------------------------------------------------------------------
 
 #' Summarize PSI distribution across cells for each event
+#'
+#' Returns a summary table with per-event PSI statistics across all (or a
+#' subset of) cells. Call this after \code{\link{CalculatePSI}} or after
+#' creating an event-mode object with \code{\link{CreateMatisseObject}}.
 #'
 #' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param cells Optional character vector of cell barcodes to subset.

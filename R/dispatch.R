@@ -96,11 +96,86 @@ FindClusters.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::FindClusters, object, ...)
 }
 
+#' SCTransform normalisation for MatisseObjects
+#'
+#' Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults. In
+#' \strong{event mode}, normalises the \code{"transcript"} assay. In
+#' \strong{junction mode}, normalises the active default assay (usually
+#' \code{"RNA"}). Override with the \code{assay} argument.
+#'
+#' After normalisation, \code{RunPCA} is run automatically on the resulting
+#' \code{"SCT"} assay. To skip PCA set \code{n_pca_dims = 0L}.
+#'
+#' @param object A \code{MatisseObject}.
+#' @param assay Character. Assay to normalise. Default: \code{"transcript"}
+#'   in event mode; the active default assay in junction mode.
+#' @param n_pca_dims Integer. PCA dimensions to compute. Default: \code{50}.
+#'   Set to \code{0L} to skip PCA.
+#' @param vars_to_regress Character vector. Variables to regress out.
+#'   Default: \code{NULL}.
+#' @param verbose Logical. Default: \code{TRUE}.
+#' @param ... Additional arguments forwarded to \code{\link[Seurat]{SCTransform}}.
+#' @return The updated \code{MatisseObject}.
+#'
 #' @importFrom Seurat SCTransform
 #' @method SCTransform MatisseObject
 #' @export
-SCTransform.MatisseObject <- function(object, ...) {
-  .seurat_forward(Seurat::SCTransform, object, ...)
+SCTransform.MatisseObject <- function(object,
+                                       assay           = NULL,
+                                       n_pca_dims      = 50L,
+                                       vars_to_regress = NULL,
+                                       verbose         = TRUE,
+                                       ...) {
+  # Determine which assay to normalise
+  if (is.null(assay)) {
+    assay <- if (object@mode == "event") "transcript"
+             else SeuratObject::DefaultAssay(object@seurat)
+  }
+
+  seu <- object@seurat
+  if (is.null(.get_assay_safe(seu, assay))) {
+    rlang::abort(paste0(
+      "No '", assay, "' assay found. ",
+      if (object@mode == "event")
+        "Run CreateMatisseObject(transcript_counts=..., ioe_files=...) first."
+      else
+        "Run CreateMatisseObject(junction_counts=...) first, or pass `assay` explicitly."
+    ))
+  }
+
+  SeuratObject::DefaultAssay(seu) <- assay
+
+  if (verbose) {
+    cli::cli_alert_info(
+      "Running SCTransform on '{assay}' assay ({nrow(seu[[assay]])} features)...")
+  }
+
+  seu <- Seurat::SCTransform(
+    seu,
+    assay           = assay,
+    vars.to.regress = vars_to_regress,
+    verbose         = verbose,
+    ...
+  )
+
+  if (n_pca_dims > 0L) {
+    n_pca_dims <- min(as.integer(n_pca_dims),
+                      nrow(seu[["SCT"]]) - 1L,
+                      ncol(seu) - 1L)
+    if (verbose) {
+      cli::cli_alert_info("Running PCA with {n_pca_dims} components on SCT assay...")
+    }
+    seu <- Seurat::RunPCA(seu, assay = "SCT", npcs = n_pca_dims,
+                          verbose = verbose)
+  }
+
+  object@seurat <- seu
+
+  if (verbose) {
+    cli::cli_alert_success("SCTransform complete.")
+  }
+
+  object
 }
 
 #' @importFrom Seurat FindMarkers

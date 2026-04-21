@@ -17,5 +17,7 @@ A \code{data.frame} with one row per event and columns:
 \code{n_cells_covered}.
 }
 \description{
-Summarize PSI distribution across cells for each event
+Returns a summary table with per-event PSI statistics across all (or a
+subset of) cells. Call this after \code{\link{CalculatePSI}} or after
+creating an event-mode object with \code{\link{CreateMatisseObject}}.
 }

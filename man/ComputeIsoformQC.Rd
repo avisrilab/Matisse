@@ -21,21 +21,23 @@ ComputeIsoformQC(object, ...)
 }
 \value{
 The updated \code{MatisseObject} with QC columns added to
-isoform metadata.
+cell metadata.
 
 The \code{MatisseObject} with QC columns added to
-\code{isoform_metadata}.
+\code{MatisseMeta(object)} (i.e. the Seurat \code{meta.data}).
 }
 \description{
 Calculates a panel of QC metrics from the junction count and PSI layers and
-stores them in the \code{isoform_metadata} slot. Existing columns with the
-same names are overwritten.
+stores them directly in the embedded Seurat object's \code{meta.data}.
+Existing columns with the same names are overwritten.
 }
 \details{
 Computed metrics:
 \describe{
-\item{n_junctions_detected}{Number of junctions with at least one read.}
-\item{total_junction_reads}{Total junction read count across all junctions.}
+\item{n_junctions_detected}{Number of junctions with at least one read
+(junction mode only).}
+\item{total_junction_reads}{Total junction read count across all junctions
+(junction mode only).}
 \item{n_events_covered}{Number of splice events with PSI \eqn{\geq}
 \code{min_coverage} (requires PSI to be calculated first).}
 \item{pct_events_covered}{Percentage of events with sufficient coverage.}

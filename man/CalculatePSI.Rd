@@ -25,8 +25,8 @@ CalculatePSI(object, events = NULL, ...)
 )
 }
 \arguments{
-\item{object}{A \code{\linkS4class{MatisseObject}} with a non-\code{NULL}
-\code{junction_counts} slot, or a sparse matrix (cells × junctions).}
+\item{object}{A \code{\linkS4class{MatisseObject}} in junction mode, or a
+sparse matrix (cells × junctions).}
 
 \item{events}{When \code{object} is a matrix: a \code{data.frame} with
 columns \code{event_id}, \code{inclusion_junctions}, and
@@ -54,9 +54,12 @@ populated inside the embedded Seurat object.
 }
 \description{
 Computes a Percent Spliced In (PSI) matrix for all splice events defined in
-\code{event_data}. For each cell \eqn{c} and event \eqn{e}:
+\code{event_data}. Only applies to objects in \strong{junction mode}; in
+event mode PSI is computed at construction time.
 }
 \details{
+For each cell \eqn{c} and event \eqn{e}:
+
 \deqn{PSI_{c,e} = \frac{\sum \text{inclusion reads}}
                        {\sum \text{inclusion reads} +
                         \sum \text{exclusion reads}}}
@@ -72,5 +75,5 @@ Entries where total coverage falls below \code{min_coverage} are set to
 \code{NA} in the \code{"data"} layer.
 }
 \seealso{
-\code{\link{ComputeIsoformQC}}, \code{\link{PlotPSIHeatmap}}
+\code{\link{ComputeIsoformQC}}, \code{\link{PlotHeatmap}}
 }

@@ -1,34 +1,34 @@
 #' The MatisseObject S4 class
 #'
 #' The central data structure for Matisse. It wraps a \code{\link[Seurat]{Seurat}}
-#' object and augments it with isoform-resolved layers. Two fixed assays live
-#' inside the embedded Seurat object:
-#' \describe{
-#'   \item{\code{"transcript"}}{A standard \code{Assay5} holding raw
-#'     transcript-level counts (transcripts × cells). Created by
-#'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
-#'   \item{\code{"psi"}}{An \code{Assay5} holding PSI values in the
-#'     \code{"data"} layer, inclusion counts in \code{"counts"}, and exclusion
-#'     counts in \code{"exclusion"} (all features × cells). Created by
-#'     \code{\link{CalculatePSI}} or
-#'     \code{\link{CreateMatisseObjectFromTranscripts}}.}
-#' }
-#' Raw junction counts and splice-event annotations are kept as slots on the
-#' MatisseObject itself.
+#' object and adds isoform-resolved splicing layers. All per-cell data — junction
+#' counts, PSI values, transcript counts, and QC metrics — live inside the
+#' embedded Seurat object as named assays (\code{Assay5}) or cell metadata
+#' (\code{meta.data}). Nothing is duplicated outside the Seurat object.
 #'
-#' @slot seurat A \code{Seurat} object carrying gene-level expression,
-#'   dimensionality reductions, cell metadata, and the \code{"transcript"} /
-#'   \code{"psi"} assays.
-#' @slot junction_counts A sparse matrix (dgCMatrix, cells × junctions) of raw
-#'   per-junction read counts.
+#' Two operating modes are supported, set automatically at construction:
+#' \describe{
+#'   \item{\code{"junction"}}{Short-read mode. Raw junction counts are stored
+#'     as \code{Assay5("junction")} (junctions × cells). PSI is computed later
+#'     by \code{\link{CalculatePSI}} and stored as \code{Assay5("psi")}.}
+#'   \item{\code{"event"}}{Long-read mode. Transcript counts (e.g. from
+#'     Bagpiper or FLAMES) are stored as \code{Assay5("transcript")}. PSI is
+#'     computed at construction time from SUPPA2 \code{.ioe} event definitions
+#'     and stored as \code{Assay5("psi")}.}
+#' }
+#'
+#' @slot seurat A \code{Seurat} object. Contains all per-cell data: gene
+#'   expression, splice assays (\code{"junction"}, \code{"transcript"},
+#'   \code{"psi"}), cell metadata (QC metrics, cluster labels), and
+#'   dimensionality reductions.
 #' @slot event_data A \code{data.frame} with one row per splice event. Required
 #'   columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
 #'   \code{event_type}, \code{inclusion_junctions}, \code{exclusion_junctions}.
 #' @slot junction_data A \code{data.frame} with one row per junction. Required
 #'   columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 #'   \code{strand}, \code{gene_id}.
-#' @slot isoform_metadata A \code{data.frame} of per-cell isoform QC metrics.
-#'   Rownames correspond to cell barcodes.
+#' @slot mode Character. \code{"junction"} for short-read objects;
+#'   \code{"event"} for long-read objects.
 #' @slot version Character string recording the Matisse version used to create
 #'   the object.
 #' @slot misc Named list for user-defined extra data.
@@ -39,22 +39,20 @@
 setClass(
   "MatisseObject",
   slots = c(
-    seurat           = "ANY",        # Seurat object (contains "transcript" Assay5 and "psi" Assay5)
-    junction_counts  = "ANY",        # dgCMatrix | NULL (cells x junctions)
-    event_data       = "data.frame",
-    junction_data    = "data.frame",
-    isoform_metadata = "data.frame",
-    version          = "character",
-    misc             = "list"
+    seurat        = "ANY",        # Seurat object
+    event_data    = "data.frame",
+    junction_data = "data.frame",
+    mode          = "character",  # "junction" | "event"
+    version       = "character",
+    misc          = "list"
   ),
   prototype = list(
-    seurat           = NULL,
-    junction_counts  = NULL,
-    event_data       = data.frame(),
-    junction_data    = data.frame(),
-    isoform_metadata = data.frame(),
-    version          = as.character(utils::packageVersion("Matisse")),
-    misc             = list()
+    seurat        = NULL,
+    event_data    = data.frame(),
+    junction_data = data.frame(),
+    mode          = "junction",
+    version       = as.character(utils::packageVersion("Matisse")),
+    misc          = list()
   )
 )
 
@@ -65,6 +63,11 @@ setClass(
 setValidity("MatisseObject", function(object) {
   errors <- character()
 
+  # mode must be one of the two supported values
+  if (!object@mode %in% c("junction", "event")) {
+    errors <- c(errors, "'mode' must be \"junction\" or \"event\".")
+  }
+
   if (!is.null(object@seurat)) {
     if (!inherits(object@seurat, "Seurat")) {
       errors <- c(errors, "'seurat' slot must be a Seurat object or NULL.")
@@ -72,14 +75,6 @@ setValidity("MatisseObject", function(object) {
   }
 
   cells <- .get_cells(object)
-
-  # If junction_counts exists, its rows must match cell barcodes
-  if (!is.null(object@junction_counts)) {
-    if (!is.null(cells) && !identical(rownames(object@junction_counts), cells)) {
-      errors <- c(errors,
-        "Row names of 'junction_counts' must match cell barcodes in the Seurat object.")
-    }
-  }
 
   # If the "psi" assay exists in Seurat, its columns must match cell barcodes
   if (!is.null(object@seurat) && inherits(object@seurat, "Seurat")) {
@@ -160,4 +155,13 @@ setValidity("MatisseObject", function(object) {
   if (is.null(psi_assay)) return(0L)
   # event_data is authoritative for active events (assay may hold a superset)
   nrow(object@event_data)
+}
+
+# Returns the number of junctions stored in the "junction" Assay5.
+# Only meaningful in junction mode; returns 0L in event mode.
+.n_junctions <- function(object) {
+  if (object@mode != "junction") return(0L)
+  jxn_assay <- .get_assay_safe(object@seurat, "junction")
+  if (is.null(jxn_assay)) return(0L)
+  nrow(jxn_assay)   # rows = junctions (Seurat's features × cells convention)
 }

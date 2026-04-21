@@ -39,39 +39,39 @@
 }
 \description{
 The central data structure for Matisse. It wraps a \code{\link[Seurat]{Seurat}}
-object and augments it with isoform-resolved layers. Two fixed assays live
-inside the embedded Seurat object:
-\describe{
-\item{\code{"transcript"}}{A standard \code{Assay5} holding raw
-transcript-level counts (transcripts × cells). Created by
-\code{\link{CreateMatisseObjectFromTranscripts}}.}
-\item{\code{"psi"}}{An \code{Assay5} holding PSI values in the
-\code{"data"} layer, inclusion counts in \code{"counts"}, and exclusion
-counts in \code{"exclusion"} (all features × cells). Created by
-\code{\link{CalculatePSI}} or
-\code{\link{CreateMatisseObjectFromTranscripts}}.}
+object and adds isoform-resolved splicing layers. All per-cell data — junction
+counts, PSI values, transcript counts, and QC metrics — live inside the
+embedded Seurat object as named assays (\code{Assay5}) or cell metadata
+(\code{meta.data}). Nothing is duplicated outside the Seurat object.
 }
-Raw junction counts and splice-event annotations are kept as slots on the
-MatisseObject itself.
+\details{
+Two operating modes are supported, set automatically at construction:
+\describe{
+\item{\code{"junction"}}{Short-read mode. Raw junction counts are stored
+as \code{Assay5("junction")} (junctions × cells). PSI is computed later
+by \code{\link{CalculatePSI}} and stored as \code{Assay5("psi")}.}
+\item{\code{"event"}}{Long-read mode. Transcript counts (e.g. from
+Bagpiper or FLAMES) are stored as \code{Assay5("transcript")}. PSI is
+computed at construction time from SUPPA2 \code{.ioe} event definitions
+and stored as \code{Assay5("psi")}.}
+}
 }
 \section{Functions}{
 \itemize{
 \item \code{show(MatisseObject)}: Display a summary of a \code{MatisseObject}.
 
-\item \code{x[[i}: Access isoform metadata columns or Seurat slots via \code{[[}.
-Checks \code{isoform_metadata} first; falls back to the embedded
-Seurat object.
+\item \code{x[[i}: Access cell metadata or Seurat slots via \code{[[}.
+Checks \code{seurat@meta.data} first; falls back to the embedded
+Seurat object (assays, reductions, etc.).
 
 }}
 \section{Slots}{
 
 \describe{
-\item{\code{seurat}}{A \code{Seurat} object carrying gene-level expression,
-dimensionality reductions, cell metadata, and the \code{"transcript"} /
-\code{"psi"} assays.}
-
-\item{\code{junction_counts}}{A sparse matrix (dgCMatrix, cells × junctions) of raw
-per-junction read counts.}
+\item{\code{seurat}}{A \code{Seurat} object. Contains all per-cell data: gene
+expression, splice assays (\code{"junction"}, \code{"transcript"},
+\code{"psi"}), cell metadata (QC metrics, cluster labels), and
+dimensionality reductions.}
 
 \item{\code{event_data}}{A \code{data.frame} with one row per splice event. Required
 columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
@@ -81,8 +81,8 @@ columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
 columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 \code{strand}, \code{gene_id}.}
 
-\item{\code{isoform_metadata}}{A \code{data.frame} of per-cell isoform QC metrics.
-Rownames correspond to cell barcodes.}
+\item{\code{mode}}{Character. \code{"junction"} for short-read objects;
+\code{"event"} for long-read objects.}
 
 \item{\code{version}}{Character string recording the Matisse version used to create
 the object.}

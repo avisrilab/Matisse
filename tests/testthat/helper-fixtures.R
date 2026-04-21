@@ -93,7 +93,7 @@ make_seurat <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
   Seurat::CreateSeuratObject(counts = counts)
 }
 
-# ---- Full MatisseObject fixture (junction-based, no PSI yet) ---------------
+# ---- Full MatisseObject fixture (junction mode, no PSI yet) ----------------
 
 make_matisse_object <- function() {
   skip_if_not_installed("Seurat")
@@ -102,11 +102,11 @@ make_matisse_object <- function() {
   ev_data <- make_event_data()
   jd_data <- make_junction_data()
   CreateMatisseObject(
-    seurat        = seu,
+    seurat          = seu,
     junction_counts = jxn_mat,
-    event_data    = ev_data,
-    junction_data = jd_data,
-    verbose       = FALSE
+    event_data      = ev_data,
+    junction_data   = jd_data,
+    verbose         = FALSE
   )
 }
 
@@ -138,11 +138,11 @@ make_matisse_with_umap <- function() {
   ev_data <- make_event_data()
   jd_data <- make_junction_data()
   obj <- CreateMatisseObject(
-    seurat        = seu,
+    seurat          = seu,
     junction_counts = jxn_mat,
-    event_data    = ev_data,
-    junction_data = jd_data,
-    verbose       = FALSE
+    event_data      = ev_data,
+    junction_data   = jd_data,
+    verbose         = FALSE
   )
   CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
@@ -154,14 +154,14 @@ make_matisse_with_qc <- function() {
   ComputeIsoformQC(obj, verbose = FALSE)
 }
 
-# ---- MatisseObject from transcripts ----------------------------------------
+# ---- MatisseObject from transcripts (event mode) ---------------------------
 
 make_matisse_from_transcripts <- function() {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
-  CreateMatisseObjectFromTranscripts(
+  CreateMatisseObject(
     seurat            = seu,
     transcript_counts = tx_mat,
     ioe_files         = f,

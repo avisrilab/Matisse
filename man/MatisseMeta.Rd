@@ -5,7 +5,7 @@
 \alias{MatisseMeta<-}
 \alias{MatisseMeta,MatisseObject-method}
 \alias{MatisseMeta<-,MatisseObject-method}
-\title{Get or set cell-level isoform metadata}
+\title{Get or set cell-level metadata}
 \usage{
 MatisseMeta(object, ...)
 
@@ -20,13 +20,16 @@ MatisseMeta(object) <- value
 
 \item{...}{Additional arguments (unused).}
 
-\item{value}{A \code{data.frame} of cell-level metadata to assign (for the
-setter). Rownames must match cell barcodes.}
+\item{value}{A \code{data.frame} whose columns are added to cell metadata
+(for the setter). Rownames must match cell barcodes.}
 }
 \value{
 For the getter: a \code{data.frame}. For the setter: the updated
 \code{MatisseObject}.
 }
 \description{
-Get or set cell-level isoform metadata
+Returns the full \code{meta.data} of the embedded Seurat object, which
+includes all per-cell QC metrics and annotations added by Matisse (e.g.
+\code{n_junctions_detected}, \code{mean_psi}) alongside standard Seurat
+columns. Use \code{AddIsoformMetadata()} to add new columns.
 }

@@ -8,8 +8,10 @@ CreateMatisseObject(
   seurat,
   junction_counts = NULL,
   transcript_counts = NULL,
+  ioe_files = NULL,
   event_data = NULL,
   junction_data = NULL,
+  min_coverage = 5L,
   verbose = TRUE
 )
 }
@@ -17,22 +19,29 @@ CreateMatisseObject(
 \item{seurat}{A \code{Seurat} object. Required.}
 
 \item{junction_counts}{A sparse matrix (dgCMatrix, cells × junctions) of
-raw per-junction read counts. Row names must match
-\code{colnames(seurat)}. Default: \code{NULL}.}
+raw per-junction read counts. Row names must match \code{colnames(seurat)}.
+Triggers junction mode. Default: \code{NULL}.}
 
 \item{transcript_counts}{A matrix or sparse matrix (transcripts × cells) of
-raw transcript-level counts. When supplied it is added to the Seurat
-object as a \code{Assay5} named \code{"transcript"}. Column names must
-overlap with \code{colnames(seurat)}. Default: \code{NULL}.}
+raw transcript-level counts. Stored as \code{Assay5("transcript")} in the
+Seurat object. Column names must overlap with \code{colnames(seurat)}.
+Default: \code{NULL}.}
 
-\item{event_data}{A \code{data.frame} defining splice events. Required
-columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
-\code{event_type}, \code{inclusion_junctions},
+\item{ioe_files}{Character vector of paths to SUPPA2 \code{.ioe} files.
+When supplied together with \code{transcript_counts}, triggers event mode
+and PSI is computed at construction. Default: \code{NULL}.}
+
+\item{event_data}{A \code{data.frame} defining splice events (junction mode
+only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
+\code{strand}, \code{event_type}, \code{inclusion_junctions},
 \code{exclusion_junctions}. Default: \code{NULL}.}
 
 \item{junction_data}{A \code{data.frame} of junction annotations. Required
 columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 \code{strand}, \code{gene_id}. Default: \code{NULL}.}
+
+\item{min_coverage}{Integer. Minimum total transcript counts per cell per
+event to report a PSI value (event mode only). Default: \code{5}.}
 
 \item{verbose}{Logical. Print construction progress. Default: \code{TRUE}.}
 }
@@ -40,11 +49,27 @@ columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 A \code{\linkS4class{MatisseObject}}.
 }
 \description{
-The primary constructor for \code{\linkS4class{MatisseObject}}. Combines a
-\code{Seurat} object with optional isoform-resolved data layers. When
-\code{transcript_counts} is supplied the matrix is stored as a \code{Assay5}
-named \code{"transcript"} inside the embedded Seurat object, ready for
-downstream SCTransform normalisation.
+The single constructor for \code{\linkS4class{MatisseObject}}. Combines a
+\code{Seurat} object with isoform-resolved splicing data. The operating
+mode is detected automatically from the inputs you supply:
+}
+\details{
+\itemize{
+\item \strong{Junction mode} (short-read): pass \code{junction_counts}.
+Junction counts are stored as \code{Assay5("junction")} inside the
+Seurat object. Call \code{\link{CalculatePSI}} afterwards to compute
+PSI values.
+\item \strong{Event mode} (long-read): pass \code{transcript_counts} and
+\code{ioe_files}. Transcript counts are stored as
+\code{Assay5("transcript")} and PSI is computed immediately from the
+supplied SUPPA2 \code{.ioe} event definitions, stored as
+\code{Assay5("psi")}.
+}
+
+You can also pass \code{transcript_counts} alone (without \code{ioe_files})
+to store the transcript assay without computing PSI — for example, when you
+want to run \code{\link{SCTransform}} on transcript-level counts and compute
+PSI separately.
 }
 \examples{
 \dontrun{
@@ -53,8 +78,15 @@ counts <- matrix(rpois(200, 5), nrow = 20,
                  dimnames = list(paste0("Gene", 1:20),
                                  paste0("Cell", 1:10)))
 seu <- CreateSeuratObject(counts)
-obj <- CreateMatisseObject(seurat = seu)
-obj
+
+# Junction mode
+jxn <- make_junction_counts()
+obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn)
+
+# Event mode
+tx  <- make_transcript_counts()
+obj <- CreateMatisseObject(seurat = seu, transcript_counts = tx,
+                           ioe_files = "path/to/events.ioe")
 }
 
 }

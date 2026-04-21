@@ -3,7 +3,7 @@
 \name{AddIsoformMetadata}
 \alias{AddIsoformMetadata}
 \alias{AddIsoformMetadata,MatisseObject-method}
-\title{Add columns to the isoform metadata}
+\title{Add columns to the cell metadata}
 \usage{
 AddIsoformMetadata(object, metadata, ...)
 
@@ -21,10 +21,12 @@ Rownames (or names) must match cell barcodes.}
 The updated \code{MatisseObject}.
 }
 \description{
-Add columns to the isoform metadata
+Adds new columns to the embedded Seurat object's \code{meta.data}. This is
+the standard way to attach per-cell isoform QC or other annotations to a
+\code{MatisseObject}.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{AddIsoformMetadata(MatisseObject)}: Add or update columns in the isoform metadata.
+\item \code{AddIsoformMetadata(MatisseObject)}: Add or update columns in the cell metadata.
 
 }}

@@ -36,9 +36,14 @@ setGeneric("GetPSI", function(object, ...) standardGeneric("GetPSI"))
 setGeneric("SetPSI", function(object, value) standardGeneric("SetPSI"))
 
 #' Get raw junction count matrix
+#'
+#' Retrieves the per-junction read counts from the \code{"junction"}
+#' \code{Assay5} stored inside the embedded Seurat object.
+#'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells × junctions) of read counts.
+#' @return A sparse matrix (cells × junctions) of read counts, or \code{NULL}
+#'   if the object is in event mode or no junction assay exists.
 #' @export
 setGeneric("GetJunctionCounts",
            function(object, ...) standardGeneric("GetJunctionCounts"))
@@ -96,11 +101,16 @@ setGeneric("GetEventData",
 setGeneric("GetJunctionData",
            function(object, ...) standardGeneric("GetJunctionData"))
 
-#' Get or set cell-level isoform metadata
+#' Get or set cell-level metadata
+#'
+#' Returns the full \code{meta.data} of the embedded Seurat object, which
+#' includes all per-cell QC metrics and annotations added by Matisse (e.g.
+#' \code{n_junctions_detected}, \code{mean_psi}) alongside standard Seurat
+#' columns. Use \code{AddIsoformMetadata()} to add new columns.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param value A \code{data.frame} of cell-level metadata to assign (for the
-#'   setter). Rownames must match cell barcodes.
+#' @param value A \code{data.frame} whose columns are added to cell metadata
+#'   (for the setter). Rownames must match cell barcodes.
 #' @param ... Additional arguments (unused).
 #' @return For the getter: a \code{data.frame}. For the setter: the updated
 #'   \code{MatisseObject}.
@@ -113,7 +123,11 @@ setGeneric("MatisseMeta",
 setGeneric("MatisseMeta<-",
            function(object, value) standardGeneric("MatisseMeta<-"))
 
-#' Add columns to the isoform metadata
+#' Add columns to the cell metadata
+#'
+#' Adds new columns to the embedded Seurat object's \code{meta.data}. This is
+#' the standard way to attach per-cell isoform QC or other annotations to a
+#' \code{MatisseObject}.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param metadata A named \code{data.frame} or named numeric/character vector.
@@ -130,8 +144,8 @@ setGeneric("AddIsoformMetadata",
 
 #' Calculate PSI matrix from junction counts
 #'
-#' @param object A \code{MatisseObject} or a sparse count matrix
-#'   (cells × junctions).
+#' @param object A \code{MatisseObject} in junction mode, or a sparse count
+#'   matrix (cells × junctions).
 #' @param events A \code{data.frame} defining splice events (see
 #'   \code{\link{CalculatePSI}} for required columns).
 #' @param ... Additional arguments passed to the method.
@@ -145,7 +159,7 @@ setGeneric("CalculatePSI",
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
 #' @return The updated \code{MatisseObject} with QC columns added to
-#'   isoform metadata.
+#'   cell metadata.
 #' @export
 setGeneric("ComputeIsoformQC",
            function(object, ...) standardGeneric("ComputeIsoformQC"))
@@ -168,57 +182,53 @@ setGeneric("FilterCells",
 setGeneric("FilterEvents",
            function(object, ...) standardGeneric("FilterEvents"))
 
-#' SCTransform normalization for the transcript assay
-#'
-#' Runs \code{SCTransform} on the \code{"transcript"} assay of the embedded
-#' Seurat object and follows it with \code{RunPCA} using a larger number of
-#' principal components, giving better isoform-level cluster resolution.
-#'
-#' @param object A \code{MatisseObject} with a \code{"transcript"} assay.
-#' @param ... Additional arguments passed to the method.
-#' @return The updated \code{MatisseObject}.
-#' @export
-setGeneric("SCTransformTranscripts",
-           function(object, ...) standardGeneric("SCTransformTranscripts"))
-
 # ---------------------------------------------------------------------------
 # Visualization generics
 # ---------------------------------------------------------------------------
 
-#' Heatmap of PSI values across cells and events
+#' UMAP plot coloured by any feature
+#'
+#' Overlays the value of a feature (PSI event, junction count, or gene
+#' expression) on the UMAP embedding stored in the embedded Seurat object.
+#' Pass an event ID for PSI, a junction ID for junction counts, or a gene
+#' name for expression.
+#'
 #' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (see \code{\link{PlotPSIHeatmap}}).
-#' @return A \code{ggplot} or \code{pheatmap} object.
-#' @export
-setGeneric("PlotPSIHeatmap",
-           function(object, ...) standardGeneric("PlotPSIHeatmap"))
-
-#' UMAP plot colored by PSI of a specific splice event
-#' @param object A \code{MatisseObject}.
-#' @param event_id Character. Name of the splice event to visualize.
-#' @param ... Additional arguments (see \code{\link{PlotPSIUMAP}}).
+#' @param feature Character. Feature to visualise.
+#' @param ... Additional arguments (see \code{\link{PlotUMAP}}).
 #' @return A \code{ggplot} object.
 #' @export
-setGeneric("PlotPSIUMAP",
-           function(object, event_id, ...) standardGeneric("PlotPSIUMAP"))
+setGeneric("PlotUMAP",
+           function(object, feature, ...) standardGeneric("PlotUMAP"))
 
-#' Violin plot of PSI values split by cell group
+#' Violin plot of feature values split by cell group
+#'
 #' @param object A \code{MatisseObject}.
-#' @param event_id Character. Name of the splice event to visualize.
-#' @param ... Additional arguments (see \code{\link{PlotPSIViolin}}).
+#' @param feature Character. Feature to visualise (PSI event, junction, or gene).
+#' @param ... Additional arguments (see \code{\link{PlotViolin}}).
 #' @return A \code{ggplot} object.
 #' @export
-setGeneric("PlotPSIViolin",
-           function(object, event_id, ...) standardGeneric("PlotPSIViolin"))
+setGeneric("PlotViolin",
+           function(object, feature, ...) standardGeneric("PlotViolin"))
 
-#' Per-cell junction coverage plot for a gene
+#' Heatmap of feature values across cells and events
+#'
 #' @param object A \code{MatisseObject}.
+#' @param ... Additional arguments (see \code{\link{PlotHeatmap}}).
+#' @return A \code{ggplot} object.
+#' @export
+setGeneric("PlotHeatmap",
+           function(object, ...) standardGeneric("PlotHeatmap"))
+
+#' Junction coverage bar plot for a gene
+#'
+#' @param object A \code{MatisseObject} in junction mode.
 #' @param gene Character. Gene name.
-#' @param ... Additional arguments (see \code{\link{PlotJunctionCoverage}}).
+#' @param ... Additional arguments (see \code{\link{PlotCoverage}}).
 #' @return A \code{ggplot} object.
 #' @export
-setGeneric("PlotJunctionCoverage",
-           function(object, gene, ...) standardGeneric("PlotJunctionCoverage"))
+setGeneric("PlotCoverage",
+           function(object, gene, ...) standardGeneric("PlotCoverage"))
 
 #' Violin/ridge plot of isoform QC metrics
 #' @param object A \code{MatisseObject}.

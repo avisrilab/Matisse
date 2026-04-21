@@ -39,7 +39,7 @@ Default: \code{NULL}.}
 Default: \code{NULL}.}
 
 \item{custom_filters}{Named list of two-element numeric vectors
-\code{c(min, max)} applied to arbitrary \code{isoform_metadata} columns.
+\code{c(min, max)} applied to arbitrary metadata columns.
 Use \code{NA} for a one-sided bound. Default: \code{NULL}.}
 
 \item{verbose}{Logical. Default: \code{TRUE}.}
@@ -50,8 +50,9 @@ The filtered \code{MatisseObject}.
 The filtered \code{MatisseObject}.
 }
 \description{
-Removes cells that do not pass the specified thresholds on columns in the
-\code{isoform_metadata} slot.
+Removes cells that do not pass the specified thresholds on QC columns in
+\code{MatisseMeta(object)} (the Seurat \code{meta.data}). Run
+\code{\link{ComputeIsoformQC}} first to populate those columns.
 }
 \seealso{
 \code{\link{ComputeIsoformQC}}

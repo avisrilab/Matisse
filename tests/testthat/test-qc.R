@@ -2,7 +2,7 @@
 # Tests for QC functions (ComputeIsoformQC, FilterCells, FilterEvents)
 # ---------------------------------------------------------------------------
 
-test_that("ComputeIsoformQC: adds expected columns to isoform_metadata", {
+test_that("ComputeIsoformQC: adds expected columns to cell metadata", {
   obj       <- make_matisse_object()
   obj       <- CalculatePSI(obj, verbose = FALSE)
   obj       <- ComputeIsoformQC(obj, verbose = FALSE)
@@ -63,13 +63,12 @@ test_that("ComputeIsoformQC: row count matches number of cells", {
   expect_equal(nrow(MatisseMeta(obj)), .n_cells(obj))
 })
 
-test_that("ComputeIsoformQC: works on transcript-based object", {
+test_that("ComputeIsoformQC: works on event-mode object", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_from_transcripts()
   obj <- ComputeIsoformQC(obj, verbose = FALSE)
   expect_true("mean_psi" %in% colnames(MatisseMeta(obj)))
-  # No junction metrics expected since junction_counts is NULL
+  # No junction metrics expected since event mode has no junction assay
   expect_false("n_junctions_detected" %in% colnames(MatisseMeta(obj)))
 })
 
@@ -104,7 +103,7 @@ test_that("FilterCells: warns for unknown QC column", {
     FilterCells(obj,
       custom_filters = list(n_junctions_detected = c(1, NA)),
       verbose = FALSE),
-    regexp = "not found in isoform_metadata"
+    regexp = "not found in metadata"
   )
 })
 

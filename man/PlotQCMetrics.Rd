@@ -10,10 +10,11 @@ PlotQCMetrics(object, features = NULL, ...)
 \S4method{PlotQCMetrics}{MatisseObject}(object, features = NULL, group_by = NULL, ncol = 2L)
 }
 \arguments{
-\item{object}{A \code{MatisseObject} with populated \code{isoform_metadata}.}
+\item{object}{A \code{MatisseObject} with QC metrics computed by
+\code{\link{ComputeIsoformQC}}.}
 
 \item{features}{Character vector of QC metric names. Must be columns in
-\code{isoform_metadata}. Default: all numeric columns.}
+\code{MatisseMeta(object)}. Default: all numeric columns.}
 
 \item{...}{Additional arguments (see \code{\link{PlotQCMetrics}}).}
 

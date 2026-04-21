@@ -35,7 +35,7 @@ setMethod("show", "MatisseObject", function(object) {
   n_cells  <- .n_cells(object)
   n_events <- .n_events(object)
 
-  cat("A MatisseObject\n")
+  cat("A MatisseObject (", object@mode, " mode)\n", sep = "")
   cat("  Cells        :", n_cells, "\n")
   cat("  Splice events:", n_events, "\n")
 
@@ -53,8 +53,9 @@ setMethod("show", "MatisseObject", function(object) {
     }
   }
 
-  if (!is.null(object@junction_counts)) {
-    cat("  Junctions    :", ncol(object@junction_counts), "\n")
+  n_junctions <- .n_junctions(object)
+  if (n_junctions > 0L) {
+    cat("  Junctions    :", n_junctions, "\n")
   }
 
   # PSI coverage from the "psi" Assay5
@@ -98,17 +99,15 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
 
   # Resolve cell indices
   if (missing(i)) {
-    cell_idx   <- seq_along(cells_all)
     cell_names <- cells_all
   } else if (is.character(i)) {
-    cell_idx <- match(i, cells_all)
-    if (any(is.na(cell_idx))) {
+    bad <- setdiff(i, cells_all)
+    if (length(bad) > 0) {
       rlang::abort("Some cell barcodes not found in the object.")
     }
-    cell_names <- cells_all[cell_idx]
+    cell_names <- i
   } else {
-    cell_idx   <- i
-    cell_names <- cells_all[cell_idx]
+    cell_names <- cells_all[i]
   }
 
   # Resolve event indices (only relevant if "psi" assay exists)
@@ -130,16 +129,9 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
     event_ids <- character(0)
   }
 
-  # Subset Seurat by cells (handles all assays including "psi" and "transcript")
+  # Subset Seurat by cells (handles ALL assays: junction, psi, transcript,
+  # gene expression, plus cell metadata and reductions automatically)
   new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
-
-  # Subset junction_counts (cells x junctions)
-  new_jxn <- if (!is.null(x@junction_counts))
-    x@junction_counts[cell_idx, , drop = FALSE] else NULL
-
-  # Subset isoform_metadata
-  new_meta <- if (nrow(x@isoform_metadata) > 0)
-    x@isoform_metadata[cell_idx, , drop = FALSE] else data.frame()
 
   # Subset event_data to selected events (PSI assay keeps all features;
   # GetPSI/GetInclusionCounts/GetExclusionCounts filter by event_data)
@@ -154,13 +146,12 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
   }
 
   methods::new("MatisseObject",
-    seurat           = new_seurat,
-    junction_counts  = new_jxn,
-    event_data       = new_event_data,
-    junction_data    = x@junction_data,
-    isoform_metadata = new_meta,
-    version          = x@version,
-    misc             = x@misc
+    seurat        = new_seurat,
+    event_data    = new_event_data,
+    junction_data = x@junction_data,
+    mode          = x@mode,
+    version       = x@version,
+    misc          = x@misc
   )
 })
 
@@ -201,8 +192,13 @@ setMethod("SetPSI", "MatisseObject", function(object, value) {
 })
 
 #' @rdname GetJunctionCounts
-setMethod("GetJunctionCounts", "MatisseObject",
-          function(object, ...) object@junction_counts)
+setMethod("GetJunctionCounts", "MatisseObject", function(object, ...) {
+  jxn_assay <- .get_assay_safe(object@seurat, "junction")
+  if (is.null(jxn_assay)) return(NULL)
+  # Assay5 is junctions x cells; return cells x junctions (Matisse convention)
+  jxn_ec <- .get_assay_layer(jxn_assay, "counts")
+  Matrix::t(jxn_ec)
+})
 
 #' @rdname GetInclusionCounts
 setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
@@ -248,62 +244,46 @@ setMethod("GetJunctionData", "MatisseObject",
           function(object, ...) object@junction_data)
 
 #' @rdname MatisseMeta
-setMethod("MatisseMeta", "MatisseObject",
-          function(object, ...) object@isoform_metadata)
+setMethod("MatisseMeta", "MatisseObject", function(object, ...) {
+  if (is.null(object@seurat)) return(data.frame())
+  object@seurat@meta.data
+})
 
 #' @rdname MatisseMeta
 setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
   stopifnot(is.data.frame(value))
-  object@isoform_metadata <- value
+  # Merge new columns into seurat@meta.data rather than replacing everything
+  for (col in colnames(value)) {
+    object@seurat@meta.data[[col]] <- value[[col]]
+  }
   object
 })
 
-#' @describeIn AddIsoformMetadata Add or update columns in the isoform metadata.
+#' @describeIn AddIsoformMetadata Add or update columns in the cell metadata.
 setMethod("AddIsoformMetadata", "MatisseObject",
           function(object, metadata, ...) {
-  cells <- .get_cells(object)
-
-  if (is.data.frame(metadata)) {
-    new_cols <- metadata
-  } else if (is.numeric(metadata) || is.character(metadata) ||
-             is.logical(metadata) || is.integer(metadata)) {
-    if (is.null(names(metadata))) {
-      rlang::abort("'metadata' vector must be named with cell barcodes.")
-    }
-    new_cols <- as.data.frame(metadata)
-  } else {
-    rlang::abort("'metadata' must be a data.frame or named vector.")
-  }
-
-  if (!is.null(rownames(new_cols))) {
-    new_cols <- new_cols[cells, , drop = FALSE]
-  }
-
-  current <- object@isoform_metadata
-  if (nrow(current) == 0) current <- data.frame(row.names = cells)
-
-  for (col in colnames(new_cols)) current[[col]] <- new_cols[[col]]
-
-  object@isoform_metadata <- current
+  # Delegate to Seurat's AddMetaData — it handles data.frames and named vectors
+  result <- SeuratObject::AddMetaData(object@seurat, metadata = metadata)
+  if (inherits(result, "Seurat")) object@seurat <- result
   object
 })
 
 # ---------------------------------------------------------------------------
-# [[ operator: isoform metadata first, then Seurat
+# [[ operator: metadata first, then Seurat slots
 # ---------------------------------------------------------------------------
 
 #' @describeIn MatisseObject-class
-#'   Access isoform metadata columns or Seurat slots via \code{[[}.
-#'   Checks \code{isoform_metadata} first; falls back to the embedded
-#'   Seurat object.
+#'   Access cell metadata or Seurat slots via \code{[[}.
+#'   Checks \code{seurat@@meta.data} first; falls back to the embedded
+#'   Seurat object (assays, reductions, etc.).
 #' @aliases [[,MatisseObject-method
 #' @export
 setMethod("[[", "MatisseObject", function(x, i, j, ...) {
-  meta <- x@isoform_metadata
-  if (nrow(meta) > 0 && i %in% colnames(meta)) return(meta[[i]])
-  if (!is.null(x@seurat)) return(x@seurat[[i]])
-  rlang::abort(paste0(
-    "'", i, "' not found in isoform_metadata or the embedded Seurat object."))
+  if (!is.null(x@seurat)) {
+    if (i %in% colnames(x@seurat@meta.data)) return(x@seurat@meta.data[[i]])
+    return(x@seurat[[i]])
+  }
+  rlang::abort(paste0("'", i, "' not found in the MatisseObject."))
 })
 
 # ---------------------------------------------------------------------------
@@ -337,8 +317,8 @@ setMethod("$", "MatisseObject", function(x, name) {
   # Priority 3: delegate to Seurat's [[ (handles assays, reductions, etc.)
   if (!is.null(x@seurat)) return(x@seurat[[name]])
 
-  rlang::abort(paste0("'", name, "' not found in Seurat metadata, \\
-    Seurat/Signac functions, or the Seurat object."))
+  rlang::abort(paste0("'", name, "' not found in Seurat metadata, ",
+    "Seurat/Signac functions, or the Seurat object."))
 })
 
 # Look up an exported function from Seurat or Signac

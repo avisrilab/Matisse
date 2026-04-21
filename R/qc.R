@@ -9,13 +9,15 @@ NULL
 #' Compute per-cell isoform quality-control metrics
 #'
 #' Calculates a panel of QC metrics from the junction count and PSI layers and
-#' stores them in the \code{isoform_metadata} slot. Existing columns with the
-#' same names are overwritten.
+#' stores them directly in the embedded Seurat object's \code{meta.data}.
+#' Existing columns with the same names are overwritten.
 #'
 #' Computed metrics:
 #' \describe{
-#'   \item{n_junctions_detected}{Number of junctions with at least one read.}
-#'   \item{total_junction_reads}{Total junction read count across all junctions.}
+#'   \item{n_junctions_detected}{Number of junctions with at least one read
+#'     (junction mode only).}
+#'   \item{total_junction_reads}{Total junction read count across all junctions
+#'     (junction mode only).}
 #'   \item{n_events_covered}{Number of splice events with PSI \eqn{\geq}
 #'     \code{min_coverage} (requires PSI to be calculated first).}
 #'   \item{pct_events_covered}{Percentage of events with sufficient coverage.}
@@ -28,7 +30,7 @@ NULL
 #' @param verbose Logical. Default: \code{TRUE}.
 #'
 #' @return The \code{MatisseObject} with QC columns added to
-#'   \code{isoform_metadata}.
+#'   \code{MatisseMeta(object)} (i.e. the Seurat \code{meta.data}).
 #'
 #' @seealso \code{\link{FilterCells}}, \code{\link{PlotQCMetrics}}
 #'
@@ -39,14 +41,11 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 
   qc <- data.frame(row.names = .get_cells(object))
 
-  # --- junction-level metrics ------------------------------------------------
-  if (!is.null(object@junction_counts)) {
-    jxn <- object@junction_counts
+  # --- junction-level metrics (junction mode only) --------------------------
+  jxn <- GetJunctionCounts(object)  # NULL in event mode
+  if (!is.null(jxn)) {
     qc$n_junctions_detected <- as.integer(Matrix::rowSums(jxn > 0))
     qc$total_junction_reads <- as.integer(Matrix::rowSums(jxn))
-  } else {
-    rlang::warn(
-      "junction_counts is NULL; junction QC metrics will not be computed.")
   }
 
   # --- PSI-level metrics — retrieve from the "psi" assay --------------------
@@ -74,6 +73,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
     }
   }
 
+  # Store in Seurat meta.data via AddIsoformMetadata
   object <- AddIsoformMetadata(object, qc)
 
   if (verbose) {
@@ -90,8 +90,9 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 
 #' Filter cells by isoform QC thresholds
 #'
-#' Removes cells that do not pass the specified thresholds on columns in the
-#' \code{isoform_metadata} slot.
+#' Removes cells that do not pass the specified thresholds on QC columns in
+#' \code{MatisseMeta(object)} (the Seurat \code{meta.data}). Run
+#' \code{\link{ComputeIsoformQC}} first to populate those columns.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param min_junctions Integer. Minimum \code{n_junctions_detected}.
@@ -105,7 +106,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #' @param min_pct_covered Numeric (0–100). Minimum \code{pct_events_covered}.
 #'   Default: \code{NULL}.
 #' @param custom_filters Named list of two-element numeric vectors
-#'   \code{c(min, max)} applied to arbitrary \code{isoform_metadata} columns.
+#'   \code{c(min, max)} applied to arbitrary metadata columns.
 #'   Use \code{NA} for a one-sided bound. Default: \code{NULL}.
 #' @param verbose Logical. Default: \code{TRUE}.
 #'
@@ -124,7 +125,7 @@ setMethod("FilterCells", "MatisseObject",
                    min_pct_covered    = NULL,
                    custom_filters     = NULL,
                    verbose            = TRUE) {
-  meta  <- object@isoform_metadata
+  meta  <- MatisseMeta(object)   # now seurat@meta.data
   cells <- .get_cells(object)
   keep  <- rep(TRUE, length(cells))
   names(keep) <- cells
@@ -132,7 +133,7 @@ setMethod("FilterCells", "MatisseObject",
   apply_bound <- function(col, lo, hi) {
     if (!col %in% colnames(meta)) {
       rlang::warn(paste0("Column '", col,
-                         "' not found in isoform_metadata. Run ComputeIsoformQC() first."))
+                         "' not found in metadata. Run ComputeIsoformQC() first."))
       return()
     }
     vals <- meta[[col]]

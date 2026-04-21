@@ -13,6 +13,16 @@ test_that("CreateMatisseObject: succeeds with minimal input", {
   expect_s4_class(obj, "MatisseObject")
 })
 
+test_that("CreateMatisseObject: mode is 'junction' when junction_counts supplied", {
+  obj <- make_matisse_object()
+  expect_equal(obj@mode, "junction")
+})
+
+test_that("CreateMatisseObject: mode is 'event' when ioe_files supplied", {
+  obj <- make_matisse_from_transcripts()
+  expect_equal(obj@mode, "event")
+})
+
 test_that("CreateMatisseObject: cell count matches Seurat object", {
   obj <- make_matisse_object()
   expect_equal(.n_cells(obj), 10L)
@@ -32,10 +42,33 @@ test_that("CreateMatisseObject: junction_data is stored correctly", {
   expect_true(all(c("junction_id", "chr", "start", "end") %in% colnames(jd)))
 })
 
-test_that("CreateMatisseObject: junction_counts row names match cells", {
+test_that("CreateMatisseObject: junction counts stored as Assay5('junction')", {
+  obj <- make_matisse_object()
+  expect_false(is.null(GetSeurat(obj)[["junction"]]))
+  expect_true(inherits(GetSeurat(obj)[["junction"]], "Assay5"))
+})
+
+test_that("CreateMatisseObject: GetJunctionCounts row names match cells", {
   obj <- make_matisse_object()
   jc  <- GetJunctionCounts(obj)
   expect_equal(rownames(jc), colnames(GetSeurat(obj)))
+})
+
+test_that("CreateMatisseObject: GetJunctionCounts returns cells x junctions", {
+  obj <- make_matisse_object()
+  jc  <- GetJunctionCounts(obj)
+  expect_equal(nrow(jc), 10L)
+  expect_equal(ncol(jc), 6L)
+})
+
+test_that("CreateMatisseObject: .n_junctions returns junction count in junction mode", {
+  obj <- make_matisse_object()
+  expect_equal(.n_junctions(obj), 6L)
+})
+
+test_that("CreateMatisseObject: .n_junctions returns 0 in event mode", {
+  obj <- make_matisse_from_transcripts()
+  expect_equal(.n_junctions(obj), 0L)
 })
 
 test_that("CreateMatisseObject: rejects event_data missing required columns", {
@@ -50,7 +83,6 @@ test_that("CreateMatisseObject: rejects event_data missing required columns", {
 
 test_that("CreateMatisseObject: accepts transcript_counts and creates 'transcript' assay", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   obj    <- CreateMatisseObject(seu, transcript_counts = tx_mat, verbose = FALSE)
@@ -62,6 +94,11 @@ test_that("CreateMatisseObject: accepts transcript_counts and creates 'transcrip
 test_that("show method: produces output without error", {
   obj <- make_matisse_object()
   expect_output(show(obj), regexp = "MatisseObject")
+})
+
+test_that("show method: mode appears in show output", {
+  obj <- make_matisse_object()
+  expect_output(show(obj), regexp = "junction")
 })
 
 test_that("show method: PSI coverage line present and not NA after CalculatePSI", {
@@ -115,6 +152,14 @@ test_that("subsetting [: PSI still accessible after event subset", {
   psi <- GetPSI(sub)
   expect_equal(ncol(psi), 1L)
   expect_equal(colnames(psi), "SE-gene1-e2")
+})
+
+test_that("subsetting [: junction counts also subsetted", {
+  obj <- make_matisse_object()
+  sub <- obj[paste0("Cell", 1:5), ]
+  jc  <- GetJunctionCounts(sub)
+  expect_equal(nrow(jc), 5L)
+  expect_equal(ncol(jc), 6L)
 })
 
 test_that("subsetting [: errors on unknown cell barcode", {
@@ -176,18 +221,29 @@ test_that("PSI stored as 'psi' Assay5 in Seurat object", {
   expect_true(inherits(psi_assay, "Assay5"))
 })
 
-test_that("MatisseMeta<-: assignment updates isoform_metadata", {
+test_that("MatisseMeta: returns seurat@meta.data", {
   obj  <- make_matisse_object()
-  meta <- data.frame(my_col = 1:10, row.names = colnames(GetSeurat(obj)))
-  MatisseMeta(obj) <- meta
+  meta <- MatisseMeta(obj)
+  expect_true(is.data.frame(meta))
+  expect_equal(nrow(meta), 10L)
+  expect_true("orig.ident" %in% colnames(meta))
+})
+
+test_that("MatisseMeta<-: adds new column to seurat meta.data", {
+  obj  <- make_matisse_object()
+  cells <- colnames(GetSeurat(obj))
+  new_df <- data.frame(my_col = 1:10, row.names = cells)
+  MatisseMeta(obj) <- new_df
   expect_true("my_col" %in% colnames(MatisseMeta(obj)))
 })
 
-test_that("AddIsoformMetadata: adds new columns", {
-  obj     <- make_matisse_object()
-  new_col <- stats::setNames(as.numeric(1:10), colnames(GetSeurat(obj)))
-  obj     <- AddIsoformMetadata(obj, new_col)
+test_that("AddIsoformMetadata: adds new columns to seurat meta.data", {
+  obj    <- make_matisse_object()
+  cells  <- colnames(GetSeurat(obj))
+  new_df <- data.frame(my_new_col = as.numeric(1:10), row.names = cells)
+  obj    <- AddIsoformMetadata(obj, new_df)
   expect_equal(nrow(MatisseMeta(obj)), 10L)
+  expect_true("my_new_col" %in% colnames(MatisseMeta(obj)))
 })
 
 test_that("$ operator: returns Seurat meta.data column", {
@@ -198,7 +254,6 @@ test_that("$ operator: returns Seurat meta.data column", {
 
 test_that("$ operator: returns a Seurat function as a forwarding closure", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj <- make_matisse_object()
   fn  <- obj$NormalizeData
   expect_true(is.function(fn))
@@ -206,7 +261,6 @@ test_that("$ operator: returns a Seurat function as a forwarding closure", {
 
 test_that("$ operator: calling returned closure runs on embedded Seurat and returns MatisseObject", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
   obj    <- make_matisse_object()
   result <- obj$NormalizeData()
   expect_s4_class(result, "MatisseObject")
@@ -222,19 +276,16 @@ test_that("SetPSI: updates the data layer in the 'psi' assay", {
   expect_equal(as.matrix(updated), as.matrix(new_psi), tolerance = 1e-6)
 })
 
-test_that("validity: catches 'psi' assay cells mismatching Seurat barcodes", {
+test_that("GetJunctionCounts: returns NULL for event-mode objects", {
+  obj <- make_matisse_from_transcripts()
+  expect_null(GetJunctionCounts(obj))
+})
+
+test_that("validity: passes for a valid object", {
   skip_if_not_installed("Seurat")
-  skip_if_not_installed("Signac")
-  obj <- make_matisse_object()
-  obj <- CalculatePSI(obj, verbose = FALSE)
-  # Create a second Seurat with different cells — should fail validity
   seu2 <- make_seurat(n_cells = 5L)
-  expect_error(
-    methods::new("MatisseObject",
-      seurat     = seu2,
-      event_data = GetEventData(obj)),
-    # The validity check for psi assay cells won't trigger here since we
-    # don't manually set the psi assay; but event_data consistency will.
-    NA  # allow it to pass — or check another validity path
-  )
+  obj  <- methods::new("MatisseObject",
+                        seurat     = seu2,
+                        event_data = make_event_data())
+  expect_no_error(methods::validObject(obj))
 })
