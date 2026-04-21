@@ -31,15 +31,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html#installation">Install</a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="../articles/intro.html">Getting started</a></li>
+<li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
     <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -127,7 +127,7 @@ event.</td>
 <span></span>
 <span><span class="co"># transcript_counts: transcripts × cells sparse matrix (e.g. from Bagpiper)</span></span>
 <span><span class="co"># ioe_files: SUPPA2 .ioe output files</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObjectFromTranscripts.html">CreateMatisseObjectFromTranscripts</a></span><span class="op">(</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">CreateMatisseObjectFromTranscripts</span><span class="op">(</span></span>
 <span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
 <span>  transcript_counts <span class="op">=</span> <span class="va">transcript_counts</span>,</span>
 <span>  ioe_files         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -164,7 +164,7 @@ to clustering.</p>
 <h2 id="step-3-normalise-transcript-counts">Step 3 — Normalise transcript counts<a class="anchor" aria-label="anchor" href="#step-3-normalise-transcript-counts"></a>
 </h2>
 <p>For long-read data the transcript-level count matrix often has high
-technical variability. <code><a href="../reference/SCTransformTranscripts.html">SCTransformTranscripts()</a></code> runs
+technical variability. <code>SCTransformTranscripts()</code> runs
 SCTransform on the <code>"transcript"</code> assay and then PCA with
 more components than the default — useful because isoform variation is
 subtler than gene-expression variation and benefits from a wider PCA
@@ -172,7 +172,7 @@ space.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Normalise, regress out sequencing depth, and run PCA in one step.</span></span>
 <span><span class="co"># Increase n_pca_dims if clusters look under-resolved.</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SCTransformTranscripts.html">SCTransformTranscripts</a></span><span class="op">(</span><span class="va">obj</span>, n_pca_dims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">SCTransformTranscripts</span><span class="op">(</span><span class="va">obj</span>, n_pca_dims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -195,7 +195,7 @@ object. The PSI data and all other slots are preserved throughout.</p>
 <p>Each dot is a cell coloured by its PSI value for one event: blue =
 exon skipped (low PSI), red = exon included (high PSI).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu">PlotPSIUMAP</span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span>,</span>
 <span>  title    <span class="op">=</span> <span class="st">"PTBP1 exon 9 — PSI per cell"</span></span>
@@ -205,7 +205,7 @@ exon skipped (low PSI), red = exon included (high PSI).</p>
 <h3 id="compare-splicing-between-cell-types">Compare splicing between cell types<a class="anchor" aria-label="anchor" href="#compare-splicing-between-cell-types"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu">PlotPSIViolin</span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span>,</span>
 <span>  group_by <span class="op">=</span> <span class="st">"cell_type"</span></span>
@@ -215,13 +215,13 @@ exon skipped (low PSI), red = exon included (high PSI).</p>
 <h3 id="survey-all-events-at-once">Survey all events at once<a class="anchor" aria-label="anchor" href="#survey-all-events-at-once"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIHeatmap.html">PlotPSIHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"seurat_clusters"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">PlotPSIHeatmap</span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"seurat_clusters"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note on event IDs:</strong> SUPPA2 event IDs use the format
 <code>TYPE:chr:coords:strand</code>
 (e.g. <code>SE:chr18:100-200:300-400:+</code>). These become the column
 names in <code>GetPSI(obj)</code>, so use the same string when calling
-<code><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP()</a></code> or subsetting with
+<code>PlotPSIUMAP()</code> or subsetting with
 <code>obj[, event_id]</code>.</p>
 </blockquote>
 <hr>

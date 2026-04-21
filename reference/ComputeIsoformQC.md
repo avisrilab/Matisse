@@ -1,8 +1,8 @@
 # Compute per-cell isoform QC metrics
 
 Calculates a panel of QC metrics from the junction count and PSI layers
-and stores them in the `isoform_metadata` slot. Existing columns with
-the same names are overwritten.
+and stores them directly in the embedded Seurat object's `meta.data`.
+Existing columns with the same names are overwritten.
 
 ## Usage
 
@@ -34,9 +34,10 @@ ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE)
 
 ## Value
 
-The updated `MatisseObject` with QC columns added to isoform metadata.
+The updated `MatisseObject` with QC columns added to cell metadata.
 
-The `MatisseObject` with QC columns added to `isoform_metadata`.
+The `MatisseObject` with QC columns added to `MatisseMeta(object)` (i.e.
+the Seurat `meta.data`).
 
 ## Details
 
@@ -44,11 +45,11 @@ Computed metrics:
 
 - n_junctions_detected:
 
-  Number of junctions with at least one read.
+  Number of junctions with at least one read (junction mode only).
 
 - total_junction_reads:
 
-  Total junction read count across all junctions.
+  Total junction read count across all junctions (junction mode only).
 
 - n_events_covered:
 

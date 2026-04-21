@@ -23,11 +23,8 @@
   and
   [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md):
   threshold-based filtering with informative removal summaries.
-- Visualization:
-  [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md),
-  [`PlotPSIViolin()`](https://avisrilab.github.io/Matisse/reference/PlotPSIViolin.md),
-  [`PlotPSIHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotPSIHeatmap.md),
-  [`PlotJunctionCoverage()`](https://avisrilab.github.io/Matisse/reference/PlotJunctionCoverage.md),
+- Visualization: `PlotPSIUMAP()`, `PlotPSIViolin()`, `PlotPSIHeatmap()`,
+  `PlotJunctionCoverage()`,
   [`PlotQCMetrics()`](https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.md).
 - [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md):
   convenience helper for generating one-vs-rest event tables from a

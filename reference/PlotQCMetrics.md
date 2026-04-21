@@ -17,12 +17,13 @@ PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L)
 
 - object:
 
-  A `MatisseObject` with populated `isoform_metadata`.
+  A `MatisseObject` with QC metrics computed by
+  [`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md).
 
 - features:
 
   Character vector of QC metric names. Must be columns in
-  `isoform_metadata`. Default: all numeric columns.
+  `MatisseMeta(object)`. Default: all numeric columns.
 
 - ...:
 

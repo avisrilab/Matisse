@@ -77,13 +77,10 @@ Ready to explore your data?
 
 ## Creating a Matisse object
 
-Start here. These functions combine your Seurat object with splicing
-data into a single Matisse object ready for analysis. Use
-[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
-if you have junction counts from STAR/STARsolo, or
-[`CreateMatisseObjectFromTranscripts()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md)
-if you have isoform-level counts from Bagpiper or a long-read
-quantifier.
+Start here. This function combines your Seurat object with splicing data
+into a single Matisse object ready for analysis. Pass `junction_counts`
+for short-read (junction) mode, or `transcript_counts` + `ioe_files` for
+long-read (event) mode.
 
 - [`show(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
   [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
@@ -93,8 +90,6 @@ quantifier.
   : The MatisseObject S4 class
 - [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
   : Create a MatisseObject
-- [`CreateMatisseObjectFromTranscripts()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md)
-  : Create a MatisseObject from transcript-level counts
 
 ## Retrieve or update your data
 
@@ -121,23 +116,26 @@ or putting updated tables back in.
   : Get junction annotation table
 - [`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
   [`` `MatisseMeta<-`() ``](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
-  : Get or set cell-level isoform metadata
+  : Get or set cell-level metadata
 - [`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
-  : Add columns to the isoform metadata
+  : Add columns to the cell metadata
 
 ## Normalisation
 
-Normalise transcript-level count data before clustering. These functions
-wrap standard Seurat normalisation steps and tune them for isoform data.
+Normalise count data before clustering. SCTransform applies variance
+stabilisation and scales for sequencing depth. In event mode it
+normalises the transcript assay; in junction mode it normalises the
+gene-expression assay by default.
 
-- [`SCTransformTranscripts()`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)
-  : SCTransform normalization for the transcript assay
+- [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
+  : SCTransform normalisation for MatisseObjects
 
 ## Calculate splicing ratios (PSI)
 
 Compute PSI (Percent Spliced In) — the fraction of transcripts in each
 cell that include a given exon. Values range from 0 (exon always
-skipped) to 1 (exon always included).
+skipped) to 1 (exon always included). In event mode this is done at
+construction; in junction mode call CalculatePSI() explicitly.
 
 - [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
   : Calculate PSI matrix from junction counts
@@ -158,18 +156,19 @@ for reliable analysis.
 
 ## Visualisation
 
-Plot splicing patterns across your cells. Overlay PSI values on a UMAP,
-compare splicing between cell types, or inspect junction usage for a
-gene of interest.
+Plot splicing patterns across your cells. Overlay any feature — PSI
+values, junction counts, or gene expression — on a UMAP, compare
+splicing between cell types, or inspect junction usage for a gene of
+interest. Pass the feature name via the `feature` argument.
 
-- [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md)
-  : UMAP plot colored by PSI of a specific splice event
-- [`PlotPSIViolin()`](https://avisrilab.github.io/Matisse/reference/PlotPSIViolin.md)
-  : Violin plot of PSI values split by cell group
-- [`PlotPSIHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotPSIHeatmap.md)
-  : Heatmap of PSI values across cells and events
-- [`PlotJunctionCoverage()`](https://avisrilab.github.io/Matisse/reference/PlotJunctionCoverage.md)
-  : Per-cell junction coverage plot for a gene
+- [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md)
+  : UMAP plot coloured by any feature
+- [`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+  : Violin plot of feature values split by cell group
+- [`PlotHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)
+  : Heatmap of feature values across cells and events
+- [`PlotCoverage()`](https://avisrilab.github.io/Matisse/reference/PlotCoverage.md)
+  : Junction coverage bar plot for a gene
 - [`PlotQCMetrics()`](https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.md)
   : Violin/ridge plot of isoform QC metrics
 
@@ -188,7 +187,7 @@ Helper functions for building event tables and combining datasets.
 
 - [Getting started with
   Matisse](https://avisrilab.github.io/Matisse/articles/intro.md):
-- [Short-read workflow: junction-based
-  PSI](https://avisrilab.github.io/Matisse/articles/short-reads.md):
 - [Long-read workflow: transcript-based
   PSI](https://avisrilab.github.io/Matisse/articles/long-reads.md):
+- [Short-read workflow: junction-based
+  PSI](https://avisrilab.github.io/Matisse/articles/short-reads.md):

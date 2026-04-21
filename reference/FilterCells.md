@@ -1,7 +1,9 @@
 # Filter cells by isoform QC thresholds
 
-Removes cells that do not pass the specified thresholds on columns in
-the `isoform_metadata` slot.
+Removes cells that do not pass the specified thresholds on QC columns in
+`MatisseMeta(object)` (the Seurat `meta.data`). Run
+[`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md)
+first to populate those columns.
 
 ## Usage
 
@@ -54,8 +56,8 @@ FilterCells(
 - custom_filters:
 
   Named list of two-element numeric vectors `c(min, max)` applied to
-  arbitrary `isoform_metadata` columns. Use `NA` for a one-sided bound.
-  Default: `NULL`.
+  arbitrary metadata columns. Use `NA` for a one-sided bound. Default:
+  `NULL`.
 
 - verbose:
 

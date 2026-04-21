@@ -79,12 +79,10 @@ obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
 ## Step 3 — Normalise transcript counts
 
 For long-read data the transcript-level count matrix often has high
-technical variability.
-[`SCTransformTranscripts()`](https://avisrilab.github.io/Matisse/reference/SCTransformTranscripts.md)
-runs SCTransform on the `"transcript"` assay and then PCA with more
-components than the default — useful because isoform variation is
-subtler than gene-expression variation and benefits from a wider PCA
-space.
+technical variability. `SCTransformTranscripts()` runs SCTransform on
+the `"transcript"` assay and then PCA with more components than the
+default — useful because isoform variation is subtler than
+gene-expression variation and benefits from a wider PCA space.
 
 ``` r
 # Normalise, regress out sequencing depth, and run PCA in one step.
@@ -141,9 +139,7 @@ PlotPSIHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 > **Note on event IDs:** SUPPA2 event IDs use the format
 > `TYPE:chr:coords:strand` (e.g. `SE:chr18:100-200:300-400:+`). These
 > become the column names in `GetPSI(obj)`, so use the same string when
-> calling
-> [`PlotPSIUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotPSIUMAP.md)
-> or subsetting with `obj[, event_id]`.
+> calling `PlotPSIUMAP()` or subsetting with `obj[, event_id]`.
 
 ------------------------------------------------------------------------
 

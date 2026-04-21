@@ -1,7 +1,8 @@
 # Calculate PSI matrix from junction counts
 
 Computes a Percent Spliced In (PSI) matrix for all splice events defined
-in `event_data`. For each cell \\c\\ and event \\e\\:
+in `event_data`. Only applies to objects in **junction mode**; in event
+mode PSI is computed at construction time.
 
 ## Usage
 
@@ -33,8 +34,7 @@ CalculatePSI(
 
   A
   [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  with a non-`NULL` `junction_counts` slot, or a sparse matrix (cells ×
-  junctions).
+  in junction mode, or a sparse matrix (cells × junctions).
 
 - events:
 
@@ -70,6 +70,8 @@ A `MatisseObject` (when given one) or a PSI matrix.
 
 ## Details
 
+For each cell \\c\\ and event \\e\\:
+
 \$\$PSI\_{c,e} = \frac{\sum \text{inclusion reads}} {\sum
 \text{inclusion reads} + \sum \text{exclusion reads}}\$\$
 
@@ -88,4 +90,4 @@ in the `"data"` layer.
 ## See also
 
 [`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md),
-[`PlotPSIHeatmap`](https://avisrilab.github.io/Matisse/reference/PlotPSIHeatmap.md)
+[`PlotHeatmap`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)

@@ -1,6 +1,11 @@
-# Get or set cell-level isoform metadata
+# Get or set cell-level metadata
 
-Get or set cell-level isoform metadata
+Returns the full `meta.data` of the embedded Seurat object, which
+includes all per-cell QC metrics and annotations added by Matisse (e.g.
+`n_junctions_detected`, `mean_psi`) alongside standard Seurat columns.
+Use
+[`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
+to add new columns.
 
 ## Usage
 
@@ -28,8 +33,8 @@ MatisseMeta(object) <- value
 
 - value:
 
-  A `data.frame` of cell-level metadata to assign (for the setter).
-  Rownames must match cell barcodes.
+  A `data.frame` whose columns are added to cell metadata (for the
+  setter). Rownames must match cell barcodes.
 
 ## Value
 

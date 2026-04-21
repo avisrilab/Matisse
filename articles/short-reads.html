@@ -31,15 +31,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html#installation">Install</a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="../articles/intro.html">Getting started</a></li>
+<li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
     <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -182,7 +182,7 @@ few cells:</p>
 <h3 id="where-does-the-splicing-switch-happen-on-the-umap">Where does the splicing switch happen on the UMAP?<a class="anchor" aria-label="anchor" href="#where-does-the-splicing-switch-happen-on-the-umap"></a>
 </h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIUMAP.html">PlotPSIUMAP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu">PlotPSIUMAP</span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span>,</span>
 <span>  title    <span class="op">=</span> <span class="st">"PTBP1 exon 9 — PSI per cell"</span></span>
@@ -192,7 +192,7 @@ few cells:</p>
 <h3 id="distributions-by-cell-type">Distributions by cell type<a class="anchor" aria-label="anchor" href="#distributions-by-cell-type"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIViolin.html">PlotPSIViolin</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu">PlotPSIViolin</span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span>,</span>
 <span>  group_by <span class="op">=</span> <span class="st">"cell_type"</span></span>
@@ -202,13 +202,13 @@ few cells:</p>
 <h3 id="overview-of-all-events">Overview of all events<a class="anchor" aria-label="anchor" href="#overview-of-all-events"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotPSIHeatmap.html">PlotPSIHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">PlotPSIHeatmap</span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="inspect-raw-junction-coverage-for-a-gene">Inspect raw junction coverage for a gene<a class="anchor" aria-label="anchor" href="#inspect-raw-junction-coverage-for-a-gene"></a>
 </h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotJunctionCoverage.html">PlotJunctionCoverage</a></span><span class="op">(</span><span class="va">obj</span>, gene_id <span class="op">=</span> <span class="st">"PTBP1"</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">PlotJunctionCoverage</span><span class="op">(</span><span class="va">obj</span>, gene_id <span class="op">=</span> <span class="st">"PTBP1"</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>

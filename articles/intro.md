@@ -29,10 +29,10 @@ added alongside them.
 Matisse supports two data types that require slightly different starting
 steps:
 
-| Data type                                                          | Entry point                                                                                                                   | When to use                                                                 |
-|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| **Short-read 10x Chromium** (STARsolo junction counts)             | [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)                               | You have a cells × junctions count matrix from STARsolo `--soloFeatures SJ` |
-| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | [`CreateMatisseObjectFromTranscripts()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md) | You have a transcripts × cells count matrix and SUPPA2 IOE files            |
+| Data type                                                          | Entry point                                                                                     | When to use                                                                 |
+|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| **Short-read 10x Chromium** (STARsolo junction counts)             | [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md) | You have a cells × junctions count matrix from STARsolo `--soloFeatures SJ` |
+| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObjectFromTranscripts()`                                                          | You have a transcripts × cells count matrix and SUPPA2 IOE files            |
 
 Once the object is built, all downstream functions — QC, filtering,
 normalisation, visualisation — are identical for both data types.

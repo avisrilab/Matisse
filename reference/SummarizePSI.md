@@ -1,6 +1,10 @@
 # Summarize PSI distribution across cells for each event
 
-Summarize PSI distribution across cells for each event
+Returns a summary table with per-event PSI statistics across all (or a
+subset of) cells. Call this after
+[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+or after creating an event-mode object with
+[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md).
 
 ## Usage
 

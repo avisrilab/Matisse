@@ -2,26 +2,10 @@
 
 The central data structure for Matisse. It wraps a
 [`Seurat`](https://satijalab.org/seurat/reference/Seurat-package.html)
-object and augments it with isoform-resolved layers. Two fixed assays
-live inside the embedded Seurat object:
-
-- `"transcript"`:
-
-  A standard `Assay5` holding raw transcript-level counts (transcripts ×
-  cells). Created by
-  [`CreateMatisseObjectFromTranscripts`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md).
-
-- `"psi"`:
-
-  An `Assay5` holding PSI values in the `"data"` layer, inclusion counts
-  in `"counts"`, and exclusion counts in `"exclusion"` (all features ×
-  cells). Created by
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-  or
-  [`CreateMatisseObjectFromTranscripts`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObjectFromTranscripts.md).
-
-Raw junction counts and splice-event annotations are kept as slots on
-the MatisseObject itself.
+object and adds isoform-resolved splicing layers. All per-cell data —
+junction counts, PSI values, transcript counts, and QC metrics — live
+inside the embedded Seurat object as named assays (`Assay5`) or cell
+metadata (`meta.data`). Nothing is duplicated outside the Seurat object.
 
 ## Usage
 
@@ -72,25 +56,38 @@ x$name
 
   Metadata column name or Seurat/Signac function name.
 
+## Details
+
+Two operating modes are supported, set automatically at construction:
+
+- `"junction"`:
+
+  Short-read mode. Raw junction counts are stored as
+  `Assay5("junction")` (junctions × cells). PSI is computed later by
+  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  and stored as `Assay5("psi")`.
+
+- `"event"`:
+
+  Long-read mode. Transcript counts (e.g. from Bagpiper or FLAMES) are
+  stored as `Assay5("transcript")`. PSI is computed at construction time
+  from SUPPA2 `.ioe` event definitions and stored as `Assay5("psi")`.
+
 ## Functions
 
 - `show(MatisseObject)`: Display a summary of a `MatisseObject`.
 
-- `x[[i`: Access isoform metadata columns or Seurat slots via `[[`.
-  Checks `isoform_metadata` first; falls back to the embedded Seurat
-  object.
+- `x[[i`: Access cell metadata or Seurat slots via `[[`. Checks
+  `seurat@meta.data` first; falls back to the embedded Seurat object
+  (assays, reductions, etc.).
 
 ## Slots
 
 - `seurat`:
 
-  A `Seurat` object carrying gene-level expression, dimensionality
-  reductions, cell metadata, and the `"transcript"` / `"psi"` assays.
-
-- `junction_counts`:
-
-  A sparse matrix (dgCMatrix, cells × junctions) of raw per-junction
-  read counts.
+  A `Seurat` object. Contains all per-cell data: gene expression, splice
+  assays (`"junction"`, `"transcript"`, `"psi"`), cell metadata (QC
+  metrics, cluster labels), and dimensionality reductions.
 
 - `event_data`:
 
@@ -103,10 +100,10 @@ x$name
   A `data.frame` with one row per junction. Required columns:
   `junction_id`, `chr`, `start`, `end`, `strand`, `gene_id`.
 
-- `isoform_metadata`:
+- `mode`:
 
-  A `data.frame` of per-cell isoform QC metrics. Rownames correspond to
-  cell barcodes.
+  Character. `"junction"` for short-read objects; `"event"` for
+  long-read objects.
 
 - `version`:
 

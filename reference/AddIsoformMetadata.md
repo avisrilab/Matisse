@@ -1,6 +1,8 @@
-# Add columns to the isoform metadata
+# Add columns to the cell metadata
 
-Add columns to the isoform metadata
+Adds new columns to the embedded Seurat object's `meta.data`. This is
+the standard way to attach per-cell isoform QC or other annotations to a
+`MatisseObject`.
 
 ## Usage
 
@@ -32,5 +34,5 @@ The updated `MatisseObject`.
 
 ## Methods (by class)
 
-- `AddIsoformMetadata(MatisseObject)`: Add or update columns in the
-  isoform metadata.
+- `AddIsoformMetadata(MatisseObject)`: Add or update columns in the cell
+  metadata.
