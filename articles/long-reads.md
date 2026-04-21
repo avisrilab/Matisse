@@ -21,19 +21,24 @@ instead.
 | Input                       | Description                                                                                                                                                                          |
 |-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Seurat object**           | Already processed: gene-expression normalisation, UMAP, cluster labels.                                                                                                              |
-| **Transcript count matrix** | *Transcripts × cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation.                                                                          |
+| **Transcript count matrix** | *Transcripts x cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation.                                                                          |
 | **SUPPA2 IOE files**        | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to inclusion/exclusion sets for each splicing event. |
 
 ------------------------------------------------------------------------
 
-## Step 1 — Build the Matisse object
+## Step 1 – Build the Matisse object
+
+Pass `transcript_counts` and `ioe_files` together to trigger event mode.
+PSI is calculated automatically during construction – no separate
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+call is needed.
 
 ``` r
 library(Matisse)
 
-# transcript_counts: transcripts × cells sparse matrix (e.g. from Bagpiper)
+# transcript_counts: transcripts x cells sparse matrix (e.g. from Bagpiper)
 # ioe_files: SUPPA2 .ioe output files
-obj <- CreateMatisseObjectFromTranscripts(
+obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
   ioe_files         = c(
@@ -45,10 +50,8 @@ obj <- CreateMatisseObjectFromTranscripts(
 )
 ```
 
-PSI is calculated automatically during construction — no separate
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-call is needed. Each cell × event entry is the fraction of transcripts
-carrying the included form of that exon:
+Each cell x event PSI entry is the fraction of transcripts carrying the
+included form of that exon:
 
 $$PSI_{c,e} = \frac{\sum\text{inclusion transcript counts}}{\sum\text{inclusion counts} + \sum\text{exclusion counts}}$$
 
@@ -57,10 +60,16 @@ event are left as `NA`.
 
 ------------------------------------------------------------------------
 
-## Step 2 — Quality control
+## Step 2 – Summarise and quality control
 
-Check that each cell has enough transcript coverage before moving on to
-clustering.
+Summarise the PSI distribution across events, then compute per-cell QC
+metrics before filtering.
+
+``` r
+# Per-event summary: mean PSI, median PSI, variance, cell coverage
+psi_summary <- SummarizePSI(obj)
+head(psi_summary)
+```
 
 ``` r
 obj <- ComputeIsoformQC(obj)
@@ -76,23 +85,25 @@ obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
 
 ------------------------------------------------------------------------
 
-## Step 3 — Normalise transcript counts
+## Step 3 – Normalise transcript counts
 
 For long-read data the transcript-level count matrix often has high
-technical variability. `SCTransformTranscripts()` runs SCTransform on
-the `"transcript"` assay and then PCA with more components than the
-default — useful because isoform variation is subtler than
-gene-expression variation and benefits from a wider PCA space.
+technical variability.
+[`SCTransform()`](https://satijalab.org/seurat/reference/SCTransform.html)
+on a Matisse object in event mode automatically targets the
+`"transcript"` assay and then runs PCA – useful because isoform
+variation is subtler than gene-expression variation and benefits from a
+wider PCA space.
 
 ``` r
 # Normalise, regress out sequencing depth, and run PCA in one step.
 # Increase n_pca_dims if clusters look under-resolved.
-obj <- SCTransformTranscripts(obj, n_pca_dims = 50)
+obj <- SCTransform(obj, n_pca_dims = 50)
 ```
 
 ------------------------------------------------------------------------
 
-## Step 4 — Cluster and embed
+## Step 4 – Cluster and embed
 
 Standard Seurat clustering functions work directly on the Matisse
 object. The PSI data and all other slots are preserved throughout.
@@ -105,7 +116,7 @@ obj <- FindClusters(obj, resolution = 0.5)
 
 ------------------------------------------------------------------------
 
-## Step 5 — Visualise splicing patterns
+## Step 5 – Visualise splicing patterns
 
 ### Overlay PSI on the UMAP
 
@@ -113,19 +124,19 @@ Each dot is a cell coloured by its PSI value for one event: blue = exon
 skipped (low PSI), red = exon included (high PSI).
 
 ``` r
-PlotPSIUMAP(
+PlotUMAP(
   obj,
-  event_id = "SE:chr18:3433647-3436055:+",
-  title    = "PTBP1 exon 9 — PSI per cell"
+  feature = "SE:chr18:3433647-3436055:+",
+  title   = "PTBP1 exon 9 -- PSI per cell"
 )
 ```
 
 ### Compare splicing between cell types
 
 ``` r
-PlotPSIViolin(
+PlotViolin(
   obj,
-  event_id = "SE:chr18:3433647-3436055:+",
+  feature  = "SE:chr18:3433647-3436055:+",
   group_by = "cell_type"
 )
 ```
@@ -133,13 +144,15 @@ PlotPSIViolin(
 ### Survey all events at once
 
 ``` r
-PlotPSIHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
+PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 ```
 
 > **Note on event IDs:** SUPPA2 event IDs use the format
 > `TYPE:chr:coords:strand` (e.g. `SE:chr18:100-200:300-400:+`). These
-> become the column names in `GetPSI(obj)`, so use the same string when
-> calling `PlotPSIUMAP()` or subsetting with `obj[, event_id]`.
+> become the row names in `GetPSI(obj)`, so use the same string when
+> calling
+> [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md)
+> or subsetting.
 
 ------------------------------------------------------------------------
 
@@ -153,13 +166,13 @@ seu <- GetSeurat(obj)
 obj$seurat_clusters
 obj$cell_type
 
-# Full PSI matrix as a sparse matrix (cells × events)
+# Full PSI matrix as a sparse matrix (cells x events)
 psi <- GetPSI(obj)
 
-# Raw transcript counts (transcripts × cells)
+# Raw transcript counts (transcripts x cells)
 tx <- GetTranscriptCounts(obj)
 
-# Subset to one cell type — PSI and gene expression stay in sync
+# Subset to one cell type -- PSI and gene expression stay in sync
 neurons <- obj[obj$cell_type == "Neuron", ]
 ```
 

@@ -2,7 +2,7 @@
 
 ## What does Matisse do?
 
-Genes can be spliced in different ways — certain exons may be included
+Genes can be spliced in different ways – certain exons may be included
 in some transcripts but skipped in others. This is called **alternative
 splicing**, and it means one gene can produce multiple protein variants
 with different functions.
@@ -11,12 +11,12 @@ Matisse measures alternative splicing **one cell at a time**. For each
 cell it calculates a **PSI value** (Percent Spliced In) for each
 splicing event:
 
-- **PSI = 1** — every transcript in that cell includes the exon
-- **PSI = 0** — every transcript skips the exon
-- **PSI = 0.5** — half include, half skip
+- **PSI = 1** – every transcript in that cell includes the exon
+- **PSI = 0** – every transcript skips the exon
+- **PSI = 0.5** – half include, half skip
 
 By comparing PSI values across cell types, clusters, or conditions you
-can find which populations splice genes differently — and by how much.
+can find which populations splice genes differently – and by how much.
 Matisse sits on top of your existing
 [Seurat](https://satijalab.org/seurat/) workflow. Your gene expression
 data, UMAP, and cluster labels stay intact; splicing information is
@@ -26,16 +26,43 @@ added alongside them.
 
 ## Two entry points
 
-Matisse supports two data types that require slightly different starting
-steps:
+Matisse supports two data types via a single constructor. What you pass
+in determines the mode:
 
-| Data type                                                          | Entry point                                                                                     | When to use                                                                 |
-|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| **Short-read 10x Chromium** (STARsolo junction counts)             | [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md) | You have a cells × junctions count matrix from STARsolo `--soloFeatures SJ` |
-| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObjectFromTranscripts()`                                                          | You have a transcripts × cells count matrix and SUPPA2 IOE files            |
+| Data type                                                          | How to create                                               | When to use                                                                 |
+|--------------------------------------------------------------------|-------------------------------------------------------------|-----------------------------------------------------------------------------|
+| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObject(transcript_counts=..., ioe_files=...)` | You have a transcripts x cells count matrix and SUPPA2 IOE files            |
+| **Short-read 10x Chromium** (STARsolo junction counts)             | `CreateMatisseObject(junction_counts=..., event_data=...)`  | You have a cells x junctions count matrix from STARsolo `--soloFeatures SJ` |
 
-Once the object is built, all downstream functions — QC, filtering,
-normalisation, visualisation — are identical for both data types.
+Once the object is built, all downstream functions – QC, filtering,
+normalisation, visualisation – are identical for both data types.
+
+------------------------------------------------------------------------
+
+## Quick-start (long reads)
+
+``` r
+library(Matisse)
+
+obj <- CreateMatisseObject(
+  seurat            = seu,
+  transcript_counts = tx_counts,    # transcripts x cells from Bagpiper/FLAMES
+  ioe_files         = "events_SE.ioe",
+  min_coverage      = 5L
+)
+# PSI is computed at construction; summarise before clustering
+obj <- SummarizePSI(obj)
+obj <- ComputeIsoformQC(obj)
+# Normalise transcript counts and cluster
+obj <- SCTransform(obj)
+obj <- RunUMAP(obj, dims = 1:50)
+obj <- FindNeighbors(obj, dims = 1:50)
+obj <- FindClusters(obj, resolution = 0.5)
+PlotUMAP(obj, feature = "SE:chr18:3433647-3436055:+")
+```
+
+-\> **Full walkthrough:** [Long-read
+workflow](https://avisrilab.github.io/Matisse/articles/long-reads.md)
 
 ------------------------------------------------------------------------
 
@@ -46,40 +73,16 @@ library(Matisse)
 
 obj <- CreateMatisseObject(
   seurat          = seu,          # your existing Seurat object
-  junction_counts = jxn_counts,   # cells × junctions from STARsolo
+  junction_counts = jxn_counts,   # cells x junctions from STARsolo
   event_data      = event_df      # splice event annotation
 )
 obj <- CalculatePSI(obj, min_coverage = 5)
 obj <- ComputeIsoformQC(obj)
-PlotPSIUMAP(obj, event_id = "PTBP1:SE:chr18:3433647-3436055")
+PlotUMAP(obj, feature = "PTBP1:SE:chr18:3433647-3436055")
 ```
 
-→ **Full walkthrough:** [Short-read
+-\> **Full walkthrough:** [Short-read
 workflow](https://avisrilab.github.io/Matisse/articles/short-reads.md)
-
-------------------------------------------------------------------------
-
-## Quick-start (long reads)
-
-``` r
-library(Matisse)
-
-obj <- CreateMatisseObjectFromTranscripts(
-  seurat            = seu,
-  transcript_counts = tx_counts,    # transcripts × cells from Bagpiper/FLAMES
-  ioe_files         = "events_SE.ioe",
-  min_coverage      = 5L
-)
-# PSI is already computed; normalise transcripts then cluster
-obj <- SCTransformTranscripts(obj, n_pca_dims = 50)
-obj <- RunUMAP(obj, dims = 1:50)
-obj <- FindNeighbors(obj, dims = 1:50)
-obj <- FindClusters(obj, resolution = 0.5)
-PlotPSIUMAP(obj, event_id = "SE:chr18:3433647-3436055:+")
-```
-
-→ **Full walkthrough:** [Long-read
-workflow](https://avisrilab.github.io/Matisse/articles/long-reads.md)
 
 ------------------------------------------------------------------------
 

@@ -247,3 +247,51 @@
 .template-home #pkgdown-sidebar {
   padding-top: 0.5rem;
 }
+
+/* ── Reduce excess horizontal whitespace ──────────────────── */
+
+/* Pull the Bootstrap container inward less aggressively */
+.container, .container-fluid, .container-xxl {
+  padding-left: 1rem  !important;
+  padding-right: 1rem !important;
+}
+
+/* Tighten the main content column on article/reference pages */
+.template-article .col-md-9,
+.template-reference-topic .col-md-9 {
+  padding-left: 1.5rem;
+  padding-right: 1rem;
+}
+
+/* Sidebar narrower so content gets more room */
+.template-article #pkgdown-sidebar,
+.template-reference-topic #pkgdown-sidebar {
+  padding-right: 0.75rem;
+}
+
+/* ── Back-to-top button ───────────────────────────────────── */
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+  display: none;          /* hidden until user scrolls */
+  background: #2c6e8a;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.2rem;
+  line-height: 2.6rem;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  transition: background 0.2s, opacity 0.2s;
+  opacity: 0.85;
+}
+
+#back-to-top:hover {
+  background: #1b4f6a;
+  opacity: 1;
+}

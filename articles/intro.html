@@ -11,7 +11,7 @@
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="Getting started with Matisse">
+<script src="../extra.js"></script><meta property="og:title" content="Getting started with Matisse">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -72,7 +72,7 @@
 <div class="section level2">
 <h2 id="what-does-matisse-do">What does Matisse do?<a class="anchor" aria-label="anchor" href="#what-does-matisse-do"></a>
 </h2>
-<p>Genes can be spliced in different ways — certain exons may be
+<p>Genes can be spliced in different ways – certain exons may be
 included in some transcripts but skipped in others. This is called
 <strong>alternative splicing</strong>, and it means one gene can produce
 multiple protein variants with different functions.</p>
@@ -81,15 +81,15 @@ time</strong>. For each cell it calculates a <strong>PSI value</strong>
 (Percent Spliced In) for each splicing event:</p>
 <ul>
 <li>
-<strong>PSI = 1</strong> — every transcript in that cell includes
+<strong>PSI = 1</strong> – every transcript in that cell includes
 the exon</li>
 <li>
-<strong>PSI = 0</strong> — every transcript skips the exon</li>
+<strong>PSI = 0</strong> – every transcript skips the exon</li>
 <li>
-<strong>PSI = 0.5</strong> — half include, half skip</li>
+<strong>PSI = 0.5</strong> – half include, half skip</li>
 </ul>
 <p>By comparing PSI values across cell types, clusters, or conditions
-you can find which populations splice genes differently — and by how
+you can find which populations splice genes differently – and by how
 much. Matisse sits on top of your existing <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> workflow. Your gene
 expression data, UMAP, and cluster labels stay intact; splicing
 information is added alongside them.</p>
@@ -98,79 +98,82 @@ information is added alongside them.</p>
 <div class="section level2">
 <h2 id="two-entry-points">Two entry points<a class="anchor" aria-label="anchor" href="#two-entry-points"></a>
 </h2>
-<p>Matisse supports two data types that require slightly different
-starting steps:</p>
+<p>Matisse supports two data types via a single constructor. What you
+pass in determines the mode:</p>
 <table class="table">
 <colgroup>
-<col width="29%">
-<col width="35%">
-<col width="35%">
+<col width="28%">
+<col width="36%">
+<col width="34%">
 </colgroup>
 <thead><tr class="header">
 <th>Data type</th>
-<th>Entry point</th>
+<th>How to create</th>
 <th>When to use</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td>
-<strong>Short-read 10x Chromium</strong> (STARsolo junction
-counts)</td>
-<td><code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code></td>
-<td>You have a cells × junctions count matrix from STARsolo
-<code>--soloFeatures SJ</code>
-</td>
+<strong>Long-read / transcript quantification</strong> (Bagpiper,
+FLAMES, LIQA)</td>
+<td><code>CreateMatisseObject(transcript_counts=..., ioe_files=...)</code></td>
+<td>You have a transcripts x cells count matrix and SUPPA2 IOE
+files</td>
 </tr>
 <tr class="even">
 <td>
-<strong>Long-read / transcript quantification</strong> (Bagpiper,
-FLAMES, LIQA)</td>
-<td><code>CreateMatisseObjectFromTranscripts()</code></td>
-<td>You have a transcripts × cells count matrix and SUPPA2 IOE
-files</td>
+<strong>Short-read 10x Chromium</strong> (STARsolo junction
+counts)</td>
+<td><code>CreateMatisseObject(junction_counts=..., event_data=...)</code></td>
+<td>You have a cells x junctions count matrix from STARsolo
+<code>--soloFeatures SJ</code>
+</td>
 </tr>
 </tbody>
 </table>
-<p>Once the object is built, all downstream functions — QC, filtering,
-normalisation, visualisation — are identical for both data types.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="quick-start-short-reads">Quick-start (short reads)<a class="anchor" aria-label="anchor" href="#quick-start-short-reads"></a>
-</h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
-<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,          <span class="co"># your existing Seurat object</span></span>
-<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,   <span class="co"># cells × junctions from STARsolo</span></span>
-<span>  event_data      <span class="op">=</span> <span class="va">event_df</span>      <span class="co"># splice event annotation</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="fu">PlotPSIUMAP</span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span><span class="op">)</span></span></code></pre></div>
-<p>→ <strong>Full walkthrough:</strong> <a href="short-reads.html">Short-read workflow</a></p>
+<p>Once the object is built, all downstream functions – QC, filtering,
+normalisation, visualisation – are identical for both data types.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="quick-start-long-reads">Quick-start (long reads)<a class="anchor" aria-label="anchor" href="#quick-start-long-reads"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">CreateMatisseObjectFromTranscripts</span><span class="op">(</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
 <span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  transcript_counts <span class="op">=</span> <span class="va">tx_counts</span>,    <span class="co"># transcripts × cells from Bagpiper/FLAMES</span></span>
+<span>  transcript_counts <span class="op">=</span> <span class="va">tx_counts</span>,    <span class="co"># transcripts x cells from Bagpiper/FLAMES</span></span>
 <span>  ioe_files         <span class="op">=</span> <span class="st">"events_SE.ioe"</span>,</span>
 <span>  min_coverage      <span class="op">=</span> <span class="fl">5L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># PSI is already computed; normalise transcripts then cluster</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">SCTransformTranscripts</span><span class="op">(</span><span class="va">obj</span>, n_pca_dims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="co"># PSI is computed at construction; summarise before clustering</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SummarizePSI.html">SummarizePSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="co"># Normalise transcript counts and cluster</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">obj</span>, resolution <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="fu">PlotPSIUMAP</span><span class="op">(</span><span class="va">obj</span>, event_id <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span><span class="op">)</span></span></code></pre></div>
-<p>→ <strong>Full walkthrough:</strong> <a href="long-reads.html">Long-read workflow</a></p>
+<span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span><span class="va">obj</span>, feature <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span><span class="op">)</span></span></code></pre></div>
+<p>-&gt; <strong>Full walkthrough:</strong> <a href="long-reads.html">Long-read workflow</a></p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="quick-start-short-reads">Quick-start (short reads)<a class="anchor" aria-label="anchor" href="#quick-start-short-reads"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
+<span>  seurat          <span class="op">=</span> <span class="va">seu</span>,          <span class="co"># your existing Seurat object</span></span>
+<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,   <span class="co"># cells x junctions from STARsolo</span></span>
+<span>  event_data      <span class="op">=</span> <span class="va">event_df</span>      <span class="co"># splice event annotation</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span><span class="va">obj</span>, feature <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span><span class="op">)</span></span></code></pre></div>
+<p>-&gt; <strong>Full walkthrough:</strong> <a href="short-reads.html">Short-read workflow</a></p>
 <hr>
 </div>
 <div class="section level2">

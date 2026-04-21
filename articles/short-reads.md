@@ -20,19 +20,19 @@ instead.
 | Input                      | Description                                                                                                                                                                                                                                                            |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Seurat object**          | Already processed: normalisation, UMAP, cluster labels.                                                                                                                                                                                                                |
-| **Junction count matrix**  | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs in the format `chr:start:end`. Produced by STARsolo with `--soloFeatures SJ`.                                                                             |
+| **Junction count matrix**  | *Cells x junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs in the format `chr:start:end`. Produced by STARsolo with `--soloFeatures SJ`.                                                                             |
 | **Event annotation table** | A data frame with one row per splicing event, specifying which junctions support inclusion versus exclusion. Can be built with [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md) or loaded from a SUPPA2 / rMATS annotation. |
 
 ------------------------------------------------------------------------
 
-## Step 1 — Build the Matisse object
+## Step 1 – Build the Matisse object
 
 ``` r
 library(Matisse)
 
 obj <- CreateMatisseObject(
   seurat          = seu,
-  junction_counts = jxn_counts,   # cells × junctions matrix from STARsolo
+  junction_counts = jxn_counts,   # cells x junctions matrix from STARsolo
   event_data      = event_df,     # splice event annotation table
   junction_data   = junction_df   # optional: genomic coordinates per junction
 )
@@ -40,7 +40,7 @@ obj <- CreateMatisseObject(
 
 If you don’t have a hand-curated event annotation,
 [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md)
-can generate one automatically from the junction table — each junction
+can generate one automatically from the junction table – each junction
 becomes its own “simple” event with all other junctions for the same
 gene treated as exclusion evidence:
 
@@ -50,7 +50,7 @@ event_df <- BuildSimpleEvents(junction_df)
 
 ------------------------------------------------------------------------
 
-## Step 2 — Calculate PSI
+## Step 2 – Calculate PSI
 
 For each cell and each event, Matisse sums the reads from
 inclusion-supporting junctions and exclusion-supporting junctions, then
@@ -67,7 +67,7 @@ obj <- CalculatePSI(obj, min_coverage = 5)
 
 ------------------------------------------------------------------------
 
-## Step 3 — Quality control
+## Step 3 – Quality control
 
 ``` r
 obj <- ComputeIsoformQC(obj)
@@ -94,24 +94,24 @@ obj <- FilterEvents(
 
 ------------------------------------------------------------------------
 
-## Step 4 — Visualise splicing patterns
+## Step 4 – Visualise splicing patterns
 
 ### Where does the splicing switch happen on the UMAP?
 
 ``` r
-PlotPSIUMAP(
+PlotUMAP(
   obj,
-  event_id = "PTBP1:SE:chr18:3433647-3436055",
-  title    = "PTBP1 exon 9 — PSI per cell"
+  feature = "PTBP1:SE:chr18:3433647-3436055",
+  title   = "PTBP1 exon 9 -- PSI per cell"
 )
 ```
 
 ### Distributions by cell type
 
 ``` r
-PlotPSIViolin(
+PlotViolin(
   obj,
-  event_id = "PTBP1:SE:chr18:3433647-3436055",
+  feature  = "PTBP1:SE:chr18:3433647-3436055",
   group_by = "cell_type"
 )
 ```
@@ -119,13 +119,13 @@ PlotPSIViolin(
 ### Overview of all events
 
 ``` r
-PlotPSIHeatmap(obj, group_by = "cell_type", max_cells = 400)
+PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
 ```
 
 ### Inspect raw junction coverage for a gene
 
 ``` r
-PlotJunctionCoverage(obj, gene_id = "PTBP1", group_by = "cell_type")
+PlotCoverage(obj, gene = "PTBP1")
 ```
 
 ------------------------------------------------------------------------
@@ -140,10 +140,10 @@ seu <- GetSeurat(obj)
 obj$seurat_clusters
 obj$cell_type
 
-# PSI matrix: cells × events
+# PSI matrix: cells x events
 psi <- GetPSI(obj)
 
-# Raw junction counts: cells × junctions
+# Raw junction counts: cells x junctions
 jxn <- GetJunctionCounts(obj)
 
 # Subset to a specific cell type
