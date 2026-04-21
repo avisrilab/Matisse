@@ -48,10 +48,8 @@ Collate:
     'MatisseObject-methods.R'
     'constructors.R'
     'dispatch.R'
-    'normalization.R'
     'psi.R'
     'qc.R'
-    'transcript_psi.R'
     'utils.R'
     'visualization.R'
 URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse
