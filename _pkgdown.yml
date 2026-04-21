@@ -7,8 +7,7 @@ template:
     primary: "#2C6E8A"
     heading-font: "Lato"
     base-font-size: "1rem"
-    # Widen the content area — Bootstrap default is 960 px; 1320 px uses xl breakpoint fully
-    container-max-width: "1320px"
+    container-max-width: "100%"
 
 home:
   title: "Matisse — Splicing and chromatin, one cell at a time"
@@ -29,7 +28,7 @@ home:
 
 navbar:
   structure:
-    left:  [intro, getting-started, install, articles, reference, news]
+    left:  [intro, install, getting-started, articles, reference, news]
     right: [search, github]
   components:
     install:
