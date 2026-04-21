@@ -28,13 +28,13 @@ CreateMatisseObject(
 
 - junction_counts:
 
-  A sparse matrix (dgCMatrix, cells × junctions) of raw per-junction
+  A sparse matrix (dgCMatrix, cells x junctions) of raw per-junction
   read counts. Row names must match `colnames(seurat)`. Triggers
   junction mode. Default: `NULL`.
 
 - transcript_counts:
 
-  A matrix or sparse matrix (transcripts × cells) of raw
+  A matrix or sparse matrix (transcripts x cells) of raw
   transcript-level counts. Stored as `Assay5("transcript")` in the
   Seurat object. Column names must overlap with `colnames(seurat)`.
   Default: `NULL`.
@@ -85,7 +85,7 @@ A
   definitions, stored as `Assay5("psi")`.
 
 You can also pass `transcript_counts` alone (without `ioe_files`) to
-store the transcript assay without computing PSI — for example, when you
+store the transcript assay without computing PSI – for example, when you
 want to run
 [`SCTransform`](https://satijalab.org/seurat/reference/SCTransform.html)
 on transcript-level counts and compute PSI separately.

@@ -73,13 +73,13 @@ mode is detected automatically from the inputs you supply:</p>
 
 
 <dt id="arg-junction-counts">junction_counts<a class="anchor" aria-label="anchor" href="#arg-junction-counts"></a></dt>
-<dd><p>A sparse matrix (dgCMatrix, cells × junctions) of
+<dd><p>A sparse matrix (dgCMatrix, cells x junctions) of
 raw per-junction read counts. Row names must match <code>colnames(seurat)</code>.
 Triggers junction mode. Default: <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-transcript-counts">transcript_counts<a class="anchor" aria-label="anchor" href="#arg-transcript-counts"></a></dt>
-<dd><p>A matrix or sparse matrix (transcripts × cells) of
+<dd><p>A matrix or sparse matrix (transcripts x cells) of
 raw transcript-level counts. Stored as <code>Assay5("transcript")</code> in the
 Seurat object. Column names must overlap with <code>colnames(seurat)</code>.
 Default: <code>NULL</code>.</p></dd>
@@ -130,7 +130,7 @@ PSI values.</p></li>
 supplied SUPPA2 <code>.ioe</code> event definitions, stored as
 <code>Assay5("psi")</code>.</p></li>
 </ul><p>You can also pass <code>transcript_counts</code> alone (without <code>ioe_files</code>)
-to store the transcript assay without computing PSI — for example, when you
+to store the transcript assay without computing PSI – for example, when you
 want to run <code><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></code> on transcript-level counts and compute
 PSI separately.</p>
     </div>
