@@ -10,3 +10,4 @@
 ^\.lintr$
 ^codecov\.yml$
 ^CRAN-SUBMISSION$
+^index\.md$

@@ -18,11 +18,11 @@ CreateMatisseObject(
 \arguments{
 \item{seurat}{A \code{Seurat} object. Required.}
 
-\item{junction_counts}{A sparse matrix (dgCMatrix, cells × junctions) of
+\item{junction_counts}{A sparse matrix (dgCMatrix, cells x junctions) of
 raw per-junction read counts. Row names must match \code{colnames(seurat)}.
 Triggers junction mode. Default: \code{NULL}.}
 
-\item{transcript_counts}{A matrix or sparse matrix (transcripts × cells) of
+\item{transcript_counts}{A matrix or sparse matrix (transcripts x cells) of
 raw transcript-level counts. Stored as \code{Assay5("transcript")} in the
 Seurat object. Column names must overlap with \code{colnames(seurat)}.
 Default: \code{NULL}.}
@@ -67,8 +67,8 @@ supplied SUPPA2 \code{.ioe} event definitions, stored as
 }
 
 You can also pass \code{transcript_counts} alone (without \code{ioe_files})
-to store the transcript assay without computing PSI — for example, when you
-want to run \code{\link{SCTransform}} on transcript-level counts and compute
+to store the transcript assay without computing PSI -- for example, when you
+want to run \code{\link[Seurat]{SCTransform}} on transcript-level counts and compute
 PSI separately.
 }
 \examples{

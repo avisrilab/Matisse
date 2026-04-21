@@ -21,15 +21,15 @@ NULL
 #' }
 #'
 #' You can also pass \code{transcript_counts} alone (without \code{ioe_files})
-#' to store the transcript assay without computing PSI — for example, when you
-#' want to run \code{\link{SCTransform}} on transcript-level counts and compute
+#' to store the transcript assay without computing PSI -- for example, when you
+#' want to run \code{\link[Seurat]{SCTransform}} on transcript-level counts and compute
 #' PSI separately.
 #'
 #' @param seurat A \code{Seurat} object. Required.
-#' @param junction_counts A sparse matrix (dgCMatrix, cells × junctions) of
+#' @param junction_counts A sparse matrix (dgCMatrix, cells x junctions) of
 #'   raw per-junction read counts. Row names must match \code{colnames(seurat)}.
 #'   Triggers junction mode. Default: \code{NULL}.
-#' @param transcript_counts A matrix or sparse matrix (transcripts × cells) of
+#' @param transcript_counts A matrix or sparse matrix (transcripts x cells) of
 #'   raw transcript-level counts. Stored as \code{Assay5("transcript")} in the
 #'   Seurat object. Column names must overlap with \code{colnames(seurat)}.
 #'   Default: \code{NULL}.
@@ -109,7 +109,7 @@ CreateMatisseObject <- function(
     seurat <- .add_junction_assay(seurat, junction_counts, cells, verbose)
   }
 
-  # --- optional transcript counts → "transcript" Assay5 -------------------
+  # --- optional transcript counts -> "transcript" Assay5 -------------------
   if (has_transcripts) {
     seurat <- .add_transcript_assay(seurat, transcript_counts, cells, verbose)
   }
@@ -228,9 +228,9 @@ CreateMatisseObject <- function(
   if (ncol(jxn_counts) < 2L) {
     rlang::abort(
       "`junction_counts` must have at least 2 junctions ",
-      "(Assay5 requires ≥2 features).")
+      "(Assay5 requires >=2 features).")
   }
-  # Transpose: cells x junctions → junctions x cells for Seurat convention
+  # Transpose: cells x junctions -> junctions x cells for Seurat convention
   jxn_ec  <- Matrix::t(jxn_counts)
   jxn_assay <- SeuratObject::CreateAssay5Object(counts = jxn_ec)
   seurat[["junction"]] <- jxn_assay
@@ -276,8 +276,8 @@ CreateMatisseObject <- function(
 
 # Build an Assay5 ("psi") from PSI, inclusion, and exclusion matrices.
 # All inputs are cells x events (Matisse convention); stored as events x cells.
-# Returns list($assay, $feature_names) — stored names may differ from inputs
-# if SeuratObject sanitized them (e.g. underscore → dash).
+# Returns list($assay, $feature_names) -- stored names may differ from inputs
+# if SeuratObject sanitized them (e.g. underscore -> dash).
 .create_psi_assay <- function(psi_mat, inc_mat, exc_mat) {
   psi_ec <- Matrix::t(psi_mat)
   inc_ec <- Matrix::t(inc_mat)
