@@ -7,7 +7,6 @@
 \method{SCTransform}{MatisseObject}(
   object,
   assay = NULL,
-  n_pca_dims = 50L,
   vars_to_regress = NULL,
   verbose = TRUE,
   ...
@@ -19,26 +18,28 @@
 \item{assay}{Character. Assay to normalise. Default: \code{"transcript"}
 in event mode; the active default assay in junction mode.}
 
-\item{n_pca_dims}{Integer. PCA dimensions to compute. Default: \code{50}.
-Set to \code{0L} to skip PCA.}
+\item{vars_to_regress}{Character vector. Covariates to regress out
+(e.g. \code{"percent.mt"}). Default: \code{NULL}.}
 
-\item{vars_to_regress}{Character vector. Variables to regress out.
-Default: \code{NULL}.}
-
-\item{verbose}{Logical. Default: \code{TRUE}.}
+\item{verbose}{Logical. Print progress messages. Default: \code{TRUE}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[Seurat]{SCTransform}}.}
 }
 \value{
-The updated \code{MatisseObject}.
+The updated \code{MatisseObject} with a new \code{"SCT"} assay.
 }
 \description{
-Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults. In
-\strong{event mode}, normalises the \code{"transcript"} assay. In
-\strong{junction mode}, normalises the active default assay (usually
-\code{"RNA"}). Override with the \code{assay} argument.
+Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults.
+In \strong{event mode} (long-read), normalises the \code{"transcript"}
+assay by default, so that transcript-level abundances are
+variance-stabilised before dimensionality reduction. In
+\strong{junction mode} (short-read), normalises the active default assay
+(typically \code{"RNA"}).
+
+Override the target assay with the \code{assay} argument. PCA is
+\strong{not} run automatically — call \code{\link{RunPCA.MatisseObject}}
+after normalisation.
 }
-\details{
-After normalisation, \code{RunPCA} is run automatically on the resulting
-\code{"SCT"} assay. To skip PCA set \code{n_pca_dims = 0L}.
+\seealso{
+\code{\link{RunPCA.MatisseObject}}, \code{\link{NormalizeData.MatisseObject}}
 }
