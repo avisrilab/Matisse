@@ -321,6 +321,12 @@ setMethod("$", "MatisseObject", function(x, name) {
     "Seurat/Signac functions, or the Seurat object."))
 })
 
+#' @export
+.DollarNames.MatisseObject <- function(x, pattern = "") {
+  nms <- if (!is.null(x@seurat)) colnames(x@seurat@meta.data) else character(0)
+  grep(pattern, nms, value = TRUE)
+}
+
 # Look up an exported function from Seurat or Signac
 .find_package_function <- function(name, pkgs = c("Seurat", "Signac")) {
   for (pkg in pkgs) {

@@ -252,6 +252,19 @@ test_that("$ operator: returns Seurat meta.data column", {
   expect_no_error(obj$orig.ident)
 })
 
+test_that(".DollarNames: lists Seurat metadata columns for tab-completion", {
+  obj <- make_matisse_with_umap()   # has cell_type and seurat_clusters
+  nms <- .DollarNames(obj, pattern = "")
+  expect_true("cell_type" %in% nms)
+  expect_true("seurat_clusters" %in% nms)
+})
+
+test_that(".DollarNames: pattern filters returned names", {
+  obj <- make_matisse_with_umap()
+  nms <- .DollarNames(obj, pattern = "cell")
+  expect_true(all(grepl("cell", nms)))
+})
+
 test_that("$ operator: returns a Seurat function as a forwarding closure", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_object()
