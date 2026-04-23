@@ -133,8 +133,7 @@ test_that("FilterCells: 'psi' assay cells are also subsetted", {
 
 test_that("FilterCells: no warning in event mode when no junction bounds given", {
   obj <- make_matisse_from_transcripts()
-  obj <- CalculatePSI(obj, verbose = FALSE)
-  expect_no_warning(FilterCells(obj, min_pct_covered = 0, verbose = FALSE))
+  expect_no_warning(FilterCells(obj, verbose = FALSE))
 })
 
 # ---------------------------------------------------------------------------

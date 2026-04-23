@@ -211,20 +211,40 @@ SummarizePSI <- function(object, cells = NULL) {
 
   if (!is.null(cells)) psi_cx <- psi_cx[cells, , drop = FALSE]
 
-  psi     <- .psi_to_dense_na(psi_cx)
-  n_cov   <- .n_covered_per_event(psi_cx)
-  no_data <- n_cov == 0L
+  psi_csc <- as(psi_cx, "dgCMatrix")       # cells x events, sparse
+  x       <- psi_csc@x
+  not_na  <- !is.na(x)
+  col_idx <- rep(seq_len(ncol(psi_csc)), diff(psi_csc@p))
 
-  mean_psi   <- colMeans(psi, na.rm = TRUE)
-  median_psi <- apply(psi, 2, stats::median, na.rm = TRUE)
-  sd_psi     <- apply(psi, 2, stats::sd,     na.rm = TRUE)
+  # Coverage (number of non-NA entries per event column)
+  n_cov <- tabulate(col_idx[not_na], nbins = ncol(psi_csc))
 
-  mean_psi[no_data]   <- NA_real_
-  median_psi[no_data] <- NA_real_
-  sd_psi[no_data]     <- NA_real_
+  # Mean: colSums(non-NA values) / n_cov  — no dense matrix
+  x_zeroed        <- x; x_zeroed[!not_na] <- 0
+  psi_for_sum     <- psi_csc; psi_for_sum@x <- x_zeroed
+  col_sums        <- as.numeric(Matrix::colSums(psi_for_sum))
+  mean_psi        <- ifelse(n_cov > 0L, col_sums / n_cov, NA_real_)
+
+  # SD: Var = (sum(x^2) - sum(x)^2 / n) / (n-1), SD = sqrt(Var)
+  psi_sq          <- psi_for_sum; psi_sq@x <- x_zeroed^2
+  col_sum_sq      <- as.numeric(Matrix::colSums(psi_sq))
+  sd_psi          <- ifelse(
+    n_cov > 1L,
+    sqrt(pmax(0, (col_sum_sq - col_sums^2 / n_cov) / (n_cov - 1L))),
+    NA_real_
+  )
+
+  # Median: tapply over the non-NA stored values — avoids full dense alloc
+  vals_non_na <- x[not_na]
+  cols_non_na <- col_idx[not_na]
+  median_psi  <- rep(NA_real_, ncol(psi_csc))
+  if (length(vals_non_na) > 0L) {
+    med_vals   <- tapply(vals_non_na, cols_non_na, stats::median)
+    median_psi[as.integer(names(med_vals))] <- as.numeric(med_vals)
+  }
 
   data.frame(
-    event_id        = colnames(psi),
+    event_id        = colnames(psi_csc),
     mean_psi        = mean_psi,
     median_psi      = median_psi,
     sd_psi          = sd_psi,

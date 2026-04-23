@@ -90,7 +90,7 @@ make_seurat <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
   counts <- matrix(rpois(n_genes * n_cells, lambda = 5),
                    nrow = n_genes, ncol = n_cells,
                    dimnames = list(genes, cells))
-  Seurat::CreateSeuratObject(counts = counts)
+  suppressWarnings(Seurat::CreateSeuratObject(counts = counts))
 }
 
 # ---- Full MatisseObject fixture (junction mode, no PSI yet) ----------------
@@ -121,9 +121,9 @@ make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
     ncol     = 2L,
     dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2"))
   )
-  seu[["umap"]] <- SeuratObject::CreateDimReducObject(
+  seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
     embeddings = coords, key = "UMAP_"
-  )
+  ))
   seu$cell_type       <- rep(c("TypeA", "TypeB"), length.out = n_cells)
   seu$seurat_clusters <- factor(rep(0L, n_cells))
   seu
@@ -233,8 +233,8 @@ make_matisse_short_read <- function() {
   set.seed(7L)
   coords <- matrix(stats::rnorm(n_cells * 2L), nrow = n_cells, ncol = 2L,
                    dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2")))
-  seu[["umap"]]   <- SeuratObject::CreateDimReducObject(embeddings = coords,
-                                                        key = "UMAP_")
+  seu[["umap"]]   <- suppressWarnings(SeuratObject::CreateDimReducObject(
+    embeddings = coords, key = "UMAP_"))
   seu$cell_type   <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
   obj <- CreateMatisseObject(
     seurat          = seu,
@@ -286,8 +286,8 @@ make_matisse_long_read <- function() {
   set.seed(7L)
   coords <- matrix(stats::rnorm(n_cells * 2L), nrow = n_cells, ncol = 2L,
                    dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2")))
-  seu[["umap"]] <- SeuratObject::CreateDimReducObject(embeddings = coords,
-                                                      key = "UMAP_")
+  seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
+    embeddings = coords, key = "UMAP_"))
   seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
   CreateMatisseObject(
     seurat            = seu,
