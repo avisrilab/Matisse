@@ -10,14 +10,7 @@ default assay (usually `"RNA"`). Override with the `assay` argument.
 
 ``` r
 # S3 method for class 'MatisseObject'
-SCTransform(
-  object,
-  assay = NULL,
-  n_pca_dims = 50L,
-  vars_to_regress = NULL,
-  verbose = TRUE,
-  ...
-)
+SCTransform(object, assay = NULL, vars_to_regress = NULL, verbose = TRUE, ...)
 ```
 
 ## Arguments
@@ -30,11 +23,6 @@ SCTransform(
 
   Character. Assay to normalise. Default: `"transcript"` in event mode;
   the active default assay in junction mode.
-
-- n_pca_dims:
-
-  Integer. PCA dimensions to compute. Default: `50`. Set to `0L` to skip
-  PCA.
 
 - vars_to_regress:
 
@@ -55,5 +43,10 @@ The updated `MatisseObject`.
 
 ## Details
 
-After normalisation, `RunPCA` is run automatically on the resulting
-`"SCT"` assay. To skip PCA set `n_pca_dims = 0L`.
+PCA is **not** run automatically. Call
+[`RunPCA()`](https://satijalab.org/seurat/reference/RunPCA.html) on the
+resulting object after normalisation:
+
+    obj <- SCTransform(obj)
+    obj <- RunPCA(obj, assay = "SCT", npcs = 50)
+    obj <- RunUMAP(obj, dims = 1:50)

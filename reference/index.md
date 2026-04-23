@@ -94,6 +94,8 @@ interest. Pass the feature name via the `feature` argument.
   : Heatmap of feature values across cells and events
 - [`PlotCoverage()`](https://avisrilab.github.io/Matisse/reference/PlotCoverage.md)
   : Junction coverage bar plot for a gene
+- [`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md)
+  : Sashimi-style coverage plot for a splice event
 - [`PlotQCMetrics()`](https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.md)
   : Violin/ridge plot of isoform QC metrics
 
