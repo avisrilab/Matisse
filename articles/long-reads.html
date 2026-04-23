@@ -171,9 +171,9 @@ QC metrics before filtering.</p>
 <h2 id="step-3-normalise-transcript-counts">Step 3 – Normalise transcript counts<a class="anchor" aria-label="anchor" href="#step-3-normalise-transcript-counts"></a>
 </h2>
 <p>For long-read data the transcript-level count matrix often has high
-technical variability. <code><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform()</a></code> on a Matisse object in
-event mode automatically targets the <code>"transcript"</code> assay.
-Run <code><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA()</a></code> explicitly afterwards.</p>
+technical variability. [SCTransform.MatisseObject()] on a Matisse object
+in event mode automatically targets the <code>"transcript"</code> assay.
+Run [RunPCA.MatisseObject()] explicitly afterwards.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">obj</span>, assay <span class="op">=</span> <span class="st">"SCT"</span>, npcs <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
@@ -224,13 +224,13 @@ exon skipped (low PSI), red = exon included (high PSI).</p>
 <div class="section level3">
 <h3 id="inspect-junction-coverage-with-a-sashimi-plot">Inspect junction coverage with a sashimi plot<a class="anchor" aria-label="anchor" href="#inspect-junction-coverage-with-a-sashimi-plot"></a>
 </h3>
-<p><code><a href="../reference/CoveragePlot.html">CoveragePlot()</a></code> draws junction arcs scaled by aggregate
+<p><code><a href="../reference/PlotSashimi.html">PlotSashimi()</a></code> draws junction arcs scaled by aggregate
 read count, coloured by role (inclusion = blue, exclusion = red). It
 works in event mode by parsing junction coordinates directly from the SE
 event ID. Facet by cell type to compare isoform usage across
 populations.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/CoveragePlot.html">CoveragePlot</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotSashimi.html">PlotSashimi</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
 <span>  group_by <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
@@ -241,8 +241,8 @@ populations.</p>
 format <code>SE:chr:donor1-acceptor1:donor2-acceptor2:strand</code>
 (e.g. <code>SE:chr18:3433648-3434699:3434801-3436055:-</code>). These
 become the feature names in <code>GetPSI(obj)</code>, so use the same
-string when calling <code><a href="../reference/PlotUMAP.html">PlotUMAP()</a></code>,
-<code><a href="../reference/CoveragePlot.html">CoveragePlot()</a></code>, or subsetting.</p>
+string when calling <code><a href="../reference/PlotUMAP.html">PlotUMAP()</a></code>, <code><a href="../reference/PlotSashimi.html">PlotSashimi()</a></code>,
+or subsetting.</p>
 </blockquote>
 <hr>
 </div>

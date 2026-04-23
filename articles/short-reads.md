@@ -130,12 +130,12 @@ PlotCoverage(obj, gene = "PTBP1")
 
 ### Sashimi plot for a specific event
 
-[`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md)
+[`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
 shows junction arcs scaled by read count, coloured by inclusion (blue)
 vs exclusion (red). Use `group_by` to compare cell types side by side.
 
 ``` r
-CoveragePlot(
+PlotSashimi(
   obj,
   event_id  = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by  = "cell_type",

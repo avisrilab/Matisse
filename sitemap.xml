@@ -14,7 +14,6 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/CalculatePSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/CoveragePlot.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterCells.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterEvents.html</loc></url>
@@ -39,6 +38,7 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotCoverage.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotHeatmap.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.html</loc></url>
+<url><loc>https://avisrilab.github.io/Matisse/reference/PlotSashimi.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotUMAP.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/PlotViolin.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.html</loc></url>

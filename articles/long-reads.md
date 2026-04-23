@@ -88,12 +88,9 @@ obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
 ## Step 3 – Normalise transcript counts
 
 For long-read data the transcript-level count matrix often has high
-technical variability.
-[`SCTransform()`](https://satijalab.org/seurat/reference/SCTransform.html)
-on a Matisse object in event mode automatically targets the
-`"transcript"` assay. Run
-[`RunPCA()`](https://satijalab.org/seurat/reference/RunPCA.html)
-explicitly afterwards.
+technical variability. \[SCTransform.MatisseObject()\] on a Matisse
+object in event mode automatically targets the `"transcript"` assay. Run
+\[RunPCA.MatisseObject()\] explicitly afterwards.
 
 ``` r
 obj <- SCTransform(obj)
@@ -148,14 +145,14 @@ PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 
 ### Inspect junction coverage with a sashimi plot
 
-[`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md)
+[`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
 draws junction arcs scaled by aggregate read count, coloured by role
 (inclusion = blue, exclusion = red). It works in event mode by parsing
 junction coordinates directly from the SE event ID. Facet by cell type
 to compare isoform usage across populations.
 
 ``` r
-CoveragePlot(
+PlotSashimi(
   obj,
   event_id = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by = "cell_type",
@@ -168,7 +165,7 @@ CoveragePlot(
 > (e.g. `SE:chr18:3433648-3434699:3434801-3436055:-`). These become the
 > feature names in `GetPSI(obj)`, so use the same string when calling
 > [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md),
-> [`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md),
+> [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md),
 > or subsetting.
 
 ------------------------------------------------------------------------
