@@ -211,14 +211,24 @@ SummarizePSI <- function(object, cells = NULL) {
 
   if (!is.null(cells)) psi_cx <- psi_cx[cells, , drop = FALSE]
 
-  psi <- .psi_to_dense_na(psi_cx)
+  psi     <- .psi_to_dense_na(psi_cx)
+  n_cov   <- .n_covered_per_event(psi_cx)
+  no_data <- n_cov == 0L
+
+  mean_psi   <- colMeans(psi, na.rm = TRUE)
+  median_psi <- apply(psi, 2, stats::median, na.rm = TRUE)
+  sd_psi     <- apply(psi, 2, stats::sd,     na.rm = TRUE)
+
+  mean_psi[no_data]   <- NA_real_
+  median_psi[no_data] <- NA_real_
+  sd_psi[no_data]     <- NA_real_
 
   data.frame(
     event_id        = colnames(psi),
-    mean_psi        = colMeans(psi, na.rm = TRUE),
-    median_psi      = apply(psi, 2, stats::median, na.rm = TRUE),
-    sd_psi          = apply(psi, 2, stats::sd,     na.rm = TRUE),
-    n_cells_covered = .n_covered_per_event(psi_cx),
+    mean_psi        = mean_psi,
+    median_psi      = median_psi,
+    sd_psi          = sd_psi,
+    n_cells_covered = n_cov,
     stringsAsFactors = FALSE,
     row.names        = NULL
   )

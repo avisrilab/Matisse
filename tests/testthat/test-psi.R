@@ -188,6 +188,17 @@ test_that("SummarizePSI: errors if 'psi' assay is absent", {
   expect_error(SummarizePSI(obj), regexp = "PSI matrix is empty")
 })
 
+test_that("SummarizePSI: no NaN in output (uncovered events yield NA)", {
+  # Build an object where min_coverage is very high so no event is covered
+  obj <- make_matisse_object()
+  obj <- CalculatePSI(obj, min_coverage = 9999L, verbose = FALSE)
+  s   <- SummarizePSI(obj)
+  expect_false(any(is.nan(s$mean_psi)))
+  expect_false(any(is.nan(s$median_psi)))
+  expect_false(any(is.nan(s$sd_psi)))
+  expect_true(all(is.na(s$mean_psi)))
+})
+
 # ---- CalculatePSI on event-mode object (already has PSI) ------------------
 
 test_that("CalculatePSI: warns and returns unchanged on event-mode object", {
