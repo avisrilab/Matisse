@@ -215,16 +215,16 @@ ggsave("vignettes/figures/psi_heatmap.png",  p4,
        width = 7, height = 6, dpi = 150, bg = "white")
 message("Saved psi_heatmap.png")
 
-# Figure 5 — CoveragePlot: PTBP1 all cells pooled (junction mode)
-p5 <- CoveragePlot(obj,
+# Figure 5 — PlotSashimi: PTBP1 all cells pooled (junction mode)
+p5 <- PlotSashimi(obj,
   event_id  = ptbp1_id,
   title     = "PTBP1 exon 9 — junction coverage")
 ggsave("vignettes/figures/ptbp1_coverage.png", p5,
        width = 7, height = 4, dpi = 150, bg = "white")
 message("Saved ptbp1_coverage.png")
 
-# Figure 6 — CoveragePlot: PTBP1 faceted by cell type
-p6 <- CoveragePlot(obj,
+# Figure 6 — PlotSashimi: PTBP1 faceted by cell type
+p6 <- PlotSashimi(obj,
   event_id  = ptbp1_id,
   group_by  = "cell_type",
   title     = "PTBP1 exon 9 — coverage by cell type")
@@ -232,8 +232,8 @@ ggsave("vignettes/figures/ptbp1_coverage_by_type.png", p6,
        width = 10, height = 4, dpi = 150, bg = "white")
 message("Saved ptbp1_coverage_by_type.png")
 
-# Figure 7 — CoveragePlot: NRXN1 faceted by cell type
-p7 <- CoveragePlot(obj,
+# Figure 7 — PlotSashimi: NRXN1 faceted by cell type
+p7 <- PlotSashimi(obj,
   event_id  = nrxn1_id,
   group_by  = "cell_type",
   arc_scale = "sqrt",
@@ -242,8 +242,8 @@ ggsave("vignettes/figures/nrxn1_coverage_by_type.png", p7,
        width = 10, height = 4, dpi = 150, bg = "white")
 message("Saved nrxn1_coverage_by_type.png")
 
-# Figure 8 — CoveragePlot: event mode (long-read simulation)
-# Simulate a small long-read object for the event-mode CoveragePlot demo
+# Figure 8 — PlotSashimi: event mode (long-read simulation)
+# Simulate a small long-read object for the event-mode PlotSashimi demo
 lr_cells <- paste0("LRCell", seq_len(40L))
 lr_types <- rep(c("TypeA", "TypeB"), each = 20L)
 lr_genes <- paste0("Gene", seq_len(50L))
@@ -287,7 +287,7 @@ lr_obj <- CreateMatisseObject(
   verbose           = FALSE
 )
 
-p8 <- CoveragePlot(lr_obj,
+p8 <- PlotSashimi(lr_obj,
   event_id  = "SE:chr1:1201-2999:3201-4999:+",
   group_by  = "cell_type",
   title     = "SE event — long-read coverage by cell type")

@@ -164,7 +164,7 @@ reference:
       - PlotViolin
       - PlotHeatmap
       - PlotCoverage
-      - CoveragePlot
+      - PlotSashimi
       - PlotQCMetrics
 
   - title: "Utilities"

@@ -236,75 +236,111 @@ test_that("PlotCoverage: errors for a gene not present in junction_data", {
 })
 
 # ============================================================
-# CoveragePlot
+# PlotSashimi
 # ============================================================
 
-test_that("CoveragePlot: returns a ggplot for junction-mode object", {
+test_that("PlotSashimi: returns a ggplot for junction-mode object", {
   obj <- make_matisse_short_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
   expect_s3_class(p, "gg")
 })
 
-test_that("CoveragePlot: returns a ggplot for event-mode object", {
+test_that("PlotSashimi: returns a ggplot for event-mode object", {
   obj <- make_matisse_long_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
   expect_s3_class(p, "gg")
 })
 
-test_that("CoveragePlot: group_by produces a faceted plot", {
+test_that("PlotSashimi: group_by produces a faceted plot", {
   obj <- make_matisse_short_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
                       group_by = "cell_type")
   expect_s3_class(p, "gg")
   expect_true(!is.null(p$facet))
 })
 
-test_that("CoveragePlot: arc_scale = 'linear' is accepted", {
+test_that("PlotSashimi: arc_scale = 'linear' is accepted", {
   obj <- make_matisse_short_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
                       arc_scale = "linear")
   expect_s3_class(p, "gg")
 })
 
-test_that("CoveragePlot: arc_scale = 'log' is accepted", {
+test_that("PlotSashimi: arc_scale = 'log' is accepted", {
   obj <- make_matisse_short_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
                       arc_scale = "log")
   expect_s3_class(p, "gg")
 })
 
-test_that("CoveragePlot: custom title is applied", {
+test_that("PlotSashimi: custom title is applied", {
   obj <- make_matisse_short_read()
-  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+  p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
                       title = "My SE event")
   expect_equal(p$labels$title, "My SE event")
 })
 
-test_that("CoveragePlot: cell subset is accepted without error", {
+test_that("PlotSashimi: cell subset is accepted without error", {
   obj   <- make_matisse_short_read()
   cells <- paste0("Cell", 1:5)
   expect_no_error(
-    CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+    PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
                  cells = cells)
   )
 })
 
-test_that("CoveragePlot: errors for unknown event_id", {
+test_that("PlotSashimi: errors for unknown event_id", {
   obj <- make_matisse_short_read()
   expect_error(
-    CoveragePlot(obj, event_id = "SE:chr99:0-1:2-3:+"),
+    PlotSashimi(obj, event_id = "SE:chr99:0-1:2-3:+"),
     regexp = "not found in event_data"
   )
 })
 
-test_that("CoveragePlot: errors in event mode for non-SE event_id format", {
+test_that("PlotSashimi: errors in event mode for unsupported event type", {
   obj <- make_matisse_long_read()
-  # Manually mangle the event_id to a non-SE type
   obj@event_data$event_id <- "A3:chr1:1201-2999:3201-4999:+"
   expect_error(
-    CoveragePlot(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
-    regexp = "SE event"
+    PlotSashimi(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
+    regexp = "does not yet support"
   )
+})
+
+test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
+  n_cells <- 20L
+  seu <- make_seurat(n_cells = n_cells)
+  set.seed(7L)
+  coords <- matrix(stats::rnorm(n_cells * 2L), nrow = n_cells, ncol = 2L,
+                   dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2")))
+  seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
+    embeddings = coords, key = "UMAP_"))
+  seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
+
+  ri_event_id <- "RI:chr1:851927:852094-852671:852766:+"
+  txs  <- c("tx_ret", "tx_spl")
+  cells <- paste0("Cell", seq_len(n_cells))
+  set.seed(42L)
+  tx_mat <- Matrix::Matrix(
+    matrix(sample(0L:10L, 2L * n_cells, replace = TRUE),
+           nrow = 2L, ncol = n_cells,
+           dimnames = list(txs, cells)),
+    sparse = TRUE
+  )
+  ioe <- tempfile(fileext = ".ioe")
+  writeLines(c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    paste(c("chr1", paste0("ENSG1;", ri_event_id),
+            "tx_ret", "tx_ret,tx_spl"), collapse = "\t")
+  ), ioe)
+  obj <- CreateMatisseObject(
+    seurat            = seu,
+    transcript_counts = tx_mat,
+    ioe_files         = ioe,
+    min_coverage      = 1L,
+    verbose           = FALSE
+  )
+  p <- PlotSashimi(obj, event_id = ri_event_id)
+  expect_s3_class(p, "gg")
 })
 
 # ============================================================

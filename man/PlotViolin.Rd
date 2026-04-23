@@ -13,7 +13,8 @@ PlotViolin(object, feature, ...)
   group_by = "seurat_clusters",
   colours = NULL,
   add_points = FALSE,
-  title = NULL
+  title = NULL,
+  ...
 )
 }
 \arguments{
@@ -22,7 +23,7 @@ PlotViolin(object, feature, ...)
 \item{feature}{Character. Feature to plot (PSI event ID, junction ID, or
 gene name).}
 
-\item{...}{Additional arguments (see \code{\link{PlotViolin}}).}
+\item{...}{Additional arguments (unused).}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} to split
 cells by. Default: \code{"seurat_clusters"}.}
@@ -37,11 +38,9 @@ points. Default: \code{FALSE}.}
 }
 \value{
 A \code{ggplot} object.
-
-A \code{ggplot} object.
 }
 \description{
-Violin plot of feature values split by cell group
-
-Violin plot of feature values split by cell group
+Violin plot of PSI values (or other feature values) split by a cell
+metadata column. Cells are grouped by \code{group_by} and optionally
+coloured with a custom palette.
 }

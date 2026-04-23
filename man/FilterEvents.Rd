@@ -11,13 +11,14 @@ FilterEvents(object, ...)
   object,
   min_cells_covered = 10L,
   min_psi_variance = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
 \item{object}{A \code{MatisseObject} with a \code{"psi"} assay.}
 
-\item{...}{Named thresholds; see \code{\link{FilterEvents}}.}
+\item{...}{Additional arguments (unused).}
 
 \item{min_cells_covered}{Integer. Minimum number of cells in which the
 event must have a non-\code{NA} PSI value. Default: \code{10}.}
@@ -28,8 +29,6 @@ cells. Default: \code{NULL} (no variance filter).}
 \item{verbose}{Logical. Default: \code{TRUE}.}
 }
 \value{
-The filtered \code{MatisseObject}.
-
 The filtered \code{MatisseObject}.
 }
 \description{

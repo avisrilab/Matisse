@@ -170,7 +170,7 @@ make_matisse_from_transcripts <- function() {
   )
 }
 
-# ---- Realistic SE event fixtures for CoveragePlot --------------------------
+# ---- Realistic SE event fixtures for PlotSashimi --------------------------
 #
 # Gene structure (chr1, + strand):
 #   Exon 1:        900 – 1200

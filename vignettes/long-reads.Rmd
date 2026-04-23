@@ -96,10 +96,10 @@ obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
 ## Step 3 -- Normalise transcript counts
 
 For long-read data the transcript-level count matrix often has high technical
-variability. `SCTransform()` on a Matisse object in event mode automatically
-targets the `"transcript"` assay. Run `RunPCA()` explicitly afterwards.
+variability. [SCTransform.MatisseObject()] on a Matisse object in event mode automatically
+targets the `"transcript"` assay. Run [RunPCA.MatisseObject()] explicitly afterwards.
 
-```{r sctransform, eval=FALSE}
+```{r sctransform, eval=FALSE, downlit=FALSE}
 obj <- SCTransform(obj)
 obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 ```
@@ -111,7 +111,7 @@ obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 Standard Seurat clustering functions work directly on the Matisse object.
 The PSI data and all other slots are preserved throughout.
 
-```{r cluster, eval=FALSE}
+```{r cluster, eval=FALSE, downlit=FALSE}
 obj <- RunUMAP(obj, dims = 1:50)
 obj <- FindNeighbors(obj, dims = 1:50)
 obj <- FindClusters(obj, resolution = 0.5)
@@ -152,13 +152,13 @@ PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 
 ### Inspect junction coverage with a sashimi plot
 
-`CoveragePlot()` draws junction arcs scaled by aggregate read count, coloured
+`PlotSashimi()` draws junction arcs scaled by aggregate read count, coloured
 by role (inclusion = blue, exclusion = red). It works in event mode by parsing
 junction coordinates directly from the SE event ID. Facet by cell type to
 compare isoform usage across populations.
 
 ```{r coverage, eval=FALSE}
-CoveragePlot(
+PlotSashimi(
   obj,
   event_id = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by = "cell_type",
@@ -170,7 +170,7 @@ CoveragePlot(
 > `SE:chr:donor1-acceptor1:donor2-acceptor2:strand`
 > (e.g. `SE:chr18:3433648-3434699:3434801-3436055:-`). These become
 > the feature names in `GetPSI(obj)`, so use the same string when calling
-> `PlotUMAP()`, `CoveragePlot()`, or subsetting.
+> `PlotUMAP()`, `PlotSashimi()`, or subsetting.
 
 ---
 

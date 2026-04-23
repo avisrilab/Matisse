@@ -13,13 +13,13 @@ PlotHeatmap(object, ...)
   cells = NULL,
   group_by = NULL,
   max_cells = 500L,
-  na_colour = "grey90"
+  max_events = 200L,
+  na_colour = "grey90",
+  ...
 )
 }
 \arguments{
 \item{object}{A \code{MatisseObject} with a \code{"psi"} assay.}
-
-\item{...}{Additional arguments (see \code{\link{PlotHeatmap}}).}
 
 \item{events}{Character vector of event IDs to include.
 Default: all events.}
@@ -33,16 +33,19 @@ annotate and order cells. Default: \code{NULL}.}
 \item{max_cells}{Integer. Downsample to this many cells before plotting.
 Default: \code{500}.}
 
+\item{max_events}{Integer. Cap the number of events shown. When exceeded,
+the top-variance events are selected. Default: \code{200}.}
+
 \item{na_colour}{Character. Colour for \code{NA} entries.
 Default: \code{"grey90"}.}
+
+\item{...}{Additional arguments (unused).}
 }
 \value{
 A \code{ggplot} object.
-
-A \code{ggplot} object.
 }
 \description{
-Heatmap of feature values across cells and events
-
-Heatmap of PSI values (cells x events)
+Heatmap of PSI values (cells x events). Cells are optionally ordered by a
+metadata column (\code{group_by}); high-variance events are shown when
+the total count exceeds \code{max_events}.
 }

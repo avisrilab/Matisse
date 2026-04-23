@@ -15,13 +15,14 @@ FilterCells(object, ...)
   max_junction_reads = NULL,
   min_pct_covered = NULL,
   custom_filters = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{...}{Named numeric thresholds; see \code{\link{FilterCells}}.}
+\item{...}{Additional arguments (unused).}
 
 \item{min_junctions}{Integer. Minimum \code{n_junctions_detected}.
 Default: \code{NULL} (no filter).}
@@ -45,8 +46,6 @@ Use \code{NA} for a one-sided bound. Default: \code{NULL}.}
 \item{verbose}{Logical. Default: \code{TRUE}.}
 }
 \value{
-The filtered \code{MatisseObject}.
-
 The filtered \code{MatisseObject}.
 }
 \description{

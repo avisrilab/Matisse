@@ -301,14 +301,14 @@ setGeneric("PlotQCMetrics",
 #'
 #' @param object A \code{MatisseObject}.
 #' @param event_id Character. Event ID as stored in \code{event_data}.
-#' @param ... Additional arguments (see \code{\link{CoveragePlot}}).
+#' @param ... Additional arguments (see \code{\link{PlotSashimi}}).
 #' @return A \code{ggplot} object.
 #' @export
-setGeneric("CoveragePlot",
+setGeneric("PlotSashimi",
            function(object, event_id,
                     cells     = NULL,
                     group_by  = NULL,
                     arc_scale = c("sqrt", "linear", "log"),
                     colours   = c(inclusion = "#4393c3", exclusion = "#d6604d"),
                     title     = NULL, ...)
-             standardGeneric("CoveragePlot"))
+             standardGeneric("PlotSashimi"))

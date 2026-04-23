@@ -376,7 +376,7 @@ setMethod("PlotQCMetrics", "MatisseObject",
 })
 
 # ---------------------------------------------------------------------------
-# CoveragePlot
+# PlotSashimi
 # ---------------------------------------------------------------------------
 
 #' Sashimi-style coverage plot for a splice event
@@ -389,8 +389,9 @@ setMethod("PlotQCMetrics", "MatisseObject",
 #' to derive junction coordinates; inclusion and exclusion counts come from the
 #' \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 #'
-#' Currently only SE (skipped exon) events are supported for coordinate
-#' derivation in event mode. Other event types require junction mode.
+#' Supported event types in event mode: \strong{SE} (skipped exon) and
+#' \strong{RI} (retained intron). Junction mode supports all event types
+#' since coordinates come directly from \code{junction_data}.
 #'
 #' @param object A \code{MatisseObject} with a PSI assay computed.
 #' @param event_id Character. Event ID as stored in \code{event_data}, e.g.
@@ -407,9 +408,9 @@ setMethod("PlotQCMetrics", "MatisseObject",
 #'
 #' @return A \code{ggplot} object.
 #'
-#' @rdname CoveragePlot
+#' @rdname PlotSashimi
 #' @export
-setMethod("CoveragePlot", "MatisseObject",
+setMethod("PlotSashimi", "MatisseObject",
           function(object, event_id,
                    cells     = NULL,
                    group_by  = NULL,
@@ -474,19 +475,26 @@ setMethod("CoveragePlot", "MatisseObject",
       stringsAsFactors = FALSE
     )
   } else {
-    .cov_parse_se(ev)
+    etype <- strsplit(ev$event_id, ":", fixed = TRUE)[[1L]][1L]
+    switch(etype,
+      SE = .cov_parse_se(ev),
+      RI = .cov_parse_ri(ev),
+      rlang::abort(paste0(
+        "PlotSashimi() in event mode does not yet support '", etype,
+        "' events. Supported types: SE, RI."))
+    )
   }
 }
 
 # Parse SE event row into junction coord table (chr + strand from ev)
+# Format: SE:chr:donor1-acceptor1:donor2-acceptor2:strand
 .cov_parse_se <- function(ev) {
   event_id <- ev$event_id
   parts    <- strsplit(event_id, ":", fixed = TRUE)[[1L]]
   if (length(parts) < 5L || parts[1L] != "SE") {
     rlang::abort(paste0(
-      "CoveragePlot() in event mode requires SE event IDs ",
-      "(format 'SE:chr:start1-end1:start2-end2:strand'). Got: '",
-      event_id, "'."))
+      "Malformed SE event ID: '", event_id, "'. ",
+      "Expected format: 'SE:chr:start1-end1:start2-end2:strand'."))
   }
   chr    <- ev$chr
   strand <- ev$strand
@@ -499,6 +507,33 @@ setMethod("CoveragePlot", "MatisseObject",
     end         = c(p3[2L], p4[2L], p4[2L]),
     strand      = strand,
     role        = c("inclusion", "inclusion", "exclusion"),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Parse RI event row into junction coord table (chr + strand from ev)
+# Format: RI:chr:exon1_end:intron_start-intron_end:exon2_start:strand
+# inc_jxn represents the retained intron body; exc_jxn is the normal splice.
+.cov_parse_ri <- function(ev) {
+  event_id <- ev$event_id
+  parts    <- strsplit(event_id, ":", fixed = TRUE)[[1L]]
+  if (length(parts) < 6L || parts[1L] != "RI") {
+    rlang::abort(paste0(
+      "Malformed RI event ID: '", event_id, "'. ",
+      "Expected format: 'RI:chr:exon1_end:intron_start-intron_end:exon2_start:strand'."))
+  }
+  chr        <- ev$chr
+  strand     <- ev$strand
+  exon1_end  <- as.integer(parts[3L])
+  intron     <- as.integer(strsplit(parts[4L], "-", fixed = TRUE)[[1L]])
+  exon2_start <- as.integer(parts[5L])
+  data.frame(
+    junction_id = c("inc_jxn", "exc_jxn"),
+    chr         = chr,
+    start       = c(intron[1L], exon1_end),
+    end         = c(intron[2L], exon2_start),
+    strand      = strand,
+    role        = c("inclusion", "exclusion"),
     stringsAsFactors = FALSE
   )
 }
@@ -521,11 +556,21 @@ setMethod("CoveragePlot", "MatisseObject",
       sum(inc_cx[cells, eid]) else 0
     exc_tot <- if (!is.null(exc_cx) && eid %in% colnames(exc_cx))
       sum(exc_cx[cells, eid]) else 0
-    data.frame(
-      junction_id = c("inc_jxn1", "inc_jxn2", "exc_jxn"),
-      count       = c(inc_tot / 2, inc_tot / 2, exc_tot),
-      stringsAsFactors = FALSE
-    )
+    etype <- strsplit(eid, ":", fixed = TRUE)[[1L]][1L]
+    if (etype == "RI") {
+      data.frame(
+        junction_id = c("inc_jxn", "exc_jxn"),
+        count       = c(inc_tot,    exc_tot),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      # SE (and other 2-junction events): split inclusion evenly across the two arcs
+      data.frame(
+        junction_id = c("inc_jxn1", "inc_jxn2", "exc_jxn"),
+        count       = c(inc_tot / 2, inc_tot / 2, exc_tot),
+        stringsAsFactors = FALSE
+      )
+    }
   }
 }
 
