@@ -157,6 +157,20 @@ test_that("PlotHeatmap: warns on unknown event IDs (does not error)", {
   )
 })
 
+test_that("PlotHeatmap: max_events cap is respected", {
+  obj <- make_matisse_with_umap()
+  p   <- PlotHeatmap(obj, max_events = 1L)
+  expect_equal(length(unique(p$data$event)), 1L)
+})
+
+test_that("PlotHeatmap: max_events selects top-variance events with message", {
+  obj <- make_matisse_with_umap()
+  expect_message(
+    PlotHeatmap(obj, max_events = 1L),
+    regexp = "highest-variance"
+  )
+})
+
 test_that("PlotHeatmap: errors if PSI matrix is NULL", {
   obj <- make_matisse_object()
   expect_error(PlotHeatmap(obj), regexp = "PSI assay is NULL")

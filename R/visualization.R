@@ -139,13 +139,16 @@ setMethod("PlotViolin", "MatisseObject",
 #'
 #' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param events Character vector of event IDs to include.
-#'   Default: all events.
+#'   Default: \code{NULL} (top-variance events up to \code{max_events}).
 #' @param cells Character vector of cell barcodes to include.
-#'   Default: all cells.
+#'   Default: \code{NULL} (random sample up to \code{max_cells}).
 #' @param group_by Character. Column in \code{Seurat::meta.data} used to
 #'   annotate and order cells. Default: \code{NULL}.
 #' @param max_cells Integer. Downsample to this many cells before plotting.
 #'   Default: \code{500}.
+#' @param max_events Integer. Cap on events to plot. When the candidate set
+#'   exceeds this, the top-variance events are selected automatically.
+#'   Default: \code{200}.
 #' @param na_colour Character. Colour for \code{NA} entries.
 #'   Default: \code{"grey90"}.
 #'
@@ -159,13 +162,15 @@ setMethod("PlotHeatmap", "MatisseObject",
                    cells      = NULL,
                    group_by   = NULL,
                    max_cells  = 500L,
+                   max_events = 200L,
                    na_colour  = "grey90", ...) {
   .require_psi(object)
 
-  psi_cx     <- GetPSI(object)  # cells x events
+  psi_cx     <- GetPSI(object)  # cells x events (sparse)
   all_cells  <- .get_cells(object)
   all_events <- colnames(psi_cx)
 
+  # Validate and intersect user-supplied vectors
   cells  <- cells  %||% all_cells
   events <- events %||% all_events
 
@@ -176,13 +181,28 @@ setMethod("PlotHeatmap", "MatisseObject",
   cells  <- intersect(cells,  all_cells)
   events <- intersect(events, all_events)
 
+  # Cap cells first (cheap on sparse matrix)
   if (length(cells) > max_cells) cells <- sample(cells, max_cells)
 
+  # Cap events by variance — must happen BEFORE as.matrix() to avoid huge allocs
+  if (length(events) > max_events) {
+    # Compute per-event variance on the sparse submatrix (still sparse here)
+    psi_for_var <- psi_cx[cells, events, drop = FALSE]
+    col_vars    <- apply(psi_for_var, 2, stats::var, na.rm = TRUE)
+    col_vars[is.na(col_vars)] <- 0
+    events <- events[order(col_vars, decreasing = TRUE)[seq_len(max_events)]]
+    rlang::inform(paste0(
+      "Showing top ", max_events, " highest-variance events. ",
+      "Pass `events` explicitly or increase `max_events` to change this."))
+  }
+
+  # Now safe to densify: at most max_cells x max_events
   psi_sub <- as.matrix(psi_cx[cells, events, drop = FALSE])
 
+  # Cluster events by PSI profile (small matrix now — safe)
   finite_mask <- is.finite(psi_sub)
-  if (sum(finite_mask) > 0) {
-    psi_for_clust           <- psi_sub
+  if (sum(finite_mask) > 0 && length(events) > 1L) {
+    psi_for_clust              <- psi_sub
     psi_for_clust[!finite_mask] <- 0.5
     event_order <- tryCatch({
       hc <- stats::hclust(stats::dist(t(psi_for_clust)))
@@ -192,14 +212,15 @@ setMethod("PlotHeatmap", "MatisseObject",
     event_order <- seq_len(ncol(psi_sub))
   }
 
+  # Order cells by group if requested
   if (!is.null(group_by)) {
     grp   <- .get_seurat_meta_col(object, group_by)[match(cells, all_cells)]
     cells <- cells[order(grp)]
   }
 
   df <- data.frame(
-    cell  = rep(cells,                 each  = length(events)),
-    event = rep(events[event_order],   times = length(cells)),
+    cell  = rep(cells,               each  = length(events)),
+    event = rep(events[event_order], times = length(cells)),
     psi   = as.vector(psi_sub[cells, events[event_order]])
   )
   df$cell  <- factor(df$cell,  levels = cells)

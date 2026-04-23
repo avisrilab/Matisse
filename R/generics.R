@@ -251,20 +251,22 @@ setGeneric("PlotViolin",
 #' Heatmap of feature values across cells and events
 #'
 #' @param object A \code{MatisseObject}.
-#' @param events Character vector of event IDs. Default: all events.
-#' @param cells Character vector of cell barcodes. Default: all cells.
+#' @param events Character vector of event IDs. Default: top-variance events up to \code{max_events}.
+#' @param cells Character vector of cell barcodes. Default: random sample up to \code{max_cells}.
 #' @param group_by Character. Metadata column to annotate and order cells. Default: \code{NULL}.
-#' @param max_cells Integer. Downsample cap before plotting. Default: \code{500}.
+#' @param max_cells Integer. Cell downsample cap. Default: \code{500}.
+#' @param max_events Integer. Event cap; top-variance events selected when exceeded. Default: \code{200}.
 #' @param na_colour Character. Colour for \code{NA} entries. Default: \code{"grey90"}.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotHeatmap",
            function(object,
-                    events    = NULL,
-                    cells     = NULL,
-                    group_by  = NULL,
-                    max_cells = 500L,
-                    na_colour = "grey90", ...)
+                    events     = NULL,
+                    cells      = NULL,
+                    group_by   = NULL,
+                    max_cells  = 500L,
+                    max_events = 200L,
+                    na_colour  = "grey90", ...)
              standardGeneric("PlotHeatmap"))
 
 #' Junction coverage bar plot for a gene
