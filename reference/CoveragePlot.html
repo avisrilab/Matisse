@@ -61,7 +61,16 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CoveragePlot</span><span class="op">(</span><span class="va">object</span>, <span class="va">event_id</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CoveragePlot</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  <span class="va">event_id</span>,</span>
+<span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  arc_scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sqrt"</span>, <span class="st">"linear"</span>, <span class="st">"log"</span><span class="op">)</span>,</span>
+<span>  colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>inclusion <span class="op">=</span> <span class="st">"#4393c3"</span>, exclusion <span class="op">=</span> <span class="st">"#d6604d"</span><span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MatisseObject'</span></span>
 <span><span class="fu">CoveragePlot</span><span class="op">(</span></span>
@@ -71,7 +80,8 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).</p>
 <span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  arc_scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sqrt"</span>, <span class="st">"linear"</span>, <span class="st">"log"</span><span class="op">)</span>,</span>
 <span>  colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>inclusion <span class="op">=</span> <span class="st">"#4393c3"</span>, exclusion <span class="op">=</span> <span class="st">"#d6604d"</span><span class="op">)</span>,</span>
-<span>  title <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,10 +96,6 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).</p>
 <dt id="arg-event-id">event_id<a class="anchor" aria-label="anchor" href="#arg-event-id"></a></dt>
 <dd><p>Character. Event ID as stored in <code>event_data</code>, e.g.
 <code>"SE:chr1:1201-2999:3201-4999:+"</code>.</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments (see <code>CoveragePlot</code>).</p></dd>
 
 
 <dt id="arg-cells">cells<a class="anchor" aria-label="anchor" href="#arg-cells"></a></dt>
@@ -114,6 +120,10 @@ Default: <code>NULL</code> (all cells pooled).</p></dd>
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
 <dd><p>Character. Plot title. Defaults to <code>event_id</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments (see <code>CoveragePlot</code>).</p></dd>
 
 </dl></div>
     <div class="section level2">

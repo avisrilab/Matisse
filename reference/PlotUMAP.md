@@ -13,7 +13,16 @@ colour by gene expression.
 ## Usage
 
 ``` r
-PlotUMAP(object, feature, ...)
+PlotUMAP(
+  object,
+  feature,
+  reduction = "umap",
+  dims = c(1L, 2L),
+  pt_size = 0.5,
+  na_colour = "grey80",
+  title = NULL,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 PlotUMAP(
@@ -23,7 +32,8 @@ PlotUMAP(
   dims = c(1L, 2L),
   pt_size = 0.5,
   na_colour = "grey80",
-  title = NULL
+  title = NULL,
+  ...
 )
 ```
 
@@ -37,10 +47,6 @@ PlotUMAP(
 
   Character. Feature to plot. Can be a PSI event ID (e.g.
   `"SE:chr1:100-200:300-400:+"`), a junction ID, or a gene name.
-
-- ...:
-
-  Additional arguments (see `PlotUMAP`).
 
 - reduction:
 
@@ -63,6 +69,10 @@ PlotUMAP(
 - title:
 
   Character. Plot title. Defaults to the feature name.
+
+- ...:
+
+  Additional arguments (see `PlotUMAP`).
 
 ## Value
 

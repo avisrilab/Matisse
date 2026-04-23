@@ -52,7 +52,14 @@ event mode PSI is computed at construction time.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CalculatePSI</span><span class="op">(</span><span class="va">object</span>, events <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CalculatePSI</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  events <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_coverage <span class="op">=</span> <span class="fl">5L</span>,</span>
+<span>  na_fill <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MatisseObject'</span></span>
 <span><span class="fu">CalculatePSI</span><span class="op">(</span></span>
@@ -60,16 +67,18 @@ event mode PSI is computed at construction time.</p>
 <span>  events <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_coverage <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>  na_fill <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'ANY'</span></span>
 <span><span class="fu">CalculatePSI</span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
-<span>  <span class="va">events</span>,</span>
+<span>  events <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_coverage <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>  na_fill <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,10 +98,6 @@ columns <code>event_id</code>, <code>inclusion_junctions</code>, and
 <code>MatisseObject</code> this defaults to <code>GetEventData(object)</code>.</p></dd>
 
 
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the method.</p></dd>
-
-
 <dt id="arg-min-coverage">min_coverage<a class="anchor" aria-label="anchor" href="#arg-min-coverage"></a></dt>
 <dd><p>Integer. Minimum total reads per cell per event to
 report a PSI value. Default: <code>5</code>.</p></dd>
@@ -105,6 +110,10 @@ report a PSI value. Default: <code>5</code>.</p></dd>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical. Print progress. Default: <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments passed to the method.</p></dd>
 
 </dl></div>
     <div class="section level2">

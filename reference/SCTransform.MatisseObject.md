@@ -2,9 +2,11 @@
 
 Runs
 [`SCTransform`](https://satijalab.org/seurat/reference/SCTransform.html)
-with mode-aware defaults. In **event mode**, normalises the
-`"transcript"` assay. In **junction mode**, normalises the active
-default assay (usually `"RNA"`). Override with the `assay` argument.
+with mode-aware defaults. In **event mode** (long-read), normalises the
+`"transcript"` assay by default, so that transcript-level abundances are
+variance-stabilised before dimensionality reduction. In **junction
+mode** (short-read), normalises the active default assay (typically
+`"RNA"`).
 
 ## Usage
 
@@ -26,11 +28,12 @@ SCTransform(object, assay = NULL, vars_to_regress = NULL, verbose = TRUE, ...)
 
 - vars_to_regress:
 
-  Character vector. Variables to regress out. Default: `NULL`.
+  Character vector. Covariates to regress out (e.g. `"percent.mt"`).
+  Default: `NULL`.
 
 - verbose:
 
-  Logical. Default: `TRUE`.
+  Logical. Print progress messages. Default: `TRUE`.
 
 - ...:
 
@@ -39,14 +42,20 @@ SCTransform(object, assay = NULL, vars_to_regress = NULL, verbose = TRUE, ...)
 
 ## Value
 
-The updated `MatisseObject`.
+The updated `MatisseObject` with a new `"SCT"` assay.
 
 ## Details
 
-PCA is **not** run automatically. Call
-[`RunPCA()`](https://satijalab.org/seurat/reference/RunPCA.html) on the
-resulting object after normalisation:
+Override the target assay with the `assay` argument. PCA is **not** run
+automatically — call
+[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+after normalisation:
 
-    obj <- SCTransform(obj)
-    obj <- RunPCA(obj, assay = "SCT", npcs = 50)
-    obj <- RunUMAP(obj, dims = 1:50)
+    obj <- SCTransform(obj)                        # normalise
+    obj <- RunPCA(obj, assay = "SCT", npcs = 50)  # reduce
+    obj <- RunUMAP(obj, dims = 1:50)              # embed
+
+## See also
+
+[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md),
+[`NormalizeData.MatisseObject`](https://avisrilab.github.io/Matisse/reference/NormalizeData.MatisseObject.md)

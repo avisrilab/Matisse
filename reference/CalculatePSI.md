@@ -7,7 +7,14 @@ mode PSI is computed at construction time.
 ## Usage
 
 ``` r
-CalculatePSI(object, events = NULL, ...)
+CalculatePSI(
+  object,
+  events = NULL,
+  min_coverage = 5L,
+  na_fill = NA_real_,
+  verbose = TRUE,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 CalculatePSI(
@@ -15,16 +22,18 @@ CalculatePSI(
   events = NULL,
   min_coverage = 5L,
   na_fill = NA_real_,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 
 # S4 method for class 'ANY'
 CalculatePSI(
   object,
-  events,
+  events = NULL,
   min_coverage = 5L,
   na_fill = NA_real_,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 ```
 
@@ -42,10 +51,6 @@ CalculatePSI(
   `inclusion_junctions`, and `exclusion_junctions`. When `object` is a
   `MatisseObject` this defaults to `GetEventData(object)`.
 
-- ...:
-
-  Additional arguments passed to the method.
-
 - min_coverage:
 
   Integer. Minimum total reads per cell per event to report a PSI value.
@@ -58,6 +63,10 @@ CalculatePSI(
 - verbose:
 
   Logical. Print progress. Default: `TRUE`.
+
+- ...:
+
+  Additional arguments passed to the method.
 
 ## Value
 

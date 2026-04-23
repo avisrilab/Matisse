@@ -150,7 +150,7 @@
       </dl></div><div class="section level2">
       <h2 id="normalisation">Normalisation<a class="anchor" aria-label="anchor" href="#normalisation"></a></h2>
 
-      <div class="section-desc"><p>Normalise count data before clustering. SCTransform applies variance stabilisation and scales for sequencing depth. In event mode it normalises the transcript assay; in junction mode it normalises the gene-expression assay by default.</p></div>
+      <div class="section-desc"><p>Normalise count data before clustering. <code>SCTransform</code> applies variance stabilisation and scales for sequencing depth — in event mode it targets the <code>transcript</code> assay automatically; in junction mode it targets the gene-expression assay. <code>NormalizeData</code>, <code>ScaleData</code>, and <code>FindVariableFeatures</code> are log-normalisation alternatives.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -163,6 +163,133 @@
 
         </dt>
         <dd>SCTransform normalisation for MatisseObjects</dd>
+
+        <dt>
+
+          <code><a href="NormalizeData.MatisseObject.html">NormalizeData(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Normalise gene-expression counts for a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="ScaleData.MatisseObject.html">ScaleData(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Scale gene-expression data for a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="FindVariableFeatures.MatisseObject.html">FindVariableFeatures(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Identify highly variable features for a MatisseObject</dd>
+      </dl></div><div class="section level2">
+      <h2 id="dimensionality-reduction">Dimensionality reduction<a class="anchor" aria-label="anchor" href="#dimensionality-reduction"></a></h2>
+
+      <div class="section-desc"><p>Reduce the high-dimensional feature space to a compact representation before clustering and visualisation. <code>RunPCA</code> is the standard route after <code>SCTransform</code>; <code>RunSVD</code> (LSI) is used for ATAC-seq data in multiome experiments.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="RunPCA.MatisseObject.html">RunPCA(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Run PCA on a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="RunUMAP.MatisseObject.html">RunUMAP(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Run UMAP on a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="RunTSNE.MatisseObject.html">RunTSNE(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Run t-SNE on a MatisseObject</dd>
+      </dl></div><div class="section level2">
+      <h2 id="clustering-and-differential-expression">Clustering and differential expression<a class="anchor" aria-label="anchor" href="#clustering-and-differential-expression"></a></h2>
+
+      <div class="section-desc"><p>Group cells by transcriptional state and identify marker genes. All functions operate on the embedded Seurat object and return the updated <code>MatisseObject</code> — except <code>FindMarkers</code>, which returns a data frame.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="FindNeighbors.MatisseObject.html">FindNeighbors(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Compute a shared nearest-neighbour graph for a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="FindClusters.MatisseObject.html">FindClusters(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Cluster cells in a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="FindMarkers.MatisseObject.html">FindMarkers(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Find differentially expressed markers for a MatisseObject</dd>
+      </dl></div><div class="section level2">
+      <h2 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a></h2>
+
+      <div class="section-desc"><p>Add or update per-cell metadata columns. New columns are accessible immediately via <code><a href="../reference/MatisseMeta.html">MatisseMeta()</a></code> and the <code>$</code> operator.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="AddMetaData.MatisseObject.html">AddMetaData(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Add metadata columns to a MatisseObject</dd>
+      </dl></div><div class="section level2">
+      <h2 id="signac-atac-seq-methods">Signac / ATAC-seq methods<a class="anchor" aria-label="anchor" href="#signac-atac-seq-methods"></a></h2>
+
+      <div class="section-desc"><p>For multiome (paired ATAC + RNA) datasets. <code>RunTFIDF</code> normalises peak counts; <code>FindTopFeatures</code> selects variable peaks; <code>RunSVD</code> performs Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="RunTFIDF.MatisseObject.html">RunTFIDF(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Run TF-IDF normalisation for a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="FindTopFeatures.MatisseObject.html">FindTopFeatures(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Find highly variable ATAC-seq features for a MatisseObject</dd>
+
+        <dt>
+
+          <code><a href="RunSVD.MatisseObject.html">RunSVD(<i>&lt;MatisseObject&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Run SVD (LSI) for a MatisseObject</dd>
       </dl></div><div class="section level2">
       <h2 id="calculate-splicing-ratios-psi-">Calculate splicing ratios (PSI)<a class="anchor" aria-label="anchor" href="#calculate-splicing-ratios-psi-"></a></h2>
 

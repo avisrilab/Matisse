@@ -52,7 +52,17 @@ ComputeIsoformQC first to populate those columns."></head><body>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">FilterCells</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">FilterCells</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  min_junctions <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_junctions <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_junction_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_junction_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_pct_covered <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  custom_filters <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MatisseObject'</span></span>
 <span><span class="fu">FilterCells</span><span class="op">(</span></span>
@@ -63,7 +73,8 @@ ComputeIsoformQC first to populate those columns."></head><body>
 <span>  max_junction_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_pct_covered <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_filters <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -73,10 +84,6 @@ ComputeIsoformQC first to populate those columns."></head><body>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Named numeric thresholds; see <code>FilterCells</code>.</p></dd>
 
 
 <dt id="arg-min-junctions">min_junctions<a class="anchor" aria-label="anchor" href="#arg-min-junctions"></a></dt>

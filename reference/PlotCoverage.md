@@ -7,10 +7,10 @@ junction mode.
 ## Usage
 
 ``` r
-PlotCoverage(object, gene, ...)
+PlotCoverage(object, gene, cells = NULL, log_scale = FALSE, ...)
 
 # S4 method for class 'MatisseObject'
-PlotCoverage(object, gene, cells = NULL, log_scale = FALSE)
+PlotCoverage(object, gene, cells = NULL, log_scale = FALSE, ...)
 ```
 
 ## Arguments
@@ -23,10 +23,6 @@ PlotCoverage(object, gene, cells = NULL, log_scale = FALSE)
 
   Character. Gene name to plot.
 
-- ...:
-
-  Additional arguments (see `PlotCoverage`).
-
 - cells:
 
   Character vector of cell barcodes to aggregate over. Default: all
@@ -35,6 +31,10 @@ PlotCoverage(object, gene, cells = NULL, log_scale = FALSE)
 - log_scale:
 
   Logical. Use log10 y-axis. Default: `FALSE`.
+
+- ...:
+
+  Additional arguments (see `PlotCoverage`).
 
 ## Value
 

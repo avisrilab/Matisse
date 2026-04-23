@@ -13,7 +13,16 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion
 ## Usage
 
 ``` r
-CoveragePlot(object, event_id, ...)
+CoveragePlot(
+  object,
+  event_id,
+  cells = NULL,
+  group_by = NULL,
+  arc_scale = c("sqrt", "linear", "log"),
+  colours = c(inclusion = "#4393c3", exclusion = "#d6604d"),
+  title = NULL,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 CoveragePlot(
@@ -23,7 +32,8 @@ CoveragePlot(
   group_by = NULL,
   arc_scale = c("sqrt", "linear", "log"),
   colours = c(inclusion = "#4393c3", exclusion = "#d6604d"),
-  title = NULL
+  title = NULL,
+  ...
 )
 ```
 
@@ -37,10 +47,6 @@ CoveragePlot(
 
   Character. Event ID as stored in `event_data`, e.g.
   `"SE:chr1:1201-2999:3201-4999:+"`.
-
-- ...:
-
-  Additional arguments (see `CoveragePlot`).
 
 - cells:
 
@@ -65,6 +71,10 @@ CoveragePlot(
 - title:
 
   Character. Plot title. Defaults to `event_id`.
+
+- ...:
+
+  Additional arguments (see `CoveragePlot`).
 
 ## Value
 

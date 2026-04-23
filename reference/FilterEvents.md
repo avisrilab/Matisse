@@ -5,14 +5,21 @@ Removes events that do not pass minimum coverage or variance thresholds.
 ## Usage
 
 ``` r
-FilterEvents(object, ...)
+FilterEvents(
+  object,
+  min_cells_covered = 10L,
+  min_psi_variance = NULL,
+  verbose = TRUE,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 FilterEvents(
   object,
   min_cells_covered = 10L,
   min_psi_variance = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 ```
 
@@ -21,10 +28,6 @@ FilterEvents(
 - object:
 
   A `MatisseObject` with a `"psi"` assay.
-
-- ...:
-
-  Named thresholds; see `FilterEvents`.
 
 - min_cells_covered:
 

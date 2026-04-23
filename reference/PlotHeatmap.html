@@ -49,7 +49,16 @@ Heatmap of PSI values (cells x events)"></head><body>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PlotHeatmap</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PlotHeatmap</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  events <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_cells <span class="op">=</span> <span class="fl">500L</span>,</span>
+<span>  max_events <span class="op">=</span> <span class="fl">200L</span>,</span>
+<span>  na_colour <span class="op">=</span> <span class="st">"grey90"</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MatisseObject'</span></span>
 <span><span class="fu">PlotHeatmap</span><span class="op">(</span></span>
@@ -58,7 +67,9 @@ Heatmap of PSI values (cells x events)"></head><body>
 <span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_cells <span class="op">=</span> <span class="fl">500L</span>,</span>
-<span>  na_colour <span class="op">=</span> <span class="st">"grey90"</span></span>
+<span>  max_events <span class="op">=</span> <span class="fl">200L</span>,</span>
+<span>  na_colour <span class="op">=</span> <span class="st">"grey90"</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -70,18 +81,14 @@ Heatmap of PSI values (cells x events)"></head><body>
 <dd><p>A <code>MatisseObject</code> with a <code>"psi"</code> assay.</p></dd>
 
 
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments (see <code>PlotHeatmap</code>).</p></dd>
-
-
 <dt id="arg-events">events<a class="anchor" aria-label="anchor" href="#arg-events"></a></dt>
 <dd><p>Character vector of event IDs to include.
-Default: all events.</p></dd>
+Default: <code>NULL</code> (top-variance events up to <code>max_events</code>).</p></dd>
 
 
 <dt id="arg-cells">cells<a class="anchor" aria-label="anchor" href="#arg-cells"></a></dt>
 <dd><p>Character vector of cell barcodes to include.
-Default: all cells.</p></dd>
+Default: <code>NULL</code> (random sample up to <code>max_cells</code>).</p></dd>
 
 
 <dt id="arg-group-by">group_by<a class="anchor" aria-label="anchor" href="#arg-group-by"></a></dt>
@@ -92,6 +99,12 @@ annotate and order cells. Default: <code>NULL</code>.</p></dd>
 <dt id="arg-max-cells">max_cells<a class="anchor" aria-label="anchor" href="#arg-max-cells"></a></dt>
 <dd><p>Integer. Downsample to this many cells before plotting.
 Default: <code>500</code>.</p></dd>
+
+
+<dt id="arg-max-events">max_events<a class="anchor" aria-label="anchor" href="#arg-max-events"></a></dt>
+<dd><p>Integer. Cap on events to plot. When the candidate set
+exceeds this, the top-variance events are selected automatically.
+Default: <code>200</code>.</p></dd>
 
 
 <dt id="arg-na-colour">na_colour<a class="anchor" aria-label="anchor" href="#arg-na-colour"></a></dt>

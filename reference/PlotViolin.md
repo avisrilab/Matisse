@@ -7,7 +7,15 @@ Violin plot of feature values split by cell group
 ## Usage
 
 ``` r
-PlotViolin(object, feature, ...)
+PlotViolin(
+  object,
+  feature,
+  group_by = "seurat_clusters",
+  colours = NULL,
+  add_points = FALSE,
+  title = NULL,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 PlotViolin(
@@ -16,7 +24,8 @@ PlotViolin(
   group_by = "seurat_clusters",
   colours = NULL,
   add_points = FALSE,
-  title = NULL
+  title = NULL,
+  ...
 )
 ```
 
@@ -29,10 +38,6 @@ PlotViolin(
 - feature:
 
   Character. Feature to plot (PSI event ID, junction ID, or gene name).
-
-- ...:
-
-  Additional arguments (see `PlotViolin`).
 
 - group_by:
 

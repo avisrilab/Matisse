@@ -122,13 +122,70 @@ or putting updated tables back in.
 
 ## Normalisation
 
-Normalise count data before clustering. SCTransform applies variance
-stabilisation and scales for sequencing depth. In event mode it
-normalises the transcript assay; in junction mode it normalises the
-gene-expression assay by default.
+Normalise count data before clustering. `SCTransform` applies variance
+stabilisation and scales for sequencing depth — in event mode it targets
+the `transcript` assay automatically; in junction mode it targets the
+gene-expression assay. `NormalizeData`, `ScaleData`, and
+`FindVariableFeatures` are log-normalisation alternatives.
 
 - [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
   : SCTransform normalisation for MatisseObjects
+- [`NormalizeData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/NormalizeData.MatisseObject.md)
+  : Normalise gene-expression counts for a MatisseObject
+- [`ScaleData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/ScaleData.MatisseObject.md)
+  : Scale gene-expression data for a MatisseObject
+- [`FindVariableFeatures(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindVariableFeatures.MatisseObject.md)
+  : Identify highly variable features for a MatisseObject
+
+## Dimensionality reduction
+
+Reduce the high-dimensional feature space to a compact representation
+before clustering and visualisation. `RunPCA` is the standard route
+after `SCTransform`; `RunSVD` (LSI) is used for ATAC-seq data in
+multiome experiments.
+
+- [`RunPCA(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+  : Run PCA on a MatisseObject
+- [`RunUMAP(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunUMAP.MatisseObject.md)
+  : Run UMAP on a MatisseObject
+- [`RunTSNE(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunTSNE.MatisseObject.md)
+  : Run t-SNE on a MatisseObject
+
+## Clustering and differential expression
+
+Group cells by transcriptional state and identify marker genes. All
+functions operate on the embedded Seurat object and return the updated
+`MatisseObject` — except `FindMarkers`, which returns a data frame.
+
+- [`FindNeighbors(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindNeighbors.MatisseObject.md)
+  : Compute a shared nearest-neighbour graph for a MatisseObject
+- [`FindClusters(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindClusters.MatisseObject.md)
+  : Cluster cells in a MatisseObject
+- [`FindMarkers(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindMarkers.MatisseObject.md)
+  : Find differentially expressed markers for a MatisseObject
+
+## Metadata
+
+Add or update per-cell metadata columns. New columns are accessible
+immediately via
+[`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
+and the `$` operator.
+
+- [`AddMetaData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/AddMetaData.MatisseObject.md)
+  : Add metadata columns to a MatisseObject
+
+## Signac / ATAC-seq methods
+
+For multiome (paired ATAC + RNA) datasets. `RunTFIDF` normalises peak
+counts; `FindTopFeatures` selects variable peaks; `RunSVD` performs
+Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
+
+- [`RunTFIDF(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunTFIDF.MatisseObject.md)
+  : Run TF-IDF normalisation for a MatisseObject
+- [`FindTopFeatures(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindTopFeatures.MatisseObject.md)
+  : Find highly variable ATAC-seq features for a MatisseObject
+- [`RunSVD(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunSVD.MatisseObject.md)
+  : Run SVD (LSI) for a MatisseObject
 
 ## Calculate splicing ratios (PSI)
 

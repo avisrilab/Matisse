@@ -7,10 +7,10 @@ Violin plots of isoform QC metrics
 ## Usage
 
 ``` r
-PlotQCMetrics(object, features = NULL, ...)
+PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L, ...)
 
 # S4 method for class 'MatisseObject'
-PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L)
+PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L, ...)
 ```
 
 ## Arguments
@@ -25,10 +25,6 @@ PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L)
   Character vector of QC metric names. Must be columns in
   `MatisseMeta(object)`. Default: all numeric columns.
 
-- ...:
-
-  Additional arguments (see `PlotQCMetrics`).
-
 - group_by:
 
   Character. Column in `Seurat::meta.data` to split cells by. Default:
@@ -37,6 +33,10 @@ PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L)
 - ncol:
 
   Integer. Number of columns in the faceted output. Default: `2`.
+
+- ...:
+
+  Additional arguments passed to methods.
 
 ## Value
 

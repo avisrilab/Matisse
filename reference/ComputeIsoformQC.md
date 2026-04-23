@@ -7,10 +7,10 @@ Existing columns with the same names are overwritten.
 ## Usage
 
 ``` r
-ComputeIsoformQC(object, ...)
+ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE, ...)
 
 # S4 method for class 'MatisseObject'
-ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE)
+ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE, ...)
 ```
 
 ## Arguments
@@ -18,10 +18,6 @@ ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE)
 - object:
 
   A `MatisseObject`.
-
-- ...:
-
-  Additional arguments (unused).
 
 - min_coverage:
 
@@ -31,6 +27,10 @@ ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE)
 - verbose:
 
   Logical. Default: `TRUE`.
+
+- ...:
+
+  Additional arguments (unused).
 
 ## Value
 

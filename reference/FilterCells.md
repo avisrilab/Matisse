@@ -8,7 +8,17 @@ first to populate those columns.
 ## Usage
 
 ``` r
-FilterCells(object, ...)
+FilterCells(
+  object,
+  min_junctions = NULL,
+  max_junctions = NULL,
+  min_junction_reads = NULL,
+  max_junction_reads = NULL,
+  min_pct_covered = NULL,
+  custom_filters = NULL,
+  verbose = TRUE,
+  ...
+)
 
 # S4 method for class 'MatisseObject'
 FilterCells(
@@ -19,7 +29,8 @@ FilterCells(
   max_junction_reads = NULL,
   min_pct_covered = NULL,
   custom_filters = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 ```
 
@@ -28,10 +39,6 @@ FilterCells(
 - object:
 
   A `MatisseObject`.
-
-- ...:
-
-  Named numeric thresholds; see `FilterCells`.
 
 - min_junctions:
 
