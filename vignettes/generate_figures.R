@@ -296,3 +296,19 @@ ggsave("vignettes/figures/lr_coverage_by_type.png", p8,
 message("Saved lr_coverage_by_type.png")
 
 message("All figures written to vignettes/figures/")
+
+# ---------------------------------------------------------------------------
+# Copy selected figures to man/figures/ for the pkgdown homepage
+# ---------------------------------------------------------------------------
+dir.create("man/figures", showWarnings = FALSE, recursive = TRUE)
+homepage_figs <- c("ptbp1_umap.png", "psi_heatmap.png",
+                   "ptbp1_coverage_by_type.png")
+for (f in homepage_figs) {
+  src <- file.path("vignettes/figures", f)
+  dst <- file.path("man/figures", f)
+  if (file.exists(src)) {
+    file.copy(src, dst, overwrite = TRUE)
+    message("Copied ", f, " -> man/figures/")
+  }
+}
+message("Homepage figures updated in man/figures/")

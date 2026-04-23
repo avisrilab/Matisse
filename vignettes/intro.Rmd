@@ -60,10 +60,11 @@ obj <- CreateMatisseObject(
   min_coverage      = 5L
 )
 # PSI is computed at construction; summarise before clustering
-obj <- SummarizePSI(obj)
+psi_summary <- SummarizePSI(obj)
 obj <- ComputeIsoformQC(obj)
-# Normalise transcript counts and cluster
+# Normalise transcript counts, then reduce and cluster
 obj <- SCTransform(obj)
+obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 obj <- RunUMAP(obj, dims = 1:50)
 obj <- FindNeighbors(obj, dims = 1:50)
 obj <- FindClusters(obj, resolution = 0.5)
