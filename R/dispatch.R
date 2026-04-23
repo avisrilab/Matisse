@@ -103,14 +103,17 @@ FindClusters.MatisseObject <- function(object, ...) {
 #' \strong{junction mode}, normalises the active default assay (usually
 #' \code{"RNA"}). Override with the \code{assay} argument.
 #'
-#' After normalisation, \code{RunPCA} is run automatically on the resulting
-#' \code{"SCT"} assay. To skip PCA set \code{n_pca_dims = 0L}.
+#' PCA is \strong{not} run automatically. Call \code{RunPCA()} on the
+#' resulting object after normalisation:
+#' \preformatted{
+#' obj <- SCTransform(obj)
+#' obj <- RunPCA(obj, assay = "SCT", npcs = 50)
+#' obj <- RunUMAP(obj, dims = 1:50)
+#' }
 #'
 #' @param object A \code{MatisseObject}.
 #' @param assay Character. Assay to normalise. Default: \code{"transcript"}
 #'   in event mode; the active default assay in junction mode.
-#' @param n_pca_dims Integer. PCA dimensions to compute. Default: \code{50}.
-#'   Set to \code{0L} to skip PCA.
 #' @param vars_to_regress Character vector. Variables to regress out.
 #'   Default: \code{NULL}.
 #' @param verbose Logical. Default: \code{TRUE}.
@@ -122,11 +125,9 @@ FindClusters.MatisseObject <- function(object, ...) {
 #' @export
 SCTransform.MatisseObject <- function(object,
                                        assay           = NULL,
-                                       n_pca_dims      = 50L,
                                        vars_to_regress = NULL,
                                        verbose         = TRUE,
                                        ...) {
-  # Determine which assay to normalise
   if (is.null(assay)) {
     assay <- if (object@mode == "event") "transcript"
              else SeuratObject::DefaultAssay(object@seurat)
@@ -158,21 +159,10 @@ SCTransform.MatisseObject <- function(object,
     ...
   )
 
-  if (n_pca_dims > 0L) {
-    n_pca_dims <- min(as.integer(n_pca_dims),
-                      nrow(seu[["SCT"]]) - 1L,
-                      ncol(seu) - 1L)
-    if (verbose) {
-      cli::cli_alert_info("Running PCA with {n_pca_dims} components on SCT assay...")
-    }
-    seu <- Seurat::RunPCA(seu, assay = "SCT", npcs = n_pca_dims,
-                          verbose = verbose)
-  }
-
   object@seurat <- seu
 
   if (verbose) {
-    cli::cli_alert_success("SCTransform complete.")
+    cli::cli_alert_success("SCTransform complete. Run RunPCA() next.")
   }
 
   object

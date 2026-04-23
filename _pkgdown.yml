@@ -119,6 +119,7 @@ reference:
       - PlotViolin
       - PlotHeatmap
       - PlotCoverage
+      - CoveragePlot
       - PlotQCMetrics
 
   - title: "Utilities"
