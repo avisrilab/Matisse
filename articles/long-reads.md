@@ -91,14 +91,13 @@ For long-read data the transcript-level count matrix often has high
 technical variability.
 [`SCTransform()`](https://satijalab.org/seurat/reference/SCTransform.html)
 on a Matisse object in event mode automatically targets the
-`"transcript"` assay and then runs PCA – useful because isoform
-variation is subtler than gene-expression variation and benefits from a
-wider PCA space.
+`"transcript"` assay. Run
+[`RunPCA()`](https://satijalab.org/seurat/reference/RunPCA.html)
+explicitly afterwards.
 
 ``` r
-# Normalise, regress out sequencing depth, and run PCA in one step.
-# Increase n_pca_dims if clusters look under-resolved.
-obj <- SCTransform(obj, n_pca_dims = 50)
+obj <- SCTransform(obj)
+obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 ```
 
 ------------------------------------------------------------------------
@@ -147,11 +146,29 @@ PlotViolin(
 PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 ```
 
-> **Note on event IDs:** SUPPA2 event IDs use the format
-> `TYPE:chr:coords:strand` (e.g. `SE:chr18:100-200:300-400:+`). These
-> become the row names in `GetPSI(obj)`, so use the same string when
-> calling
-> [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md)
+### Inspect junction coverage with a sashimi plot
+
+[`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md)
+draws junction arcs scaled by aggregate read count, coloured by role
+(inclusion = blue, exclusion = red). It works in event mode by parsing
+junction coordinates directly from the SE event ID. Facet by cell type
+to compare isoform usage across populations.
+
+``` r
+CoveragePlot(
+  obj,
+  event_id = "SE:chr18:3433648-3434699:3434801-3436055:-",
+  group_by = "cell_type",
+  title    = "PTBP1 exon 9 — coverage by cell type"
+)
+```
+
+> **Note on event IDs:** SUPPA2 SE event IDs use the format
+> `SE:chr:donor1-acceptor1:donor2-acceptor2:strand`
+> (e.g. `SE:chr18:3433648-3434699:3434801-3436055:-`). These become the
+> feature names in `GetPSI(obj)`, so use the same string when calling
+> [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md),
+> [`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md),
 > or subsetting.
 
 ------------------------------------------------------------------------

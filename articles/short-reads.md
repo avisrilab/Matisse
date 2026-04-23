@@ -101,7 +101,7 @@ obj <- FilterEvents(
 ``` r
 PlotUMAP(
   obj,
-  feature = "PTBP1:SE:chr18:3433647-3436055",
+  feature = "SE:chr18:3433648-3434699:3434801-3436055:-",
   title   = "PTBP1 exon 9 -- PSI per cell"
 )
 ```
@@ -111,7 +111,7 @@ PlotUMAP(
 ``` r
 PlotViolin(
   obj,
-  feature  = "PTBP1:SE:chr18:3433647-3436055",
+  feature  = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by = "cell_type"
 )
 ```
@@ -122,10 +122,26 @@ PlotViolin(
 PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
 ```
 
-### Inspect raw junction coverage for a gene
+### Inspect per-junction counts for a gene
 
 ``` r
 PlotCoverage(obj, gene = "PTBP1")
+```
+
+### Sashimi plot for a specific event
+
+[`CoveragePlot()`](https://avisrilab.github.io/Matisse/reference/CoveragePlot.md)
+shows junction arcs scaled by read count, coloured by inclusion (blue)
+vs exclusion (red). Use `group_by` to compare cell types side by side.
+
+``` r
+CoveragePlot(
+  obj,
+  event_id  = "SE:chr18:3433648-3434699:3434801-3436055:-",
+  group_by  = "cell_type",
+  arc_scale = "sqrt",
+  title     = "PTBP1 exon 9 — junction coverage by cell type"
+)
 ```
 
 ------------------------------------------------------------------------
