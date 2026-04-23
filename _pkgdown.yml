@@ -81,12 +81,57 @@ reference:
 
   - title: "Normalisation"
     desc: >
-      Normalise count data before clustering. SCTransform applies variance
-      stabilisation and scales for sequencing depth. In event mode it
-      normalises the transcript assay; in junction mode it normalises the
-      gene-expression assay by default.
+      Normalise count data before clustering. <code>SCTransform</code> applies
+      variance stabilisation and scales for sequencing depth — in event mode
+      it targets the <code>transcript</code> assay automatically; in junction
+      mode it targets the gene-expression assay. <code>NormalizeData</code>,
+      <code>ScaleData</code>, and <code>FindVariableFeatures</code> are
+      log-normalisation alternatives.
     contents:
       - SCTransform.MatisseObject
+      - NormalizeData.MatisseObject
+      - ScaleData.MatisseObject
+      - FindVariableFeatures.MatisseObject
+
+  - title: "Dimensionality reduction"
+    desc: >
+      Reduce the high-dimensional feature space to a compact representation
+      before clustering and visualisation. <code>RunPCA</code> is the standard
+      route after <code>SCTransform</code>; <code>RunSVD</code> (LSI) is used
+      for ATAC-seq data in multiome experiments.
+    contents:
+      - RunPCA.MatisseObject
+      - RunUMAP.MatisseObject
+      - RunTSNE.MatisseObject
+
+  - title: "Clustering and differential expression"
+    desc: >
+      Group cells by transcriptional state and identify marker genes.
+      All functions operate on the embedded Seurat object and return the
+      updated <code>MatisseObject</code> — except <code>FindMarkers</code>,
+      which returns a data frame.
+    contents:
+      - FindNeighbors.MatisseObject
+      - FindClusters.MatisseObject
+      - FindMarkers.MatisseObject
+
+  - title: "Metadata"
+    desc: >
+      Add or update per-cell metadata columns. New columns are accessible
+      immediately via <code>MatisseMeta()</code> and the <code>$</code> operator.
+    contents:
+      - AddMetaData.MatisseObject
+
+  - title: "Signac / ATAC-seq methods"
+    desc: >
+      For multiome (paired ATAC + RNA) datasets. <code>RunTFIDF</code>
+      normalises peak counts; <code>FindTopFeatures</code> selects variable
+      peaks; <code>RunSVD</code> performs Latent Semantic Indexing (LSI) —
+      the ATAC equivalent of PCA.
+    contents:
+      - RunTFIDF.MatisseObject
+      - FindTopFeatures.MatisseObject
+      - RunSVD.MatisseObject
 
   - title: "Calculate splicing ratios (PSI)"
     desc: >
