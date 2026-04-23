@@ -106,6 +106,14 @@ test_that("show method: event-based mode label in show output", {
   expect_output(show(obj), regexp = "event-based")
 })
 
+test_that("show method: default assay is marked with * in Assays line", {
+  obj <- make_matisse_object()
+  out        <- capture.output(show(obj))
+  assay_line <- grep("Assays", out, value = TRUE)
+  default    <- SeuratObject::DefaultAssay(GetSeurat(obj))
+  expect_true(grepl(paste0(default, "\\*"), assay_line))
+})
+
 test_that("show method: PSI coverage line present and not NA after CalculatePSI", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)

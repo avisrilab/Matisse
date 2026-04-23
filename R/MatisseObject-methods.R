@@ -46,7 +46,10 @@ setMethod("show", "MatisseObject", function(object) {
 
     assay_names <- SeuratObject::Assays(object@seurat)
     if (length(assay_names) > 0) {
-      cat("  Assays       :", paste(assay_names, collapse = ", "), "\n")
+      default_assay <- SeuratObject::DefaultAssay(object@seurat)
+      labelled <- ifelse(assay_names == default_assay,
+                         paste0(assay_names, "*"), assay_names)
+      cat("  Assays       :", paste(labelled, collapse = ", "), "\n")
     }
     if (length(SeuratObject::Reductions(object@seurat)) > 0) {
       cat("  Reductions   :",
