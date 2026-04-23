@@ -96,9 +96,14 @@ test_that("show method: produces output without error", {
   expect_output(show(obj), regexp = "MatisseObject")
 })
 
-test_that("show method: mode appears in show output", {
+test_that("show method: junction-based mode label in show output", {
   obj <- make_matisse_object()
-  expect_output(show(obj), regexp = "junction")
+  expect_output(show(obj), regexp = "junction-based")
+})
+
+test_that("show method: event-based mode label in show output", {
+  obj <- make_matisse_from_transcripts()
+  expect_output(show(obj), regexp = "event-based")
 })
 
 test_that("show method: PSI coverage line present and not NA after CalculatePSI", {

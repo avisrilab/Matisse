@@ -141,9 +141,12 @@ setMethod("FilterCells", "MatisseObject",
     if (!is.null(hi) && !is.na(hi)) keep <<- keep & !is.na(vals) & (vals <= hi)
   }
 
-  apply_bound("n_junctions_detected",  min_junctions,      max_junctions)
-  apply_bound("total_junction_reads",  min_junction_reads, max_junction_reads)
-  apply_bound("pct_events_covered",    min_pct_covered,    NULL)
+  if (!is.null(min_junctions) || !is.null(max_junctions))
+    apply_bound("n_junctions_detected", min_junctions, max_junctions)
+  if (!is.null(min_junction_reads) || !is.null(max_junction_reads))
+    apply_bound("total_junction_reads", min_junction_reads, max_junction_reads)
+  if (!is.null(min_pct_covered))
+    apply_bound("pct_events_covered", min_pct_covered, NULL)
 
   if (!is.null(custom_filters)) {
     for (col in names(custom_filters)) {

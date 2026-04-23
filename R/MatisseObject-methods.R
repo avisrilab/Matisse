@@ -35,7 +35,8 @@ setMethod("show", "MatisseObject", function(object) {
   n_cells  <- .n_cells(object)
   n_events <- .n_events(object)
 
-  cat("A MatisseObject (", object@mode, " mode)\n", sep = "")
+  mode_label <- if (object@mode == "junction") "junction-based" else "event-based"
+  cat("A MatisseObject (", mode_label, " mode)\n", sep = "")
   cat("  Cells        :", n_cells, "\n")
   cat("  Splice events:", n_events, "\n")
 
