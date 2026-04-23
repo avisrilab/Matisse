@@ -355,6 +355,253 @@ setMethod("PlotQCMetrics", "MatisseObject",
 })
 
 # ---------------------------------------------------------------------------
+# CoveragePlot
+# ---------------------------------------------------------------------------
+
+#' Sashimi-style coverage plot for a splice event
+#'
+#' Draws junction arcs scaled by aggregate read count over a schematic gene
+#' structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).
+#'
+#' In \strong{junction mode} each arc corresponds to an individual junction
+#' with its own read count. In \strong{event mode} the SE event_id is parsed
+#' to derive junction coordinates; inclusion and exclusion counts come from the
+#' \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
+#'
+#' Currently only SE (skipped exon) events are supported for coordinate
+#' derivation in event mode. Other event types require junction mode.
+#'
+#' @param object A \code{MatisseObject} with a PSI assay computed.
+#' @param event_id Character. Event ID as stored in \code{event_data}, e.g.
+#'   \code{"SE:chr1:1201-2999:3201-4999:+"}.
+#' @param cells Character vector of cell barcodes to aggregate over.
+#'   Default: all cells.
+#' @param group_by Character. Column in Seurat meta.data to facet by.
+#'   Default: \code{NULL} (all cells pooled).
+#' @param arc_scale Character. How to scale arc height to read count:
+#'   \code{"sqrt"} (default), \code{"linear"}, or \code{"log"}.
+#' @param colours Named character vector with elements \code{"inclusion"} and
+#'   \code{"exclusion"} giving arc colours.
+#' @param title Character. Plot title. Defaults to \code{event_id}.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @rdname CoveragePlot
+#' @export
+setMethod("CoveragePlot", "MatisseObject",
+          function(object, event_id,
+                   cells     = NULL,
+                   group_by  = NULL,
+                   arc_scale = c("sqrt", "linear", "log"),
+                   colours   = c(inclusion = "#4393c3", exclusion = "#d6604d"),
+                   title     = NULL) {
+  arc_scale <- match.arg(arc_scale)
+
+  ed <- object@event_data
+  if (!event_id %in% ed$event_id) {
+    rlang::abort(paste0("'", event_id, "' not found in event_data."))
+  }
+  ev        <- ed[ed$event_id == event_id, , drop = FALSE]
+  all_cells <- .get_cells(object)
+  sub_cells <- cells %||% all_cells
+
+  # Split cells by group
+  if (!is.null(group_by)) {
+    grp_vec        <- .get_seurat_meta_col(object, group_by)
+    names(grp_vec) <- all_cells
+    groups         <- split(sub_cells, grp_vec[sub_cells])
+  } else {
+    groups <- list(All = sub_cells)
+  }
+
+  jxn_coords <- .cov_jxn_coords(object, ev)
+
+  arc_data <- do.call(rbind, lapply(names(groups), function(g) {
+    cnts     <- .cov_counts(object, ev, groups[[g]])
+    df       <- merge(jxn_coords, cnts, by = "junction_id", all.x = TRUE)
+    df$count <- ifelse(is.na(df$count), 0, df$count)
+    df$group <- g
+    df
+  }))
+
+  .cov_draw(arc_data, jxn_coords, arc_scale, colours,
+            title %||% event_id, !is.null(group_by))
+})
+
+# Return data.frame: junction_id | start | end | role
+.cov_jxn_coords <- function(object, ev) {
+  if (object@mode == "junction") {
+    inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
+    exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
+    ids <- c(inc, exc)
+    jd  <- object@junction_data
+    idx <- match(ids, jd$junction_id)
+    if (anyNA(idx)) {
+      missing <- ids[is.na(idx)]
+      rlang::abort(paste0(
+        "Junctions not found in junction_data: ",
+        paste(missing, collapse = ", ")))
+    }
+    data.frame(
+      junction_id = ids,
+      chr         = jd$chr[idx],
+      start       = jd$start[idx],
+      end         = jd$end[idx],
+      strand      = jd$strand[idx],
+      role        = c(rep("inclusion", length(inc)),
+                      rep("exclusion", length(exc))),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    .cov_parse_se(ev)
+  }
+}
+
+# Parse SE event row into junction coord table (chr + strand from ev)
+.cov_parse_se <- function(ev) {
+  event_id <- ev$event_id
+  parts    <- strsplit(event_id, ":", fixed = TRUE)[[1L]]
+  if (length(parts) < 5L || parts[1L] != "SE") {
+    rlang::abort(paste0(
+      "CoveragePlot() in event mode requires SE event IDs ",
+      "(format 'SE:chr:start1-end1:start2-end2:strand'). Got: '",
+      event_id, "'."))
+  }
+  chr    <- ev$chr
+  strand <- ev$strand
+  p3     <- as.integer(strsplit(parts[3L], "-", fixed = TRUE)[[1L]])
+  p4     <- as.integer(strsplit(parts[4L], "-", fixed = TRUE)[[1L]])
+  data.frame(
+    junction_id = c("inc_jxn1", "inc_jxn2", "exc_jxn"),
+    chr         = chr,
+    start       = c(p3[1L], p4[1L], p3[1L]),
+    end         = c(p3[2L], p4[2L], p4[2L]),
+    strand      = strand,
+    role        = c("inclusion", "inclusion", "exclusion"),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Return data.frame: junction_id | count
+.cov_counts <- function(object, ev, cells) {
+  if (object@mode == "junction") {
+    jxn <- GetJunctionCounts(object)
+    inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
+    exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
+    ids <- intersect(c(inc, exc), colnames(jxn))
+    tot <- as.numeric(Matrix::colSums(jxn[cells, ids, drop = FALSE]))
+    data.frame(junction_id = ids, count = tot, stringsAsFactors = FALSE)
+  } else {
+    .require_psi(object)
+    eid     <- ev$event_id
+    inc_cx  <- GetInclusionCounts(object)
+    exc_cx  <- GetExclusionCounts(object)
+    inc_tot <- if (!is.null(inc_cx) && eid %in% colnames(inc_cx))
+      sum(inc_cx[cells, eid]) else 0
+    exc_tot <- if (!is.null(exc_cx) && eid %in% colnames(exc_cx))
+      sum(exc_cx[cells, eid]) else 0
+    data.frame(
+      junction_id = c("inc_jxn1", "inc_jxn2", "exc_jxn"),
+      count       = c(inc_tot / 2, inc_tot / 2, exc_tot),
+      stringsAsFactors = FALSE
+    )
+  }
+}
+
+# Build arc path points (n_pts per arc) and return long data.frame
+.cov_arc_paths <- function(arc_data, arc_scale) {
+  scale_fn <- switch(arc_scale,
+    sqrt   = sqrt,
+    linear = identity,
+    log    = log1p
+  )
+  n_pts <- 60L
+  t_seq <- seq(0, pi, length.out = n_pts)
+  do.call(rbind, lapply(seq_len(nrow(arc_data)), function(i) {
+    row <- arc_data[i, ]
+    h   <- scale_fn(max(row$count, 0))
+    x1  <- row$start
+    x2  <- row$end
+    data.frame(
+      x     = (x1 + x2) / 2 - (x2 - x1) / 2 * cos(t_seq),
+      y     = h * sin(t_seq),
+      role  = row$role,
+      group = row$group,
+      arc   = i,
+      stringsAsFactors = FALSE
+    )
+  }))
+}
+
+# Derive exon blocks and intron backbone from junction coordinate table
+.cov_gene_model <- function(jxn_coords, x_pad = 300L) {
+  donors    <- sort(unique(jxn_coords$start))
+  acceptors <- sort(unique(jxn_coords$end))
+  x_min     <- min(donors)    - x_pad
+  x_max     <- max(acceptors) + x_pad
+  exon_xmin <- c(x_min,         acceptors + 1L)
+  exon_xmax <- c(donors  - 1L,  x_max)
+  list(
+    exons   = data.frame(xmin = exon_xmin, xmax = exon_xmax,
+                         ymin = -0.08, ymax = 0.08),
+    intron  = data.frame(x = c(x_min, x_max), y = c(0, 0)),
+    x_range = c(x_min, x_max)
+  )
+}
+
+.cov_draw <- function(arc_data, jxn_coords, arc_scale, colours, title, facet) {
+  scale_fn <- switch(arc_scale, sqrt = sqrt, linear = identity, log = log1p)
+
+  arc_paths <- .cov_arc_paths(arc_data, arc_scale)
+  gene      <- .cov_gene_model(jxn_coords)
+
+  # Count labels: peak of each arc
+  label_df <- arc_data
+  label_df$lx <- (arc_data$start + arc_data$end) / 2
+  label_df$ly <- scale_fn(pmax(arc_data$count, 0)) * 1.08
+
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_line(
+      data = gene$intron,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      colour = "grey50", linewidth = 0.4) +
+    ggplot2::geom_rect(
+      data = gene$exons,
+      ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax,
+                   ymin = .data$ymin, ymax = .data$ymax),
+      fill = "grey55", colour = NA) +
+    ggplot2::geom_path(
+      data = arc_paths,
+      ggplot2::aes(x      = .data$x,
+                   y      = .data$y,
+                   colour = .data$role,
+                   group  = .data$arc),
+      linewidth = 1.1, lineend = "round") +
+    ggplot2::geom_text(
+      data = label_df[label_df$count > 0, ],
+      ggplot2::aes(x     = .data$lx,
+                   y     = .data$ly,
+                   label = round(.data$count),
+                   colour = .data$role),
+      size = 3, vjust = 0, show.legend = FALSE) +
+    ggplot2::scale_colour_manual(values = colours, name = "Junction role") +
+    ggplot2::scale_x_continuous(
+      limits = gene$x_range,
+      labels = function(x) format(x, big.mark = ",", scientific = FALSE)) +
+    ggplot2::labs(
+      title = title,
+      x     = paste0(jxn_coords$chr[1L], "  (", jxn_coords$strand[1L], ")"),
+      y     = paste0("Reads (", arc_scale, " scaled)")
+    ) +
+    .matisse_theme() +
+    ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank())
+
+  if (facet) p <- p + ggplot2::facet_wrap(~ group)
+  p
+}
+
+# ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 

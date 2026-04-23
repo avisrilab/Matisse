@@ -222,6 +222,78 @@ test_that("PlotCoverage: errors for a gene not present in junction_data", {
 })
 
 # ============================================================
+# CoveragePlot
+# ============================================================
+
+test_that("CoveragePlot: returns a ggplot for junction-mode object", {
+  obj <- make_matisse_short_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
+  expect_s3_class(p, "gg")
+})
+
+test_that("CoveragePlot: returns a ggplot for event-mode object", {
+  obj <- make_matisse_long_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
+  expect_s3_class(p, "gg")
+})
+
+test_that("CoveragePlot: group_by produces a faceted plot", {
+  obj <- make_matisse_short_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+                      group_by = "cell_type")
+  expect_s3_class(p, "gg")
+  expect_true(!is.null(p$facet))
+})
+
+test_that("CoveragePlot: arc_scale = 'linear' is accepted", {
+  obj <- make_matisse_short_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+                      arc_scale = "linear")
+  expect_s3_class(p, "gg")
+})
+
+test_that("CoveragePlot: arc_scale = 'log' is accepted", {
+  obj <- make_matisse_short_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+                      arc_scale = "log")
+  expect_s3_class(p, "gg")
+})
+
+test_that("CoveragePlot: custom title is applied", {
+  obj <- make_matisse_short_read()
+  p   <- CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+                      title = "My SE event")
+  expect_equal(p$labels$title, "My SE event")
+})
+
+test_that("CoveragePlot: cell subset is accepted without error", {
+  obj   <- make_matisse_short_read()
+  cells <- paste0("Cell", 1:5)
+  expect_no_error(
+    CoveragePlot(obj, event_id = "SE:chr1:1201-2999:3201-4999:+",
+                 cells = cells)
+  )
+})
+
+test_that("CoveragePlot: errors for unknown event_id", {
+  obj <- make_matisse_short_read()
+  expect_error(
+    CoveragePlot(obj, event_id = "SE:chr99:0-1:2-3:+"),
+    regexp = "not found in event_data"
+  )
+})
+
+test_that("CoveragePlot: errors in event mode for non-SE event_id format", {
+  obj <- make_matisse_long_read()
+  # Manually mangle the event_id to a non-SE type
+  obj@event_data$event_id <- "A3:chr1:1201-2999:3201-4999:+"
+  expect_error(
+    CoveragePlot(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
+    regexp = "SE event"
+  )
+})
+
+# ============================================================
 # PlotQCMetrics
 # ============================================================
 

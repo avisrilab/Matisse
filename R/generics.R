@@ -238,3 +238,18 @@ setGeneric("PlotCoverage",
 #' @export
 setGeneric("PlotQCMetrics",
            function(object, features = NULL, ...) standardGeneric("PlotQCMetrics"))
+
+#' Sashimi-style coverage plot for a splice event
+#'
+#' Draws junction arcs scaled by read count over a schematic gene structure.
+#' Arcs are coloured by role: inclusion (blue) vs exclusion (red). Works in
+#' both junction mode (per-junction counts) and event mode (aggregated
+#' inclusion/exclusion counts). Optionally faceted by a cell metadata column.
+#'
+#' @param object A \code{MatisseObject}.
+#' @param event_id Character. Event ID as stored in \code{event_data}.
+#' @param ... Additional arguments (see \code{\link{CoveragePlot}}).
+#' @return A \code{ggplot} object.
+#' @export
+setGeneric("CoveragePlot",
+           function(object, event_id, ...) standardGeneric("CoveragePlot"))
