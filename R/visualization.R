@@ -45,7 +45,7 @@ setMethod("PlotUMAP", "MatisseObject",
                    dims       = c(1L, 2L),
                    pt_size    = 0.5,
                    na_colour  = "grey80",
-                   title      = NULL) {
+                   title      = NULL, ...) {
   vals <- .get_feature_values(object, feature)
 
   emb       <- SeuratObject::Embeddings(object@seurat, reduction = reduction)
@@ -102,7 +102,7 @@ setMethod("PlotViolin", "MatisseObject",
                    group_by   = "seurat_clusters",
                    colours    = NULL,
                    add_points = FALSE,
-                   title      = NULL) {
+                   title      = NULL, ...) {
   vals       <- .get_feature_values(object, feature)
   group_vals <- .get_seurat_meta_col(object, group_by)
 
@@ -159,7 +159,7 @@ setMethod("PlotHeatmap", "MatisseObject",
                    cells      = NULL,
                    group_by   = NULL,
                    max_cells  = 500L,
-                   na_colour  = "grey90") {
+                   na_colour  = "grey90", ...) {
   .require_psi(object)
 
   psi_cx     <- GetPSI(object)  # cells x events
@@ -246,7 +246,7 @@ setMethod("PlotHeatmap", "MatisseObject",
 #' @rdname PlotCoverage
 #' @export
 setMethod("PlotCoverage", "MatisseObject",
-          function(object, gene, cells = NULL, log_scale = FALSE) {
+          function(object, gene, cells = NULL, log_scale = FALSE, ...) {
   jxn_counts <- GetJunctionCounts(object)
   if (is.null(jxn_counts)) {
     rlang::abort(
@@ -315,7 +315,7 @@ setMethod("PlotCoverage", "MatisseObject",
 #' @rdname PlotQCMetrics
 #' @export
 setMethod("PlotQCMetrics", "MatisseObject",
-          function(object, features = NULL, group_by = NULL, ncol = 2L) {
+          function(object, features = NULL, group_by = NULL, ncol = 2L, ...) {
   meta <- MatisseMeta(object)   # now returns seurat@meta.data
 
   if (is.null(features)) {
@@ -394,7 +394,7 @@ setMethod("CoveragePlot", "MatisseObject",
                    group_by  = NULL,
                    arc_scale = c("sqrt", "linear", "log"),
                    colours   = c(inclusion = "#4393c3", exclusion = "#d6604d"),
-                   title     = NULL) {
+                   title     = NULL, ...) {
   arc_scale <- match.arg(arc_scale)
 
   ed <- object@event_data

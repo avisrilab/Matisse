@@ -51,7 +51,7 @@ NULL
 #' @export
 setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
-                   na_fill = NA_real_, verbose = TRUE) {
+                   na_fill = NA_real_, verbose = TRUE, ...) {
   # In event mode PSI is already computed at construction — warn and return
   if (object@mode == "event") {
     if (!is.null(.get_assay_safe(object@seurat, "psi"))) {
@@ -115,7 +115,7 @@ setMethod("CalculatePSI", "MatisseObject",
 #' @rdname CalculatePSI
 setMethod("CalculatePSI", "ANY",
           function(object, events, min_coverage = 5L,
-                   na_fill = NA_real_, verbose = TRUE) {
+                   na_fill = NA_real_, verbose = TRUE, ...) {
   if (!inherits(object, "Matrix") && !is.matrix(object)) {
     rlang::abort("`object` must be a MatisseObject or a matrix.")
   }

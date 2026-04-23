@@ -152,7 +152,9 @@ setGeneric("AddIsoformMetadata",
 #' @return A \code{MatisseObject} (when given one) or a PSI matrix.
 #' @export
 setGeneric("CalculatePSI",
-           function(object, events = NULL, ...) standardGeneric("CalculatePSI"))
+           function(object, events = NULL, min_coverage = 5L,
+                    na_fill = NA_real_, verbose = TRUE, ...)
+             standardGeneric("CalculatePSI"))
 
 #' Compute per-cell isoform QC metrics
 #'
@@ -162,25 +164,46 @@ setGeneric("CalculatePSI",
 #'   cell metadata.
 #' @export
 setGeneric("ComputeIsoformQC",
-           function(object, ...) standardGeneric("ComputeIsoformQC"))
+           function(object, min_coverage = 5L, verbose = TRUE, ...)
+             standardGeneric("ComputeIsoformQC"))
 
 #' Filter cells by isoform QC thresholds
 #'
 #' @param object A \code{MatisseObject}.
-#' @param ... Named numeric thresholds; see \code{\link{FilterCells}}.
+#' @param min_junctions Integer. Minimum \code{n_junctions_detected}. Default: \code{NULL}.
+#' @param max_junctions Integer. Maximum \code{n_junctions_detected}. Default: \code{NULL}.
+#' @param min_junction_reads Integer. Minimum \code{total_junction_reads}. Default: \code{NULL}.
+#' @param max_junction_reads Integer. Maximum \code{total_junction_reads}. Default: \code{NULL}.
+#' @param min_pct_covered Numeric (0–100). Minimum \code{pct_events_covered}. Default: \code{NULL}.
+#' @param custom_filters Named list of \code{c(min, max)} bounds for arbitrary metadata columns.
+#' @param verbose Logical. Default: \code{TRUE}.
 #' @return The filtered \code{MatisseObject}.
 #' @export
 setGeneric("FilterCells",
-           function(object, ...) standardGeneric("FilterCells"))
+           function(object,
+                    min_junctions      = NULL,
+                    max_junctions      = NULL,
+                    min_junction_reads = NULL,
+                    max_junction_reads = NULL,
+                    min_pct_covered    = NULL,
+                    custom_filters     = NULL,
+                    verbose            = TRUE, ...)
+             standardGeneric("FilterCells"))
 
 #' Filter splice events by coverage or variance
 #'
 #' @param object A \code{MatisseObject}.
-#' @param ... Named thresholds; see \code{\link{FilterEvents}}.
+#' @param min_cells_covered Integer. Minimum cells with non-NA PSI. Default: \code{10}.
+#' @param min_psi_variance Numeric. Minimum PSI variance across covered cells. Default: \code{NULL}.
+#' @param verbose Logical. Default: \code{TRUE}.
 #' @return The filtered \code{MatisseObject}.
 #' @export
 setGeneric("FilterEvents",
-           function(object, ...) standardGeneric("FilterEvents"))
+           function(object,
+                    min_cells_covered = 10L,
+                    min_psi_variance  = NULL,
+                    verbose           = TRUE, ...)
+             standardGeneric("FilterEvents"))
 
 # ---------------------------------------------------------------------------
 # Visualization generics
@@ -199,26 +222,50 @@ setGeneric("FilterEvents",
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotUMAP",
-           function(object, feature, ...) standardGeneric("PlotUMAP"))
+           function(object, feature,
+                    reduction = "umap",
+                    dims      = c(1L, 2L),
+                    pt_size   = 0.5,
+                    na_colour = "grey80",
+                    title     = NULL, ...)
+             standardGeneric("PlotUMAP"))
 
 #' Violin plot of feature values split by cell group
 #'
 #' @param object A \code{MatisseObject}.
 #' @param feature Character. Feature to visualise (PSI event, junction, or gene).
-#' @param ... Additional arguments (see \code{\link{PlotViolin}}).
+#' @param group_by Character. Metadata column to split cells by. Default: \code{"seurat_clusters"}.
+#' @param colours Named character vector mapping group levels to colours. Default: \code{NULL}.
+#' @param add_points Logical. Overlay jittered cell values. Default: \code{FALSE}.
+#' @param title Character. Plot title. Default: feature name.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotViolin",
-           function(object, feature, ...) standardGeneric("PlotViolin"))
+           function(object, feature,
+                    group_by   = "seurat_clusters",
+                    colours    = NULL,
+                    add_points = FALSE,
+                    title      = NULL, ...)
+             standardGeneric("PlotViolin"))
 
 #' Heatmap of feature values across cells and events
 #'
 #' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (see \code{\link{PlotHeatmap}}).
+#' @param events Character vector of event IDs. Default: all events.
+#' @param cells Character vector of cell barcodes. Default: all cells.
+#' @param group_by Character. Metadata column to annotate and order cells. Default: \code{NULL}.
+#' @param max_cells Integer. Downsample cap before plotting. Default: \code{500}.
+#' @param na_colour Character. Colour for \code{NA} entries. Default: \code{"grey90"}.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotHeatmap",
-           function(object, ...) standardGeneric("PlotHeatmap"))
+           function(object,
+                    events    = NULL,
+                    cells     = NULL,
+                    group_by  = NULL,
+                    max_cells = 500L,
+                    na_colour = "grey90", ...)
+             standardGeneric("PlotHeatmap"))
 
 #' Junction coverage bar plot for a gene
 #'
@@ -228,16 +275,20 @@ setGeneric("PlotHeatmap",
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotCoverage",
-           function(object, gene, ...) standardGeneric("PlotCoverage"))
+           function(object, gene, cells = NULL, log_scale = FALSE, ...)
+             standardGeneric("PlotCoverage"))
 
 #' Violin/ridge plot of isoform QC metrics
 #' @param object A \code{MatisseObject}.
 #' @param features Character vector of QC metric names to plot.
-#' @param ... Additional arguments (see \code{\link{PlotQCMetrics}}).
+#' @param group_by Character. Metadata column to split cells by. Default: \code{NULL}.
+#' @param ncol Integer. Number of facet columns. Default: \code{2}.
+#' @param ... Additional arguments passed to methods.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotQCMetrics",
-           function(object, features = NULL, ...) standardGeneric("PlotQCMetrics"))
+           function(object, features = NULL, group_by = NULL, ncol = 2L, ...)
+             standardGeneric("PlotQCMetrics"))
 
 #' Sashimi-style coverage plot for a splice event
 #'
@@ -252,4 +303,10 @@ setGeneric("PlotQCMetrics",
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("CoveragePlot",
-           function(object, event_id, ...) standardGeneric("CoveragePlot"))
+           function(object, event_id,
+                    cells     = NULL,
+                    group_by  = NULL,
+                    arc_scale = c("sqrt", "linear", "log"),
+                    colours   = c(inclusion = "#4393c3", exclusion = "#d6604d"),
+                    title     = NULL, ...)
+             standardGeneric("CoveragePlot"))

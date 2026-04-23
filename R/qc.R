@@ -37,7 +37,7 @@ NULL
 #' @rdname ComputeIsoformQC
 #' @export
 setMethod("ComputeIsoformQC", "MatisseObject",
-          function(object, min_coverage = 5L, verbose = TRUE) {
+          function(object, min_coverage = 5L, verbose = TRUE, ...) {
 
   qc <- data.frame(row.names = .get_cells(object))
 
@@ -124,7 +124,7 @@ setMethod("FilterCells", "MatisseObject",
                    max_junction_reads = NULL,
                    min_pct_covered    = NULL,
                    custom_filters     = NULL,
-                   verbose            = TRUE) {
+                   verbose            = TRUE, ...) {
   meta  <- MatisseMeta(object)   # now seurat@meta.data
   cells <- .get_cells(object)
   keep  <- rep(TRUE, length(cells))
@@ -185,7 +185,7 @@ setMethod("FilterEvents", "MatisseObject",
           function(object,
                    min_cells_covered = 10L,
                    min_psi_variance  = NULL,
-                   verbose           = TRUE) {
+                   verbose           = TRUE, ...) {
   psi_cx <- GetPSI(object)  # cells x events
   if (is.null(psi_cx)) {
     rlang::abort("PSI matrix is NULL. Run CalculatePSI() first.")
