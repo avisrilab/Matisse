@@ -6,22 +6,31 @@
 \alias{CalculatePSI,ANY-method}
 \title{Calculate PSI matrix from junction counts}
 \usage{
-CalculatePSI(object, events = NULL, ...)
+CalculatePSI(
+  object,
+  events = NULL,
+  min_coverage = 5L,
+  na_fill = NA_real_,
+  verbose = TRUE,
+  ...
+)
 
 \S4method{CalculatePSI}{MatisseObject}(
   object,
   events = NULL,
   min_coverage = 5L,
   na_fill = NA_real_,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 
 \S4method{CalculatePSI}{ANY}(
   object,
-  events,
+  events = NULL,
   min_coverage = 5L,
   na_fill = NA_real_,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -33,8 +42,6 @@ columns \code{event_id}, \code{inclusion_junctions}, and
 \code{exclusion_junctions}. When \code{object} is a
 \code{MatisseObject} this defaults to \code{GetEventData(object)}.}
 
-\item{...}{Additional arguments passed to the method.}
-
 \item{min_coverage}{Integer. Minimum total reads per cell per event to
 report a PSI value. Default: \code{5}.}
 
@@ -42,6 +49,8 @@ report a PSI value. Default: \code{5}.}
 \code{NA_real_}.}
 
 \item{verbose}{Logical. Print progress. Default: \code{TRUE}.}
+
+\item{...}{Additional arguments passed to the method.}
 }
 \value{
 A \code{MatisseObject} (when given one) or a PSI matrix.

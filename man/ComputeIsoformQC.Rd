@@ -5,19 +5,19 @@
 \alias{ComputeIsoformQC,MatisseObject-method}
 \title{Compute per-cell isoform QC metrics}
 \usage{
-ComputeIsoformQC(object, ...)
+ComputeIsoformQC(object, min_coverage = 5L, verbose = TRUE, ...)
 
-\S4method{ComputeIsoformQC}{MatisseObject}(object, min_coverage = 5L, verbose = TRUE)
+\S4method{ComputeIsoformQC}{MatisseObject}(object, min_coverage = 5L, verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
-
-\item{...}{Additional arguments (unused).}
 
 \item{min_coverage}{Integer. Minimum total reads to consider an event
 "covered" when computing \code{n_events_covered}. Default: \code{5}.}
 
 \item{verbose}{Logical. Default: \code{TRUE}.}
+
+\item{...}{Additional arguments (unused).}
 }
 \value{
 The updated \code{MatisseObject} with QC columns added to

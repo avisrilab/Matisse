@@ -325,6 +325,7 @@ setMethod("$", "MatisseObject", function(x, name) {
     "Seurat/Signac functions, or the Seurat object."))
 })
 
+#' @importFrom utils .DollarNames
 #' @export
 .DollarNames.MatisseObject <- function(x, pattern = "") {
   nms <- if (!is.null(x@seurat)) colnames(x@seurat@meta.data) else character(0)

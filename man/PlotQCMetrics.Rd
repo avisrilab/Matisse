@@ -5,9 +5,9 @@
 \alias{PlotQCMetrics,MatisseObject-method}
 \title{Violin/ridge plot of isoform QC metrics}
 \usage{
-PlotQCMetrics(object, features = NULL, ...)
+PlotQCMetrics(object, features = NULL, group_by = NULL, ncol = 2L, ...)
 
-\S4method{PlotQCMetrics}{MatisseObject}(object, features = NULL, group_by = NULL, ncol = 2L)
+\S4method{PlotQCMetrics}{MatisseObject}(object, features = NULL, group_by = NULL, ncol = 2L, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject} with QC metrics computed by
@@ -16,13 +16,13 @@ PlotQCMetrics(object, features = NULL, ...)
 \item{features}{Character vector of QC metric names. Must be columns in
 \code{MatisseMeta(object)}. Default: all numeric columns.}
 
-\item{...}{Additional arguments (see \code{\link{PlotQCMetrics}}).}
-
 \item{group_by}{Character. Column in \code{Seurat::meta.data} to split
 cells by. Default: \code{NULL} (single group).}
 
 \item{ncol}{Integer. Number of columns in the faceted output.
 Default: \code{2}.}
+
+\item{...}{Additional arguments passed to methods.}
 }
 \value{
 A \code{ggplot} object.

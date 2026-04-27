@@ -5,7 +5,17 @@
 \alias{FilterCells,MatisseObject-method}
 \title{Filter cells by isoform QC thresholds}
 \usage{
-FilterCells(object, ...)
+FilterCells(
+  object,
+  min_junctions = NULL,
+  max_junctions = NULL,
+  min_junction_reads = NULL,
+  max_junction_reads = NULL,
+  min_pct_covered = NULL,
+  custom_filters = NULL,
+  verbose = TRUE,
+  ...
+)
 
 \S4method{FilterCells}{MatisseObject}(
   object,
@@ -21,8 +31,6 @@ FilterCells(object, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
-
-\item{...}{Additional arguments (unused).}
 
 \item{min_junctions}{Integer. Minimum \code{n_junctions_detected}.
 Default: \code{NULL} (no filter).}
@@ -44,8 +52,12 @@ Default: \code{NULL}.}
 Use \code{NA} for a one-sided bound. Default: \code{NULL}.}
 
 \item{verbose}{Logical. Default: \code{TRUE}.}
+
+\item{...}{Ignored; included for S4 generic compatibility.}
 }
 \value{
+The filtered \code{MatisseObject}.
+
 The filtered \code{MatisseObject}.
 }
 \description{

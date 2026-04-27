@@ -92,6 +92,7 @@ setMethod("PlotUMAP", "MatisseObject",
 #' @param add_points Logical. Overlay individual cell values as jittered
 #'   points. Default: \code{FALSE}.
 #' @param title Character. Plot title. Defaults to the feature name.
+#' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -151,6 +152,7 @@ setMethod("PlotViolin", "MatisseObject",
 #'   Default: \code{200}.
 #' @param na_colour Character. Colour for \code{NA} entries.
 #'   Default: \code{"grey90"}.
+#' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return A \code{ggplot} object.
 #'

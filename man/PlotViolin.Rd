@@ -5,7 +5,15 @@
 \alias{PlotViolin,MatisseObject-method}
 \title{Violin plot of feature values split by cell group}
 \usage{
-PlotViolin(object, feature, ...)
+PlotViolin(
+  object,
+  feature,
+  group_by = "seurat_clusters",
+  colours = NULL,
+  add_points = FALSE,
+  title = NULL,
+  ...
+)
 
 \S4method{PlotViolin}{MatisseObject}(
   object,
@@ -23,8 +31,6 @@ PlotViolin(object, feature, ...)
 \item{feature}{Character. Feature to plot (PSI event ID, junction ID, or
 gene name).}
 
-\item{...}{Additional arguments (unused).}
-
 \item{group_by}{Character. Column in \code{Seurat::meta.data} to split
 cells by. Default: \code{"seurat_clusters"}.}
 
@@ -35,12 +41,16 @@ Default: \code{NULL} (uses ggplot2 defaults).}
 points. Default: \code{FALSE}.}
 
 \item{title}{Character. Plot title. Defaults to the feature name.}
+
+\item{...}{Ignored; included for S4 generic compatibility.}
 }
 \value{
 A \code{ggplot} object.
+
+A \code{ggplot} object.
 }
 \description{
-Violin plot of PSI values (or other feature values) split by a cell
-metadata column. Cells are grouped by \code{group_by} and optionally
-coloured with a custom palette.
+Violin plot of feature values split by cell group
+
+Violin plot of feature values split by cell group
 }

@@ -19,6 +19,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     methods,
+    utils,
     Matrix (>= 1.5.0),
     SeuratObject (>= 5.0.0),
     Seurat (>= 5.0.0),

@@ -5,7 +5,13 @@
 \alias{FilterEvents,MatisseObject-method}
 \title{Filter splice events by coverage or variance}
 \usage{
-FilterEvents(object, ...)
+FilterEvents(
+  object,
+  min_cells_covered = 10L,
+  min_psi_variance = NULL,
+  verbose = TRUE,
+  ...
+)
 
 \S4method{FilterEvents}{MatisseObject}(
   object,
@@ -18,8 +24,6 @@ FilterEvents(object, ...)
 \arguments{
 \item{object}{A \code{MatisseObject} with a \code{"psi"} assay.}
 
-\item{...}{Additional arguments (unused).}
-
 \item{min_cells_covered}{Integer. Minimum number of cells in which the
 event must have a non-\code{NA} PSI value. Default: \code{10}.}
 
@@ -27,8 +31,12 @@ event must have a non-\code{NA} PSI value. Default: \code{10}.}
 cells. Default: \code{NULL} (no variance filter).}
 
 \item{verbose}{Logical. Default: \code{TRUE}.}
+
+\item{...}{Ignored; included for S4 generic compatibility.}
 }
 \value{
+The filtered \code{MatisseObject}.
+
 The filtered \code{MatisseObject}.
 }
 \description{

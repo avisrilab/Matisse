@@ -5,7 +5,16 @@
 \alias{PlotUMAP,MatisseObject-method}
 \title{UMAP plot coloured by any feature}
 \usage{
-PlotUMAP(object, feature, ...)
+PlotUMAP(
+  object,
+  feature,
+  reduction = "umap",
+  dims = c(1L, 2L),
+  pt_size = 0.5,
+  na_colour = "grey80",
+  title = NULL,
+  ...
+)
 
 \S4method{PlotUMAP}{MatisseObject}(
   object,
@@ -14,7 +23,8 @@ PlotUMAP(object, feature, ...)
   dims = c(1L, 2L),
   pt_size = 0.5,
   na_colour = "grey80",
-  title = NULL
+  title = NULL,
+  ...
 )
 }
 \arguments{
@@ -22,8 +32,6 @@ PlotUMAP(object, feature, ...)
 
 \item{feature}{Character. Feature to plot. Can be a PSI event ID (e.g.
 \code{"SE:chr1:100-200:300-400:+"}), a junction ID, or a gene name.}
-
-\item{...}{Additional arguments (see \code{\link{PlotUMAP}}).}
 
 \item{reduction}{Character. Name of the dimensionality reduction to use.
 Default: \code{"umap"}.}
@@ -37,6 +45,8 @@ Default: \code{c(1, 2)}.}
 Default: \code{"grey80"}.}
 
 \item{title}{Character. Plot title. Defaults to the feature name.}
+
+\item{...}{Additional arguments (see \code{\link{PlotUMAP}}).}
 }
 \value{
 A \code{ggplot} object.

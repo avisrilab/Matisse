@@ -5,7 +5,16 @@
 \alias{PlotHeatmap,MatisseObject-method}
 \title{Heatmap of feature values across cells and events}
 \usage{
-PlotHeatmap(object, ...)
+PlotHeatmap(
+  object,
+  events = NULL,
+  cells = NULL,
+  group_by = NULL,
+  max_cells = 500L,
+  max_events = 200L,
+  na_colour = "grey90",
+  ...
+)
 
 \S4method{PlotHeatmap}{MatisseObject}(
   object,
@@ -22,10 +31,10 @@ PlotHeatmap(object, ...)
 \item{object}{A \code{MatisseObject} with a \code{"psi"} assay.}
 
 \item{events}{Character vector of event IDs to include.
-Default: all events.}
+Default: \code{NULL} (top-variance events up to \code{max_events}).}
 
 \item{cells}{Character vector of cell barcodes to include.
-Default: all cells.}
+Default: \code{NULL} (random sample up to \code{max_cells}).}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} used to
 annotate and order cells. Default: \code{NULL}.}
@@ -33,19 +42,22 @@ annotate and order cells. Default: \code{NULL}.}
 \item{max_cells}{Integer. Downsample to this many cells before plotting.
 Default: \code{500}.}
 
-\item{max_events}{Integer. Cap the number of events shown. When exceeded,
-the top-variance events are selected. Default: \code{200}.}
+\item{max_events}{Integer. Cap on events to plot. When the candidate set
+exceeds this, the top-variance events are selected automatically.
+Default: \code{200}.}
 
 \item{na_colour}{Character. Colour for \code{NA} entries.
 Default: \code{"grey90"}.}
 
-\item{...}{Additional arguments (unused).}
+\item{...}{Ignored; included for S4 generic compatibility.}
 }
 \value{
 A \code{ggplot} object.
+
+A \code{ggplot} object.
 }
 \description{
-Heatmap of PSI values (cells x events). Cells are optionally ordered by a
-metadata column (\code{group_by}); high-variance events are shown when
-the total count exceeds \code{max_events}.
+Heatmap of feature values across cells and events
+
+Heatmap of PSI values (cells x events)
 }

@@ -109,6 +109,7 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #'   \code{c(min, max)} applied to arbitrary metadata columns.
 #'   Use \code{NA} for a one-sided bound. Default: \code{NULL}.
 #' @param verbose Logical. Default: \code{TRUE}.
+#' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return The filtered \code{MatisseObject}.
 #'
@@ -179,6 +180,7 @@ setMethod("FilterCells", "MatisseObject",
 #' @param min_psi_variance Numeric. Minimum variance of PSI across covered
 #'   cells. Default: \code{NULL} (no variance filter).
 #' @param verbose Logical. Default: \code{TRUE}.
+#' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return The filtered \code{MatisseObject}.
 #'

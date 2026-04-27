@@ -5,7 +5,16 @@
 \alias{PlotSashimi,MatisseObject-method}
 \title{Sashimi-style coverage plot for a splice event}
 \usage{
-PlotSashimi(object, event_id, ...)
+PlotSashimi(
+  object,
+  event_id,
+  cells = NULL,
+  group_by = NULL,
+  arc_scale = c("sqrt", "linear", "log"),
+  colours = c(inclusion = "#4393c3", exclusion = "#d6604d"),
+  title = NULL,
+  ...
+)
 
 \S4method{PlotSashimi}{MatisseObject}(
   object,
@@ -24,8 +33,6 @@ PlotSashimi(object, event_id, ...)
 \item{event_id}{Character. Event ID as stored in \code{event_data}, e.g.
 \code{"SE:chr1:1201-2999:3201-4999:+"}.}
 
-\item{...}{Additional arguments (unused).}
-
 \item{cells}{Character vector of cell barcodes to aggregate over.
 Default: all cells.}
 
@@ -39,21 +46,30 @@ Default: \code{NULL} (all cells pooled).}
 \code{"exclusion"} giving arc colours.}
 
 \item{title}{Character. Plot title. Defaults to \code{event_id}.}
+
+\item{...}{Additional arguments (see \code{\link{PlotSashimi}}).}
 }
 \value{
+A \code{ggplot} object.
+
 A \code{ggplot} object.
 }
 \description{
 Draws junction arcs scaled by read count over a schematic gene structure.
 Arcs are coloured by role: inclusion (blue) vs exclusion (red). Works in
 both junction mode (per-junction counts) and event mode (aggregated
-inclusion/exclusion counts from \code{"counts"} and \code{"exclusion"}
-layers of the PSI assay). Optionally faceted by a cell metadata column.
+inclusion/exclusion counts). Optionally faceted by a cell metadata column.
+
+Draws junction arcs scaled by aggregate read count over a schematic gene
+structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).
+}
+\details{
+In \strong{junction mode} each arc corresponds to an individual junction
+with its own read count. In \strong{event mode} the SE event_id is parsed
+to derive junction coordinates; inclusion and exclusion counts come from the
+\code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 
 Supported event types in event mode: \strong{SE} (skipped exon) and
 \strong{RI} (retained intron). Junction mode supports all event types
 since coordinates come directly from \code{junction_data}.
-}
-\seealso{
-\code{\link{CalculatePSI}}, \code{\link{PlotCoverage}}
 }

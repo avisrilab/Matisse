@@ -4,13 +4,7 @@
 \alias{SCTransform.MatisseObject}
 \title{SCTransform normalisation for MatisseObjects}
 \usage{
-\method{SCTransform}{MatisseObject}(
-  object,
-  assay = NULL,
-  vars_to_regress = NULL,
-  verbose = TRUE,
-  ...
-)
+\method{SCTransform}{MatisseObject}(object, assay = NULL, vars_to_regress = NULL, verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
@@ -31,14 +25,20 @@ The updated \code{MatisseObject} with a new \code{"SCT"} assay.
 \description{
 Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults.
 In \strong{event mode} (long-read), normalises the \code{"transcript"}
-assay by default, so that transcript-level abundances are
-variance-stabilised before dimensionality reduction. In
-\strong{junction mode} (short-read), normalises the active default assay
-(typically \code{"RNA"}).
-
+assay by default, so that transcript-level abundances are variance-stabilised
+before dimensionality reduction. In \strong{junction mode} (short-read),
+normalises the active default assay (typically \code{"RNA"}).
+}
+\details{
 Override the target assay with the \code{assay} argument. PCA is
 \strong{not} run automatically — call \code{\link{RunPCA.MatisseObject}}
-after normalisation.
+after normalisation:
+
+\preformatted{
+obj <- SCTransform(obj)                        # normalise
+obj <- RunPCA(obj, assay = "SCT", npcs = 50)  # reduce
+obj <- RunUMAP(obj, dims = 1:50)              # embed
+}
 }
 \seealso{
 \code{\link{RunPCA.MatisseObject}}, \code{\link{NormalizeData.MatisseObject}}

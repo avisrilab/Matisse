@@ -5,9 +5,9 @@
 \alias{PlotCoverage,MatisseObject-method}
 \title{Junction coverage bar plot for a gene}
 \usage{
-PlotCoverage(object, gene, ...)
+PlotCoverage(object, gene, cells = NULL, log_scale = FALSE, ...)
 
-\S4method{PlotCoverage}{MatisseObject}(object, gene, cells = NULL, log_scale = FALSE)
+\S4method{PlotCoverage}{MatisseObject}(object, gene, cells = NULL, log_scale = FALSE, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject} in junction mode with
@@ -15,12 +15,12 @@ PlotCoverage(object, gene, ...)
 
 \item{gene}{Character. Gene name to plot.}
 
-\item{...}{Additional arguments (see \code{\link{PlotCoverage}}).}
-
 \item{cells}{Character vector of cell barcodes to aggregate over.
 Default: all cells.}
 
 \item{log_scale}{Logical. Use log10 y-axis. Default: \code{FALSE}.}
+
+\item{...}{Additional arguments (see \code{\link{PlotCoverage}}).}
 }
 \value{
 A \code{ggplot} object.

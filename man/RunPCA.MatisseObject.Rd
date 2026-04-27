@@ -19,7 +19,8 @@ The updated \code{MatisseObject} with a \code{"pca"} reduction.
 Runs \code{\link[Seurat]{RunPCA}} on the embedded Seurat object and
 returns the updated \code{MatisseObject}. The PCA result is stored inside
 the Seurat object and accessible via \code{GetSeurat(obj)}.
-
+}
+\details{
 Typical usage after \code{\link{SCTransform.MatisseObject}}:
 \preformatted{
 obj <- RunPCA(obj, assay = "SCT", npcs = 50)
