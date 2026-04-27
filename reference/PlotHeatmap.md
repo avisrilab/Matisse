@@ -66,6 +66,10 @@ PlotHeatmap(
 
   Character. Colour for `NA` entries. Default: `"grey90"`.
 
+- ...:
+
+  Ignored; included for S4 generic compatibility.
+
 ## Value
 
 A `ggplot` object.

@@ -58,6 +58,10 @@ PlotViolin(
 
   Character. Plot title. Defaults to the feature name.
 
+- ...:
+
+  Ignored; included for S4 generic compatibility.
+
 ## Value
 
 A `ggplot` object.

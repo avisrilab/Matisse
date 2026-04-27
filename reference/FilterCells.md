@@ -70,6 +70,10 @@ FilterCells(
 
   Logical. Default: `TRUE`.
 
+- ...:
+
+  Ignored; included for S4 generic compatibility.
+
 ## Value
 
 The filtered `MatisseObject`.
