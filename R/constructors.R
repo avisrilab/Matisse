@@ -397,7 +397,7 @@ CreateMatisseObject <- function(
   tot_list <- strsplit(ioe$total_transcripts,     ",", fixed = TRUE)
   exc_list <- mapply(setdiff, tot_list, inc_list, SIMPLIFY = FALSE)
 
-  data.frame(
+  events <- data.frame(
     event_id              = event_ids,
     gene_id               = gene_ids,
     chr                   = ioe$seqname,
@@ -408,6 +408,20 @@ CreateMatisseObject <- function(
     stringsAsFactors      = FALSE,
     row.names             = NULL
   )
+
+  # The same event ID can appear in multiple IOE files (SUPPA2 generates one
+  # file per event type, and the same splice site can be annotated in several).
+  # Assay5 requires unique rownames, so deduplicate: keep the first occurrence.
+  dup_mask <- duplicated(events$event_id)
+  if (any(dup_mask)) {
+    rlang::warn(paste0(
+      sum(dup_mask), " duplicate event ID(s) removed after merging IOE files. ",
+      "Keeping the first occurrence of each."
+    ))
+    events <- events[!dup_mask, , drop = FALSE]
+  }
+
+  events
 }
 
 # ---------------------------------------------------------------------------

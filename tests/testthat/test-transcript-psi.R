@@ -32,11 +32,29 @@ test_that(".parse_ioe_files: exclusion = total minus inclusion", {
   expect_equal(exc2, c("tx6", "tx7"))
 })
 
-test_that(".parse_ioe_files: combines multiple IOE files", {
-  f1     <- make_ioe_file()
-  f2     <- make_ioe_file()
+test_that(".parse_ioe_files: combines multiple IOE files with distinct events", {
+  f1 <- make_ioe_file()
+  # Second file with different event coordinates so no duplicates
+  f2 <- tempfile(fileext = ".ioe")
+  writeLines(c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    paste(c("chr2", "ENSG00000002;SE:chr2:100-200:300-400:+",
+            "tx8,tx9", "tx8,tx9,tx10"), collapse = "\t")
+  ), f2)
   events <- Matisse:::.parse_ioe_files(c(f1, f2))
-  expect_equal(nrow(events), 4L)
+  expect_equal(nrow(events), 3L)   # 2 from f1 + 1 from f2
+})
+
+test_that(".parse_ioe_files: deduplicates events shared across IOE files", {
+  # Identical files -> all event IDs are duplicates; only unique ones kept
+  f1 <- make_ioe_file()
+  f2 <- make_ioe_file()
+  expect_warning(
+    Matisse:::.parse_ioe_files(c(f1, f2)),
+    regexp = "duplicate"
+  )
+  events <- suppressWarnings(Matisse:::.parse_ioe_files(c(f1, f2)))
+  expect_equal(nrow(events), 2L)   # 2 unique events, duplicates dropped
 })
 
 test_that(".parse_ioe_files: errors on malformed gene_id column", {
