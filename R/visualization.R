@@ -80,18 +80,27 @@ setMethod("PlotUMAP", "MatisseObject",
 # PlotViolin
 # ---------------------------------------------------------------------------
 
-#' Violin plot of feature values split by cell group
+#' Violin plot of one or more features split by cell group
+#'
+#' Plots any feature -- PSI event ID, junction ID, gene name, or metadata
+#' column (e.g. QC metrics from \code{\link{ComputeIsoformQC}}) -- as a
+#' violin/box split by a cell-level grouping variable.
+#' Pass a character vector to \code{feature} to plot multiple features in
+#' facets with free y-axis scales.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param feature Character. Feature to plot (PSI event ID, junction ID, or
-#'   gene name).
+#' @param feature Character scalar or vector. Feature(s) to plot. Each entry
+#'   can be a PSI event ID, junction ID, gene name, or metadata column name.
 #' @param group_by Character. Column in \code{Seurat::meta.data} to split
 #'   cells by. Default: \code{"seurat_clusters"}.
 #' @param colours Named character vector mapping group levels to colours.
 #'   Default: \code{NULL} (uses ggplot2 defaults).
 #' @param add_points Logical. Overlay individual cell values as jittered
 #'   points. Default: \code{FALSE}.
-#' @param title Character. Plot title. Defaults to the feature name.
+#' @param title Character. Plot title. Defaults to the feature name when a
+#'   single feature is requested; \code{NULL} for multiple features.
+#' @param ncol Integer. Number of facet columns when \code{feature} is a
+#'   vector of length > 1. Default: \code{2}.
 #' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return A \code{ggplot} object.
@@ -103,23 +112,32 @@ setMethod("PlotViolin", "MatisseObject",
                    group_by   = "seurat_clusters",
                    colours    = NULL,
                    add_points = FALSE,
-                   title      = NULL, ...) {
-  vals       <- .get_feature_values(object, feature)
+                   title      = NULL,
+                   ncol       = 2L, ...) {
+  # Resolve feature values first -- gives the right error when PSI is NULL
+  vals_list  <- lapply(feature, function(f) .get_feature_values(object, f))
   group_vals <- .get_seurat_meta_col(object, group_by)
 
-  df <- data.frame(val = vals, group = group_vals)
+  # Build long-form data frame -- one row per (cell, feature)
+  df <- do.call(rbind, mapply(function(f, vals) {
+    data.frame(val = vals, group = group_vals, feature_name = f,
+               stringsAsFactors = FALSE)
+  }, feature, vals_list, SIMPLIFY = FALSE))
   df <- df[!is.na(df$val), ]
 
-  plot_title <- title %||% feature
+  plot_title <- title %||% if (length(feature) == 1L) feature else NULL
 
   p <- ggplot2::ggplot(df, ggplot2::aes(
     x = .data$group, y = .data$val, fill = .data$group)) +
     ggplot2::geom_violin(trim = FALSE, scale = "width") +
     ggplot2::geom_boxplot(width = 0.1, outlier.shape = NA, fill = "white") +
-    ggplot2::scale_y_continuous(limits = c(0, 1), name = "PSI") +
-    ggplot2::labs(title = plot_title, x = group_by) +
+    ggplot2::labs(title = plot_title, x = group_by, y = NULL) +
     ggplot2::theme(legend.position = "none") +
     .matisse_theme()
+
+  if (length(feature) > 1L) {
+    p <- p + ggplot2::facet_wrap(~ feature_name, scales = "free_y", ncol = ncol)
+  }
 
   if (!is.null(colours)) p <- p + ggplot2::scale_fill_manual(values = colours)
 
@@ -136,7 +154,11 @@ setMethod("PlotViolin", "MatisseObject",
 # PlotHeatmap
 # ---------------------------------------------------------------------------
 
-#' Heatmap of PSI values (cells x events)
+#' Heatmap of PSI values (events x cells)
+#'
+#' Draws a DoHeatmap-style tile plot with splice events on the y-axis and cells
+#' on the x-axis. Events are clustered by PSI profile. When \code{group_by} is
+#' supplied, cells are ordered by group and labelled with facet strips.
 #'
 #' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param events Character vector of event IDs to include.
@@ -144,7 +166,7 @@ setMethod("PlotViolin", "MatisseObject",
 #' @param cells Character vector of cell barcodes to include.
 #'   Default: \code{NULL} (random sample up to \code{max_cells}).
 #' @param group_by Character. Column in \code{Seurat::meta.data} used to
-#'   annotate and order cells. Default: \code{NULL}.
+#'   order and label cells. Default: \code{NULL}.
 #' @param max_cells Integer. Downsample to this many cells before plotting.
 #'   Default: \code{500}.
 #' @param max_events Integer. Cap on events to plot. When the candidate set
@@ -152,6 +174,7 @@ setMethod("PlotViolin", "MatisseObject",
 #'   Default: \code{200}.
 #' @param na_colour Character. Colour for \code{NA} entries.
 #'   Default: \code{"grey90"}.
+#' @param title Character. Plot title. Default: \code{"PSI Heatmap"}.
 #' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return A \code{ggplot} object.
@@ -165,7 +188,8 @@ setMethod("PlotHeatmap", "MatisseObject",
                    group_by   = NULL,
                    max_cells  = 500L,
                    max_events = 200L,
-                   na_colour  = "grey90", ...) {
+                   na_colour  = "grey90",
+                   title      = NULL, ...) {
   .require_psi(object)
 
   psi_cx     <- GetPSI(object)  # cells x events (sparse)
@@ -186,9 +210,8 @@ setMethod("PlotHeatmap", "MatisseObject",
   # Cap cells first (cheap on sparse matrix)
   if (length(cells) > max_cells) cells <- sample(cells, max_cells)
 
-  # Cap events by variance — must happen BEFORE as.matrix() to avoid huge allocs
+  # Cap events by variance before densifying
   if (length(events) > max_events) {
-    # Compute per-event variance on the sparse submatrix (still sparse here)
     psi_for_var <- psi_cx[cells, events, drop = FALSE]
     col_vars    <- apply(psi_for_var, 2, stats::var, na.rm = TRUE)
     col_vars[is.na(col_vars)] <- 0
@@ -198,13 +221,13 @@ setMethod("PlotHeatmap", "MatisseObject",
       "Pass `events` explicitly or increase `max_events` to change this."))
   }
 
-  # Now safe to densify: at most max_cells x max_events
+  # Densify: at most max_cells x max_events
   psi_sub <- as.matrix(psi_cx[cells, events, drop = FALSE])
 
-  # Cluster events by PSI profile (small matrix now — safe)
+  # Cluster events by PSI profile
   finite_mask <- is.finite(psi_sub)
   if (sum(finite_mask) > 0 && length(events) > 1L) {
-    psi_for_clust              <- psi_sub
+    psi_for_clust               <- psi_sub
     psi_for_clust[!finite_mask] <- 0.5
     event_order <- tryCatch({
       hc <- stats::hclust(stats::dist(t(psi_for_clust)))
@@ -215,22 +238,27 @@ setMethod("PlotHeatmap", "MatisseObject",
   }
 
   # Order cells by group if requested
+  grp <- NULL
   if (!is.null(group_by)) {
     grp   <- .get_seurat_meta_col(object, group_by)[match(cells, all_cells)]
-    cells <- cells[order(grp)]
+    ord   <- order(grp)
+    cells <- cells[ord]
+    grp   <- grp[ord]
   }
 
+  # Build tidy data frame: events on y, cells on x
   df <- data.frame(
-    cell  = rep(cells,               each  = length(events)),
-    event = rep(events[event_order], times = length(cells)),
+    cell  = rep(cells,               times = length(events)),
+    event = rep(events[event_order], each  = length(cells)),
     psi   = as.vector(psi_sub[cells, events[event_order]])
   )
   df$cell  <- factor(df$cell,  levels = cells)
-  df$event <- factor(df$event, levels = events[event_order])
+  # Reverse so the first clustered event sits at the top of the y-axis
+  df$event <- factor(df$event, levels = rev(events[event_order]))
 
-  ggplot2::ggplot(df, ggplot2::aes(
-    x    = .data$event,
-    y    = .data$cell,
+  p <- ggplot2::ggplot(df, ggplot2::aes(
+    x    = .data$cell,
+    y    = .data$event,
     fill = .data$psi)) +
     ggplot2::geom_tile() +
     ggplot2::scale_fill_gradientn(
@@ -239,142 +267,28 @@ setMethod("PlotHeatmap", "MatisseObject",
       limits   = c(0, 1),
       name     = "PSI"
     ) +
-    ggplot2::labs(title = "PSI Heatmap", x = "Splice Event", y = "Cell") +
+    ggplot2::labs(title = title %||% "PSI Heatmap") +
     ggplot2::theme(
-      axis.text.x  = ggplot2::element_text(angle = 45, hjust = 1, size = 6),
-      axis.text.y  = ggplot2::element_blank(),
-      axis.ticks.y = ggplot2::element_blank()
-    ) +
-    .matisse_theme()
-})
-
-# ---------------------------------------------------------------------------
-# PlotCoverage
-# ---------------------------------------------------------------------------
-
-#' Junction coverage bar plot for a gene
-#'
-#' Aggregates junction read counts across selected cells and plots a bar chart
-#' ordered by genomic position. Only available for objects in junction mode.
-#'
-#' @param object A \code{MatisseObject} in junction mode with
-#'   \code{junction_data} populated.
-#' @param gene Character. Gene name to plot.
-#' @param cells Character vector of cell barcodes to aggregate over.
-#'   Default: all cells.
-#' @param log_scale Logical. Use log10 y-axis. Default: \code{FALSE}.
-#'
-#' @return A \code{ggplot} object.
-#'
-#' @rdname PlotCoverage
-#' @export
-setMethod("PlotCoverage", "MatisseObject",
-          function(object, gene, cells = NULL, log_scale = FALSE, ...) {
-  jxn_counts <- GetJunctionCounts(object)
-  if (is.null(jxn_counts)) {
-    rlang::abort(
-      "No junction assay found. PlotCoverage() requires a junction-mode object ",
-      "created with `junction_counts`.")
-  }
-  if (nrow(object@junction_data) == 0) {
-    rlang::abort("junction_data is empty. Pass `junction_data` to CreateMatisseObject().")
-  }
-
-  jd        <- object@junction_data
-  gene_jxns <- jd$junction_id[jd$gene_id == gene]
-  if (length(gene_jxns) == 0) {
-    rlang::abort(paste0("No junctions found for gene: ", gene))
-  }
-
-  present <- intersect(gene_jxns, colnames(jxn_counts))
-  if (length(present) == 0) {
-    rlang::abort(paste0("No junctions for '", gene,
-                        "' are present in the junction assay."))
-  }
-
-  sub_cells <- cells %||% .get_cells(object)
-  sub_mat   <- jxn_counts[sub_cells, present, drop = FALSE]
-  totals    <- Matrix::colSums(sub_mat)
-
-  df         <- data.frame(junction = names(totals), count = as.numeric(totals))
-  coord_info <- jd[match(df$junction, jd$junction_id), ]
-  df$start   <- coord_info$start
-  df         <- df[order(df$start), ]
-  df$junction <- factor(df$junction, levels = df$junction)
-
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$junction, y = .data$count)) +
-    ggplot2::geom_col(fill = "#4393c3") +
-    ggplot2::labs(
-      title = paste0("Junction coverage: ", gene),
-      x     = "Junction (ordered by genomic position)",
-      y     = "Total reads"
-    ) +
-    ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 7)
+      axis.text.x  = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_blank(),
+      axis.text.y  = ggplot2::element_text(size = 6),
+      axis.title.y = ggplot2::element_blank()
     ) +
     .matisse_theme()
 
-  if (log_scale) p <- p + ggplot2::scale_y_log10()
+  # Group annotation strips (DoHeatmap style)
+  if (!is.null(group_by)) {
+    df$group <- factor(rep(grp, times = length(events)), levels = unique(grp))
+    p <- p + ggplot2::facet_grid(. ~ group, scales = "free_x", space = "free") +
+      ggplot2::theme(
+        strip.background = ggplot2::element_rect(fill = "grey85", colour = NA),
+        strip.text       = ggplot2::element_text(size = 8L, face = "bold"),
+        panel.spacing    = ggplot2::unit(0.5, "mm")
+      )
+  }
+
   p
-})
-
-# ---------------------------------------------------------------------------
-# PlotQCMetrics
-# ---------------------------------------------------------------------------
-
-#' Violin plots of isoform QC metrics
-#'
-#' @param object A \code{MatisseObject} with QC metrics computed by
-#'   \code{\link{ComputeIsoformQC}}.
-#' @param features Character vector of QC metric names. Must be columns in
-#'   \code{MatisseMeta(object)}. Default: all numeric columns.
-#' @param group_by Character. Column in \code{Seurat::meta.data} to split
-#'   cells by. Default: \code{NULL} (single group).
-#' @param ncol Integer. Number of columns in the faceted output.
-#'   Default: \code{2}.
-#'
-#' @return A \code{ggplot} object.
-#'
-#' @rdname PlotQCMetrics
-#' @export
-setMethod("PlotQCMetrics", "MatisseObject",
-          function(object, features = NULL, group_by = NULL, ncol = 2L, ...) {
-  meta <- MatisseMeta(object)   # now returns seurat@meta.data
-
-  if (is.null(features)) {
-    features <- colnames(meta)[vapply(meta, is.numeric, logical(1))]
-  }
-
-  missing <- setdiff(features, colnames(meta))
-  if (length(missing) > 0) {
-    rlang::abort(paste0(
-      "Features not found in metadata: ",
-      paste(missing, collapse = ", "),
-      ". Run ComputeIsoformQC() first."))
-  }
-
-  cells <- .get_cells(object)
-  df    <- meta[cells, features, drop = FALSE]
-  df$cell <- rownames(df)
-  df$group <- if (!is.null(group_by))
-    .get_seurat_meta_col(object, group_by) else "All cells"
-
-  df_long <- tidyr::pivot_longer(
-    df,
-    cols      = dplyr::all_of(features),
-    names_to  = "metric",
-    values_to = "value"
-  )
-
-  ggplot2::ggplot(df_long, ggplot2::aes(
-    x = .data$group, y = .data$value, fill = .data$group)) +
-    ggplot2::geom_violin(trim = FALSE, scale = "width") +
-    ggplot2::geom_boxplot(width = 0.1, outlier.shape = NA, fill = "white") +
-    ggplot2::facet_wrap(~ metric, scales = "free_y", ncol = ncol) +
-    ggplot2::labs(x = NULL, y = NULL) +
-    ggplot2::theme(legend.position = "none",
-                   axis.text.x = ggplot2::element_text(angle = 30, hjust = 1)) +
-    .matisse_theme()
 })
 
 # ---------------------------------------------------------------------------
@@ -707,13 +621,19 @@ setMethod("PlotSashimi", "MatisseObject",
     }
   }
 
-  # 4. Fall back to no PSI assay error if PSI is NULL
+  # 4. Seurat metadata (QC metrics from ComputeIsoformQC, cell_type, etc.)
+  if (!is.null(object@seurat) &&
+      feature %in% colnames(object@seurat@meta.data)) {
+    return(as.numeric(object@seurat@meta.data[cells, feature]))
+  }
+
+  # 5. Not found
   if (is.null(psi_cx)) {
     rlang::abort("PSI assay is NULL. Run CalculatePSI() first.")
   }
   rlang::abort(paste0(
     "Feature '", feature, "' not found in PSI events, junction IDs, ",
-    "or gene expression."))
+    "gene expression, or cell metadata."))
 }
 
 .get_seurat_meta_col <- function(object, col) {

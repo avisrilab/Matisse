@@ -12,6 +12,7 @@ PlotViolin(
   colours = NULL,
   add_points = FALSE,
   title = NULL,
+  ncol = 2L,
   ...
 )
 
@@ -22,14 +23,15 @@ PlotViolin(
   colours = NULL,
   add_points = FALSE,
   title = NULL,
+  ncol = 2L,
   ...
 )
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{feature}{Character. Feature to plot (PSI event ID, junction ID, or
-gene name).}
+\item{feature}{Character scalar or vector. Feature(s) to plot. Each entry
+can be a PSI event ID, junction ID, gene name, or metadata column name.}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} to split
 cells by. Default: \code{"seurat_clusters"}.}
@@ -40,7 +42,11 @@ Default: \code{NULL} (uses ggplot2 defaults).}
 \item{add_points}{Logical. Overlay individual cell values as jittered
 points. Default: \code{FALSE}.}
 
-\item{title}{Character. Plot title. Defaults to the feature name.}
+\item{title}{Character. Plot title. Defaults to the feature name when a
+single feature is requested; \code{NULL} for multiple features.}
+
+\item{ncol}{Integer. Number of facet columns when \code{feature} is a
+vector of length > 1. Default: \code{2}.}
 
 \item{...}{Ignored; included for S4 generic compatibility.}
 }
@@ -50,7 +56,9 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
-Violin plot of feature values split by cell group
-
-Violin plot of feature values split by cell group
+Plots any feature -- PSI event ID, junction ID, gene name, or metadata
+column (e.g. QC metrics from \code{\link{ComputeIsoformQC}}) -- as a
+violin/box split by a cell-level grouping variable.
+Pass a character vector to \code{feature} to plot multiple features in
+facets with free y-axis scales.
 }

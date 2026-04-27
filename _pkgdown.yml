@@ -163,9 +163,7 @@ reference:
       - PlotUMAP
       - PlotViolin
       - PlotHeatmap
-      - PlotCoverage
       - PlotSashimi
-      - PlotQCMetrics
 
   - title: "Utilities"
     desc: >

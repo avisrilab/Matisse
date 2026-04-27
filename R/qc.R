@@ -32,7 +32,7 @@ NULL
 #' @return The \code{MatisseObject} with QC columns added to
 #'   \code{MatisseMeta(object)} (i.e. the Seurat \code{meta.data}).
 #'
-#' @seealso \code{\link{FilterCells}}, \code{\link{PlotQCMetrics}}
+#' @seealso \code{\link{FilterCells}}
 #'
 #' @rdname ComputeIsoformQC
 #' @export

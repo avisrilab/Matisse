@@ -237,7 +237,10 @@ setGeneric("PlotUMAP",
 #' @param group_by Character. Metadata column to split cells by. Default: \code{"seurat_clusters"}.
 #' @param colours Named character vector mapping group levels to colours. Default: \code{NULL}.
 #' @param add_points Logical. Overlay jittered cell values. Default: \code{FALSE}.
-#' @param title Character. Plot title. Default: feature name.
+#' @param title Character. Plot title. Default: feature name (single feature) or
+#'   \code{NULL} (multiple features).
+#' @param ncol Integer. Number of facet columns when \code{feature} is a vector.
+#'   Default: \code{2}.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotViolin",
@@ -245,10 +248,11 @@ setGeneric("PlotViolin",
                     group_by   = "seurat_clusters",
                     colours    = NULL,
                     add_points = FALSE,
-                    title      = NULL, ...)
+                    title      = NULL,
+                    ncol       = 2L, ...)
              standardGeneric("PlotViolin"))
 
-#' Heatmap of feature values across cells and events
+#' Heatmap of PSI values (events x cells, DoHeatmap style)
 #'
 #' @param object A \code{MatisseObject}.
 #' @param events Character vector of event IDs. Default: top-variance events up to \code{max_events}.
@@ -257,6 +261,7 @@ setGeneric("PlotViolin",
 #' @param max_cells Integer. Cell downsample cap. Default: \code{500}.
 #' @param max_events Integer. Event cap; top-variance events selected when exceeded. Default: \code{200}.
 #' @param na_colour Character. Colour for \code{NA} entries. Default: \code{"grey90"}.
+#' @param title Character. Plot title. Default: \code{"PSI Heatmap"}.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotHeatmap",
@@ -266,31 +271,9 @@ setGeneric("PlotHeatmap",
                     group_by   = NULL,
                     max_cells  = 500L,
                     max_events = 200L,
-                    na_colour  = "grey90", ...)
+                    na_colour  = "grey90",
+                    title      = NULL, ...)
              standardGeneric("PlotHeatmap"))
-
-#' Junction coverage bar plot for a gene
-#'
-#' @param object A \code{MatisseObject} in junction mode.
-#' @param gene Character. Gene name.
-#' @param ... Additional arguments (see \code{\link{PlotCoverage}}).
-#' @return A \code{ggplot} object.
-#' @export
-setGeneric("PlotCoverage",
-           function(object, gene, cells = NULL, log_scale = FALSE, ...)
-             standardGeneric("PlotCoverage"))
-
-#' Violin/ridge plot of isoform QC metrics
-#' @param object A \code{MatisseObject}.
-#' @param features Character vector of QC metric names to plot.
-#' @param group_by Character. Metadata column to split cells by. Default: \code{NULL}.
-#' @param ncol Integer. Number of facet columns. Default: \code{2}.
-#' @param ... Additional arguments passed to methods.
-#' @return A \code{ggplot} object.
-#' @export
-setGeneric("PlotQCMetrics",
-           function(object, features = NULL, group_by = NULL, ncol = 2L, ...)
-             standardGeneric("PlotQCMetrics"))
 
 #' Sashimi-style coverage plot for a splice event
 #'

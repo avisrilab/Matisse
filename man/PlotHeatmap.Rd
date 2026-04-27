@@ -3,7 +3,7 @@
 \name{PlotHeatmap}
 \alias{PlotHeatmap}
 \alias{PlotHeatmap,MatisseObject-method}
-\title{Heatmap of feature values across cells and events}
+\title{Heatmap of PSI values (events x cells, DoHeatmap style)}
 \usage{
 PlotHeatmap(
   object,
@@ -13,6 +13,7 @@ PlotHeatmap(
   max_cells = 500L,
   max_events = 200L,
   na_colour = "grey90",
+  title = NULL,
   ...
 )
 
@@ -24,6 +25,7 @@ PlotHeatmap(
   max_cells = 500L,
   max_events = 200L,
   na_colour = "grey90",
+  title = NULL,
   ...
 )
 }
@@ -37,7 +39,7 @@ Default: \code{NULL} (top-variance events up to \code{max_events}).}
 Default: \code{NULL} (random sample up to \code{max_cells}).}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} used to
-annotate and order cells. Default: \code{NULL}.}
+order and label cells. Default: \code{NULL}.}
 
 \item{max_cells}{Integer. Downsample to this many cells before plotting.
 Default: \code{500}.}
@@ -49,6 +51,8 @@ Default: \code{200}.}
 \item{na_colour}{Character. Colour for \code{NA} entries.
 Default: \code{"grey90"}.}
 
+\item{title}{Character. Plot title. Default: \code{"PSI Heatmap"}.}
+
 \item{...}{Ignored; included for S4 generic compatibility.}
 }
 \value{
@@ -57,7 +61,7 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
-Heatmap of feature values across cells and events
-
-Heatmap of PSI values (cells x events)
+Draws a DoHeatmap-style tile plot with splice events on the y-axis and cells
+on the x-axis. Events are clustered by PSI profile. When \code{group_by} is
+supplied, cells are ordered by group and labelled with facet strips.
 }

@@ -182,8 +182,10 @@ obj <- FilterEvents(obj,       min_cells_covered = 10, verbose = FALSE)
 # ---------------------------------------------------------------------------
 dir.create("vignettes/figures", showWarnings = FALSE, recursive = TRUE)
 
-# Figure 1 — QC metrics by cell type
-p1 <- PlotQCMetrics(obj, group_by = "cell_type")
+# Figure 1 -- QC metrics by cell type
+p1 <- PlotViolin(obj,
+                 feature  = c("mean_psi", "pct_events_covered"),
+                 group_by = "cell_type")
 ggsave("vignettes/figures/qc_metrics.png",   p1,
        width = 8, height = 5, dpi = 150, bg = "white")
 message("Saved qc_metrics.png")

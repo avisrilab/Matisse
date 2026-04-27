@@ -80,7 +80,9 @@ obj <- CalculatePSI(obj, min_coverage = 5)
 
 ```{r qc, eval=FALSE}
 obj <- ComputeIsoformQC(obj)
-PlotQCMetrics(obj, group_by = "cell_type")
+PlotViolin(obj,
+           feature  = c("n_junctions_detected", "mean_psi"),
+           group_by = "cell_type")
 ```
 
 Remove cells that are too sparse or events that are covered in too few cells:
@@ -128,12 +130,6 @@ PlotViolin(
 
 ```{r heatmap, eval=FALSE}
 PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
-```
-
-### Inspect per-junction counts for a gene
-
-```{r junction-coverage, eval=FALSE}
-PlotCoverage(obj, gene = "PTBP1")
 ```
 
 ### Sashimi plot for a specific event

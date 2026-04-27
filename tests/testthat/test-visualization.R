@@ -115,6 +115,31 @@ test_that("PlotViolin: errors for an unknown group_by column", {
   )
 })
 
+test_that("PlotViolin: vector of features returns a faceted ggplot", {
+  obj <- make_matisse_with_qc()
+  p   <- PlotViolin(obj,
+                    feature  = c("SE-gene1-e2", "mean_psi"),
+                    group_by = "cell_type")
+  expect_s3_class(p, "gg")
+  # facet_wrap adds a FacetWrap component
+  expect_s3_class(p$facet, "FacetWrap")
+})
+
+test_that("PlotViolin: metadata column (QC metric) is accepted as feature", {
+  obj <- make_matisse_with_qc()
+  p   <- PlotViolin(obj, feature = "mean_psi", group_by = "cell_type")
+  expect_s3_class(p, "gg")
+})
+
+test_that("PlotViolin: ncol controls facet columns for multiple features", {
+  obj <- make_matisse_with_qc()
+  p   <- PlotViolin(obj,
+                    feature  = c("SE-gene1-e2", "mean_psi"),
+                    group_by = "cell_type",
+                    ncol     = 1L)
+  expect_s3_class(p, "gg")
+})
+
 # ============================================================
 # PlotHeatmap
 # ============================================================
@@ -176,64 +201,6 @@ test_that("PlotHeatmap: errors if PSI matrix is NULL", {
   expect_error(PlotHeatmap(obj), regexp = "PSI assay is NULL")
 })
 
-# ============================================================
-# PlotCoverage
-# ============================================================
-
-test_that("PlotCoverage: returns a ggplot for a known gene", {
-  obj <- make_matisse_with_umap()
-  p   <- PlotCoverage(obj, gene = "gene1")
-  expect_s3_class(p, "gg")
-})
-
-test_that("PlotCoverage: log_scale = TRUE still returns a ggplot", {
-  obj <- make_matisse_with_umap()
-  p   <- PlotCoverage(obj, gene = "gene1", log_scale = TRUE)
-  expect_s3_class(p, "gg")
-})
-
-test_that("PlotCoverage: restricting to a cell subset returns a ggplot", {
-  obj   <- make_matisse_with_umap()
-  cells <- paste0("Cell", 1:5)
-  p     <- PlotCoverage(obj, gene = "gene1", cells = cells)
-  expect_s3_class(p, "gg")
-})
-
-test_that("PlotCoverage: bars are ordered by genomic start position", {
-  obj <- make_matisse_with_umap()
-  p   <- PlotCoverage(obj, gene = "gene1")
-  # The x-axis levels should be in ascending start-position order
-  jxn_levels  <- levels(p$data$junction)
-  jd          <- GetJunctionData(obj)
-  ordered_jxn <- jd$junction_id[order(jd$start)]
-  ordered_jxn <- intersect(ordered_jxn, jxn_levels)   # keep only plotted junctions
-  expect_equal(jxn_levels, ordered_jxn)
-})
-
-test_that("PlotCoverage: errors if no junction assay present", {
-  skip_if_not_installed("Seurat")
-  # Build an object without junction counts
-  seu <- make_seurat()
-  obj <- CreateMatisseObject(seurat = seu, verbose = FALSE)
-  expect_error(PlotCoverage(obj, gene = "gene1"),
-               regexp = "No junction assay found")
-})
-
-test_that("PlotCoverage: errors if junction_data is empty", {
-  skip_if_not_installed("Seurat")
-  seu <- make_seurat()
-  jxn <- make_junction_counts()
-  obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn, verbose = FALSE)
-  # junction_data is empty by default
-  expect_error(PlotCoverage(obj, gene = "gene1"),
-               regexp = "junction_data is empty")
-})
-
-test_that("PlotCoverage: errors for a gene not present in junction_data", {
-  obj <- make_matisse_with_umap()
-  expect_error(PlotCoverage(obj, gene = "no_such_gene"),
-               regexp = "No junctions found")
-})
 
 # ============================================================
 # PlotSashimi
@@ -347,46 +314,3 @@ test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
   expect_s3_class(p, "gg")
 })
 
-# ============================================================
-# PlotQCMetrics
-# ============================================================
-
-test_that("PlotQCMetrics: returns a ggplot after ComputeIsoformQC", {
-  obj <- make_matisse_with_qc()
-  p   <- PlotQCMetrics(obj)
-  expect_s3_class(p, "gg")
-})
-
-test_that("PlotQCMetrics: default features include all numeric QC columns", {
-  obj      <- make_matisse_with_qc()
-  meta     <- MatisseMeta(obj)
-  num_cols <- colnames(meta)[vapply(meta, is.numeric, logical(1))]
-  p        <- PlotQCMetrics(obj)
-  # Facet labels should be a subset of numeric metadata columns
-  facet_vals <- unique(p$data$metric)
-  expect_true(all(facet_vals %in% num_cols))
-})
-
-test_that("PlotQCMetrics: subset of features is accepted", {
-  obj <- make_matisse_with_qc()
-  p   <- PlotQCMetrics(obj, features = "mean_psi")
-  expect_equal(unique(p$data$metric), "mean_psi")
-})
-
-test_that("PlotQCMetrics: group_by splits cells into multiple violin groups", {
-  obj <- make_matisse_with_qc()
-  p   <- PlotQCMetrics(obj, features = "mean_psi", group_by = "cell_type")
-  expect_true(length(unique(p$data$group)) > 1L)
-})
-
-test_that("PlotQCMetrics: ncol is forwarded to the facet without error", {
-  obj <- make_matisse_with_qc()
-  p   <- PlotQCMetrics(obj, ncol = 1L)
-  expect_s3_class(p, "gg")
-})
-
-test_that("PlotQCMetrics: errors for a feature not in metadata", {
-  obj <- make_matisse_with_qc()
-  expect_error(PlotQCMetrics(obj, features = "no_such_metric"),
-               regexp = "not found")
-})

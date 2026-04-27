@@ -45,5 +45,5 @@ Computed metrics:
 }
 }
 \seealso{
-\code{\link{FilterCells}}, \code{\link{PlotQCMetrics}}
+\code{\link{FilterCells}}
 }
