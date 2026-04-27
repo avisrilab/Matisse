@@ -665,7 +665,7 @@ setMethod("PlotSashimi", "MatisseObject",
     ggplot2::theme(axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank())
 
-  if (facet) p <- p + ggplot2::facet_wrap(~ group)
+  if (facet) p <- p + ggplot2::facet_wrap(~ group, ncol = 1L)
   p
 }
 
