@@ -317,12 +317,14 @@ test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
   seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
 
   ri_event_id <- "RI:chr1:851927:852094-852671:852766:+"
-  txs  <- c("tx_ret", "tx_spl")
+  # tx_dummy is the inclusion transcript for a second (SE) event required
+  # because Assay5 needs >=2 features (events).
+  txs  <- c("tx_ret", "tx_spl", "tx_dummy")
   cells <- paste0("Cell", seq_len(n_cells))
   set.seed(42L)
   tx_mat <- Matrix::Matrix(
-    matrix(sample(0L:10L, 2L * n_cells, replace = TRUE),
-           nrow = 2L, ncol = n_cells,
+    matrix(sample(0L:10L, 3L * n_cells, replace = TRUE),
+           nrow = 3L, ncol = n_cells,
            dimnames = list(txs, cells)),
     sparse = TRUE
   )
@@ -330,7 +332,9 @@ test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
   writeLines(c(
     "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
     paste(c("chr1", paste0("ENSG1;", ri_event_id),
-            "tx_ret", "tx_ret,tx_spl"), collapse = "\t")
+            "tx_ret", "tx_ret,tx_spl"), collapse = "\t"),
+    paste(c("chr1", "ENSG1;SE:chr1:900000-901000:902000-903000:+",
+            "tx_dummy", "tx_dummy,tx_spl"), collapse = "\t")
   ), ioe)
   obj <- CreateMatisseObject(
     seurat            = seu,

@@ -185,43 +185,52 @@ make_matisse_from_transcripts <- function() {
 # 20 cells: Cell1-10 = TypeA (high inclusion), Cell11-20 = TypeB (high exclusion)
 
 make_se_junction_data <- function() {
+  # Two SE events sharing the upstream junction; second event uses jxn_up2/jxn_dn2.
+  # Assay5 requires >=2 features, so we need >=2 events and >=2 junctions stored.
   data.frame(
-    junction_id = c("jxn_up", "jxn_dn", "jxn_exc"),
-    chr         = rep("chr1", 3),
-    start       = c(1201L, 3201L, 1201L),
-    end         = c(2999L, 4999L, 4999L),
-    strand      = rep("+", 3),
-    gene_id     = rep("ENSG1", 3),
+    junction_id = c("jxn-up", "jxn-dn", "jxn-exc", "jxn-up2", "jxn-dn2"),
+    chr         = rep("chr1", 5),
+    start       = c(1201L, 3201L, 1201L, 5001L, 7001L),
+    end         = c(2999L, 4999L, 4999L, 6999L, 8999L),
+    strand      = rep("+", 5),
+    gene_id     = rep("ENSG1", 5),
     stringsAsFactors = FALSE
   )
 }
 
 make_se_event_data <- function() {
+  # Two SE events — required because Assay5 needs >=2 features (events).
   data.frame(
-    event_id            = "SE:chr1:1201-2999:3201-4999:+",
-    gene_id             = "ENSG1",
-    chr                 = "chr1",
-    strand              = "+",
-    event_type          = "SE",
-    inclusion_junctions = "jxn_up;jxn_dn",
-    exclusion_junctions = "jxn_exc",
+    event_id            = c("SE:chr1:1201-2999:3201-4999:+",
+                            "SE:chr1:5001-6999:7001-8999:+"),
+    gene_id             = rep("ENSG1", 2),
+    chr                 = rep("chr1", 2),
+    strand              = rep("+", 2),
+    event_type          = rep("SE", 2),
+    inclusion_junctions = c("jxn-up;jxn-dn", "jxn-up2;jxn-dn2"),
+    exclusion_junctions = c("jxn-exc",        "jxn-exc"),
     stringsAsFactors    = FALSE
   )
 }
 
 make_se_junction_counts <- function(n_cells = 20L, seed = 42L) {
   set.seed(seed)
-  cells  <- paste0("Cell", seq_len(n_cells))
-  typeA  <- seq_len(n_cells / 2L)
-  typeB  <- seq(n_cells / 2L + 1L, n_cells)
-  mat    <- matrix(0L, nrow = n_cells, ncol = 3L,
-                   dimnames = list(cells, c("jxn_up", "jxn_dn", "jxn_exc")))
-  mat[typeA, "jxn_up"]  <- sample(8L:15L, length(typeA), replace = TRUE)
-  mat[typeA, "jxn_dn"]  <- sample(8L:15L, length(typeA), replace = TRUE)
-  mat[typeA, "jxn_exc"] <- sample(0L:3L,  length(typeA), replace = TRUE)
-  mat[typeB, "jxn_up"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
-  mat[typeB, "jxn_dn"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
-  mat[typeB, "jxn_exc"] <- sample(8L:15L, length(typeB), replace = TRUE)
+  cells <- paste0("Cell", seq_len(n_cells))
+  typeA <- seq_len(n_cells / 2L)
+  typeB <- seq(n_cells / 2L + 1L, n_cells)
+  jxns  <- c("jxn-up", "jxn-dn", "jxn-exc", "jxn-up2", "jxn-dn2")
+  mat   <- matrix(0L, nrow = n_cells, ncol = length(jxns),
+                  dimnames = list(cells, jxns))
+  mat[typeA, "jxn-up"]  <- sample(8L:15L, length(typeA), replace = TRUE)
+  mat[typeA, "jxn-dn"]  <- sample(8L:15L, length(typeA), replace = TRUE)
+  mat[typeA, "jxn-exc"] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeA, "jxn-up2"] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeA, "jxn-dn2"] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeB, "jxn-up"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
+  mat[typeB, "jxn-dn"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
+  mat[typeB, "jxn-exc"] <- sample(8L:15L, length(typeB), replace = TRUE)
+  mat[typeB, "jxn-up2"] <- sample(8L:15L, length(typeB), replace = TRUE)
+  mat[typeB, "jxn-dn2"] <- sample(8L:15L, length(typeB), replace = TRUE)
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
@@ -247,12 +256,18 @@ make_matisse_short_read <- function() {
 }
 
 make_se_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
+  # Two events — Assay5 requires >=2 features (events).
   lines <- c(
     "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
     paste(c("chr1",
             "ENSG1;SE:chr1:1201-2999:3201-4999:+",
             "tx_inc_a,tx_inc_b",
             "tx_inc_a,tx_inc_b,tx_exc_a,tx_exc_b"),
+          collapse = "\t"),
+    paste(c("chr1",
+            "ENSG1;SE:chr1:5001-6999:7001-8999:+",
+            "tx_inc_c",
+            "tx_inc_c,tx_exc_b"),
           collapse = "\t")
   )
   writeLines(lines, file)
@@ -261,20 +276,23 @@ make_se_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
 
 make_se_transcript_counts <- function(n_cells = 20L, seed = 42L) {
   set.seed(seed)
-  cells  <- paste0("Cell", seq_len(n_cells))
-  typeA  <- seq_len(n_cells / 2L)
-  typeB  <- seq(n_cells / 2L + 1L, n_cells)
-  txs    <- c("tx_inc_a", "tx_inc_b", "tx_exc_a", "tx_exc_b")
-  mat    <- matrix(0L, nrow = 4L, ncol = n_cells,
-                   dimnames = list(txs, cells))
+  cells <- paste0("Cell", seq_len(n_cells))
+  typeA <- seq_len(n_cells / 2L)
+  typeB <- seq(n_cells / 2L + 1L, n_cells)
+  # tx_inc_c is the inclusion transcript for the second SE event
+  txs   <- c("tx_inc_a", "tx_inc_b", "tx_exc_a", "tx_exc_b", "tx_inc_c")
+  mat   <- matrix(0L, nrow = length(txs), ncol = n_cells,
+                  dimnames = list(txs, cells))
   mat["tx_inc_a", typeA] <- sample(5L:12L, length(typeA), replace = TRUE)
   mat["tx_inc_b", typeA] <- sample(4L:10L, length(typeA), replace = TRUE)
   mat["tx_exc_a", typeA] <- sample(0L:2L,  length(typeA), replace = TRUE)
   mat["tx_exc_b", typeA] <- sample(0L:2L,  length(typeA), replace = TRUE)
+  mat["tx_inc_c", typeA] <- sample(3L:8L,  length(typeA), replace = TRUE)
   mat["tx_inc_a", typeB] <- sample(0L:2L,  length(typeB), replace = TRUE)
   mat["tx_inc_b", typeB] <- sample(0L:2L,  length(typeB), replace = TRUE)
   mat["tx_exc_a", typeB] <- sample(5L:12L, length(typeB), replace = TRUE)
   mat["tx_exc_b", typeB] <- sample(4L:10L, length(typeB), replace = TRUE)
+  mat["tx_inc_c", typeB] <- sample(0L:2L,  length(typeB), replace = TRUE)
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
