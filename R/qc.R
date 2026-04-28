@@ -3,108 +3,29 @@
 NULL
 
 # ---------------------------------------------------------------------------
-# ComputeIsoformQC
-# ---------------------------------------------------------------------------
-
-#' Compute per-cell isoform quality-control metrics
-#'
-#' Calculates a panel of QC metrics from the junction count and PSI layers and
-#' stores them directly in the embedded Seurat object's \code{meta.data}.
-#' Existing columns with the same names are overwritten.
-#'
-#' Computed metrics:
-#' \describe{
-#'   \item{n_junctions_detected}{Number of junctions with at least one read
-#'     (junction mode only).}
-#'   \item{total_junction_reads}{Total junction read count across all junctions
-#'     (junction mode only).}
-#'   \item{n_events_covered}{Number of splice events with PSI \eqn{\geq}
-#'     \code{min_coverage} (requires PSI to be calculated first).}
-#'   \item{pct_events_covered}{Percentage of events with sufficient coverage.}
-#'   \item{mean_psi}{Mean PSI across covered events.}
-#' }
-#'
-#' @param object A \code{MatisseObject}.
-#' @param min_coverage Integer. Minimum total reads to consider an event
-#'   "covered" when computing \code{n_events_covered}. Default: \code{5}.
-#' @param verbose Logical. Default: \code{TRUE}.
-#'
-#' @return The \code{MatisseObject} with QC columns added to
-#'   \code{MatisseMeta(object)} (i.e. the Seurat \code{meta.data}).
-#'
-#' @seealso \code{\link{FilterCells}}
-#'
-#' @rdname ComputeIsoformQC
-#' @export
-setMethod("ComputeIsoformQC", "MatisseObject",
-          function(object, min_coverage = 5L, verbose = TRUE, ...) {
-
-  qc <- data.frame(row.names = .get_cells(object))
-
-  # --- junction-level metrics (junction mode only) --------------------------
-  jxn <- GetJunctionCounts(object)  # NULL in event mode
-  if (!is.null(jxn)) {
-    qc$n_junctions_detected <- as.integer(Matrix::rowSums(jxn > 0))
-    qc$total_junction_reads <- as.integer(Matrix::rowSums(jxn))
-  }
-
-  # --- PSI-level metrics — retrieve from the "psi" assay --------------------
-  psi_cx <- GetPSI(object)  # cells x events
-  if (!is.null(psi_cx)) {
-    n_events <- ncol(psi_cx)
-    inc_cx   <- GetInclusionCounts(object)  # cells x events
-    exc_cx   <- GetExclusionCounts(object)  # cells x events
-
-    if (!is.null(inc_cx) && !is.null(exc_cx)) {
-      total_csc   <- as(inc_cx + exc_cx, "dgCMatrix")
-      total_csc@x <- as.numeric(total_csc@x >= min_coverage)
-      covered_sp  <- Matrix::drop0(total_csc)
-      n_cov       <- as.integer(Matrix::rowSums(covered_sp))
-      qc$n_events_covered   <- n_cov
-      qc$pct_events_covered <- round(100 * n_cov / n_events, 2)
-    }
-
-    qc$mean_psi <- .psi_rowmeans_sparse(psi_cx)
-  } else {
-    if (verbose) {
-      rlang::warn(
-        "PSI matrix is NULL; PSI-level QC metrics will not be computed. ",
-        "Run CalculatePSI() first.")
-    }
-  }
-
-  # Store in Seurat meta.data via AddIsoformMetadata
-  object <- AddIsoformMetadata(object, qc)
-
-  if (verbose) {
-    cli::cli_alert_success(
-      "Computed {ncol(qc)} QC metrics for {nrow(qc)} cells.")
-  }
-
-  object
-})
-
-# ---------------------------------------------------------------------------
 # FilterCells
 # ---------------------------------------------------------------------------
 
-#' Filter cells by isoform QC thresholds
+#' Filter cells by QC thresholds
 #'
 #' Removes cells that do not pass the specified thresholds on QC columns in
-#' \code{MatisseMeta(object)} (the Seurat \code{meta.data}). Run
-#' \code{\link{ComputeIsoformQC}} first to populate those columns.
+#' \code{MatisseMeta(object)} (the Seurat \code{meta.data}). The columns
+#' \code{nCount_isoform} and \code{nFeature_isoform} are written at construction
+#' by \code{\link{CreateMatisseObject}}; \code{nPercent_isoform} is written by
+#' \code{\link{CalculatePSI}}.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param min_junctions Integer. Minimum \code{n_junctions_detected}.
-#'   Default: \code{NULL} (no filter).
-#' @param max_junctions Integer. Maximum \code{n_junctions_detected}.
+#' @param min_features_isoform Integer. Minimum \code{nFeature_isoform} (number
+#'   of junctions or transcripts with at least one read). Default: \code{NULL}.
+#' @param max_features_isoform Integer. Maximum \code{nFeature_isoform}.
 #'   Default: \code{NULL}.
-#' @param min_junction_reads Integer. Minimum \code{total_junction_reads}.
+#' @param min_counts_isoform Integer. Minimum \code{nCount_isoform} (total reads
+#'   in the isoform assay). Default: \code{NULL}.
+#' @param max_counts_isoform Integer. Maximum \code{nCount_isoform}.
 #'   Default: \code{NULL}.
-#' @param max_junction_reads Integer. Maximum \code{total_junction_reads}.
-#'   Default: \code{NULL}.
-#' @param min_pct_covered Numeric (0–100). Minimum \code{pct_events_covered}.
-#'   Default: \code{NULL}.
+#' @param min_pct_isoform Numeric (0-100). Minimum \code{nPercent_isoform}
+#'   (percentage of splice events with a non-NA PSI value). Requires
+#'   \code{\link{CalculatePSI}} to have been run. Default: \code{NULL}.
 #' @param custom_filters Named list of two-element numeric vectors
 #'   \code{c(min, max)} applied to arbitrary metadata columns.
 #'   Use \code{NA} for a one-sided bound. Default: \code{NULL}.
@@ -113,28 +34,28 @@ setMethod("ComputeIsoformQC", "MatisseObject",
 #'
 #' @return The filtered \code{MatisseObject}.
 #'
-#' @seealso \code{\link{ComputeIsoformQC}}
+#' @seealso \code{\link{FilterEvents}}, \code{\link{CalculatePSI}}
 #'
 #' @rdname FilterCells
 #' @export
 setMethod("FilterCells", "MatisseObject",
           function(object,
-                   min_junctions      = NULL,
-                   max_junctions      = NULL,
-                   min_junction_reads = NULL,
-                   max_junction_reads = NULL,
-                   min_pct_covered    = NULL,
-                   custom_filters     = NULL,
-                   verbose            = TRUE, ...) {
-  meta  <- MatisseMeta(object)   # now seurat@meta.data
+                   min_features_isoform = NULL,
+                   max_features_isoform = NULL,
+                   min_counts_isoform   = NULL,
+                   max_counts_isoform   = NULL,
+                   min_pct_isoform      = NULL,
+                   custom_filters       = NULL,
+                   verbose              = TRUE, ...) {
+  meta  <- MatisseMeta(object)
   cells <- .get_cells(object)
   keep  <- rep(TRUE, length(cells))
   names(keep) <- cells
 
   apply_bound <- function(col, lo, hi) {
     if (!col %in% colnames(meta)) {
-      rlang::warn(paste0("Column '", col,
-                         "' not found in metadata. Run ComputeIsoformQC() first."))
+      rlang::warn(paste0("Column '", col, "' not found in metadata. ",
+                         "Run CreateMatisseObject() or CalculatePSI() first."))
       return()
     }
     vals <- meta[[col]]
@@ -142,12 +63,12 @@ setMethod("FilterCells", "MatisseObject",
     if (!is.null(hi) && !is.na(hi)) keep <<- keep & !is.na(vals) & (vals <= hi)
   }
 
-  if (!is.null(min_junctions) || !is.null(max_junctions))
-    apply_bound("n_junctions_detected", min_junctions, max_junctions)
-  if (!is.null(min_junction_reads) || !is.null(max_junction_reads))
-    apply_bound("total_junction_reads", min_junction_reads, max_junction_reads)
-  if (!is.null(min_pct_covered))
-    apply_bound("pct_events_covered", min_pct_covered, NULL)
+  if (!is.null(min_features_isoform) || !is.null(max_features_isoform))
+    apply_bound("nFeature_isoform", min_features_isoform, max_features_isoform)
+  if (!is.null(min_counts_isoform) || !is.null(max_counts_isoform))
+    apply_bound("nCount_isoform", min_counts_isoform, max_counts_isoform)
+  if (!is.null(min_pct_isoform))
+    apply_bound("nPercent_isoform", min_pct_isoform, NULL)
 
   if (!is.null(custom_filters)) {
     for (col in names(custom_filters)) {
@@ -183,6 +104,8 @@ setMethod("FilterCells", "MatisseObject",
 #' @param ... Ignored; included for S4 generic compatibility.
 #'
 #' @return The filtered \code{MatisseObject}.
+#'
+#' @seealso \code{\link{FilterCells}}
 #'
 #' @rdname FilterEvents
 #' @export

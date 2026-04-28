@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Tests for event-mode construction and its internal helpers
+# Tests for transcript mode construction and its internal helpers
 # ---------------------------------------------------------------------------
 
 # ---- .parse_ioe_files -------------------------------------------------------
@@ -94,10 +94,22 @@ test_that(".parse_ioe_files: error message shows row number and bad value", {
 })
 
 # ---- .aggregate_transcript_counts ------------------------------------------
+# .aggregate_transcript_counts reads events$inclusion_junctions and
+# events$exclusion_junctions.  The IOE parser produces inclusion_transcripts /
+# exclusion_transcripts, so we rename after parsing -- matching what
+# CreateMatisseObject does when building event_data from IOE files.
+
+.rename_ioe_for_aggregate <- function(events) {
+  events$inclusion_junctions <- events$inclusion_transcripts
+  events$exclusion_junctions <- events$exclusion_transcripts
+  events$inclusion_transcripts <- NULL
+  events$exclusion_transcripts <- NULL
+  events
+}
 
 test_that(".aggregate_transcript_counts: output dimensions are cells x events", {
   f      <- make_ioe_file()
-  events <- Matisse:::.parse_ioe_files(f)
+  events <- .rename_ioe_for_aggregate(Matisse:::.parse_ioe_files(f))
   tx_mat <- make_transcript_counts()
   cells  <- colnames(tx_mat)
   res <- Matisse:::.aggregate_transcript_counts(
@@ -113,7 +125,7 @@ test_that(".aggregate_transcript_counts: PSI = 1 when only inclusion reads", {
                                   nrow = 8, ncol = 1,
                                   dimnames = list(paste0("tx", 1:8), cells)),
                            sparse = TRUE)
-  events <- Matisse:::.parse_ioe_files(make_ioe_file())
+  events <- .rename_ioe_for_aggregate(Matisse:::.parse_ioe_files(make_ioe_file()))
   res    <- Matisse:::.aggregate_transcript_counts(
     mat, events, min_coverage = 1L, cells = cells)
   expect_equal(as.numeric(res$psi["Cell1", "SE:chr1:100-200:300-400:+"]), 1.0)
@@ -125,7 +137,7 @@ test_that(".aggregate_transcript_counts: PSI = 0 when only exclusion reads", {
                                   nrow = 8, ncol = 1,
                                   dimnames = list(paste0("tx", 1:8), cells)),
                            sparse = TRUE)
-  events <- Matisse:::.parse_ioe_files(make_ioe_file())
+  events <- .rename_ioe_for_aggregate(Matisse:::.parse_ioe_files(make_ioe_file()))
   res    <- Matisse:::.aggregate_transcript_counts(
     mat, events, min_coverage = 1L, cells = cells)
   expect_equal(as.numeric(res$psi["Cell1", "SE:chr1:100-200:300-400:+"]), 0.0)
@@ -137,7 +149,7 @@ test_that(".aggregate_transcript_counts: PSI = 0.5 with equal counts", {
                                   nrow = 8, ncol = 1,
                                   dimnames = list(paste0("tx", 1:8), cells)),
                            sparse = TRUE)
-  events <- Matisse:::.parse_ioe_files(make_ioe_file())
+  events <- .rename_ioe_for_aggregate(Matisse:::.parse_ioe_files(make_ioe_file()))
   res    <- Matisse:::.aggregate_transcript_counts(
     mat, events, min_coverage = 1L, cells = cells)
   expect_equal(as.numeric(res$psi["Cell1", "SE:chr1:100-200:300-400:+"]), 0.5)
@@ -149,7 +161,7 @@ test_that(".aggregate_transcript_counts: low-coverage entries become NA", {
                                   nrow = 8, ncol = 1,
                                   dimnames = list(paste0("tx", 1:8), cells)),
                            sparse = TRUE)
-  events <- Matisse:::.parse_ioe_files(make_ioe_file())
+  events <- .rename_ioe_for_aggregate(Matisse:::.parse_ioe_files(make_ioe_file()))
   res    <- Matisse:::.aggregate_transcript_counts(
     mat, events, min_coverage = 5L, cells = cells)
   expect_true(is.na(res$psi["Cell1", "SE:chr1:100-200:300-400:+"]))
@@ -160,34 +172,50 @@ test_that(".aggregate_transcript_counts: missing transcripts treated as zero", {
   mat_partial <- Matrix::Matrix(matrix(c(8), nrow = 1, ncol = 1,
                                         dimnames = list("tx3", cells)),
                                  sparse = TRUE)
-  events <- Matisse:::.parse_ioe_files(make_ioe_file())[1, ]
+  events <- .rename_ioe_for_aggregate(
+    Matisse:::.parse_ioe_files(make_ioe_file())[1, ])
   res    <- Matisse:::.aggregate_transcript_counts(
     mat_partial, events, min_coverage = 1L, cells = cells)
   expect_equal(as.numeric(res$psi[1, 1]), 0.0)
 })
 
-# ---- CreateMatisseObject (event mode) ---------------------------------------
+# ---- CreateMatisseObject (transcript mode) ----------------------------------
 
-test_that("CreateMatisseObject (event mode): returns a MatisseObject", {
+test_that("CreateMatisseObject (transcript mode): returns a MatisseObject", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
   expect_s4_class(obj, "MatisseObject")
 })
 
-test_that("CreateMatisseObject (event mode): mode slot is 'event'", {
+test_that("CreateMatisseObject (transcript mode): input.mode is 'transcript'", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
-  expect_equal(obj@mode, "event")
+  expect_equal(obj@input.mode, "transcript")
 })
 
-test_that("CreateMatisseObject (event mode): 'transcript' assay stored in Seurat", {
+test_that("CreateMatisseObject (transcript mode): 'isoform' assay stored in Seurat", {
   skip_if_not_installed("Seurat")
   obj      <- make_matisse_from_transcripts()
-  tx_assay <- GetSeurat(obj)[["transcript"]]
-  expect_false(is.null(tx_assay))
+  iso_assay <- GetSeurat(obj)[["isoform"]]
+  expect_false(is.null(iso_assay))
+  expect_true(inherits(iso_assay, "Assay5"))
 })
 
-test_that("CreateMatisseObject (event mode): GetTranscriptCounts returns transcripts x cells", {
+test_that("CreateMatisseObject (transcript mode): nCount_isoform written at construction", {
+  skip_if_not_installed("Seurat")
+  seu    <- make_seurat()
+  tx_mat <- make_transcript_counts()
+  obj    <- CreateMatisseObject(
+    seurat            = seu,
+    transcript_counts = tx_mat,
+    ioe_files         = make_ioe_file(),
+    verbose           = FALSE
+  )
+  expect_true("nCount_isoform"   %in% colnames(MatisseMeta(obj)))
+  expect_true("nFeature_isoform" %in% colnames(MatisseMeta(obj)))
+})
+
+test_that("CreateMatisseObject (transcript mode): GetTranscriptCounts returns transcripts x cells", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
   tx  <- GetTranscriptCounts(obj)
@@ -195,7 +223,7 @@ test_that("CreateMatisseObject (event mode): GetTranscriptCounts returns transcr
   expect_equal(nrow(tx), 8L)    # transcripts
 })
 
-test_that("CreateMatisseObject (event mode): 'psi' Assay5 stored in Seurat", {
+test_that("CalculatePSI (transcript mode): 'psi' Assay5 stored in Seurat", {
   skip_if_not_installed("Seurat")
   obj       <- make_matisse_from_transcripts()
   psi_assay <- GetSeurat(obj)[["psi"]]
@@ -203,7 +231,7 @@ test_that("CreateMatisseObject (event mode): 'psi' Assay5 stored in Seurat", {
   expect_true(inherits(psi_assay, "Assay5"))
 })
 
-test_that("CreateMatisseObject (event mode): GetPSI returns cells x events", {
+test_that("CalculatePSI (transcript mode): GetPSI returns cells x events", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
   psi <- GetPSI(obj)
@@ -211,7 +239,7 @@ test_that("CreateMatisseObject (event mode): GetPSI returns cells x events", {
   expect_equal(ncol(psi), 2L)
 })
 
-test_that("CreateMatisseObject (event mode): PSI values are in [0,1] or NA", {
+test_that("CalculatePSI (transcript mode): PSI values are in [0,1] or NA", {
   skip_if_not_installed("Seurat")
   obj    <- make_matisse_from_transcripts()
   vals   <- as.numeric(GetPSI(obj))
@@ -219,7 +247,15 @@ test_that("CreateMatisseObject (event mode): PSI values are in [0,1] or NA", {
   expect_true(all(finite >= 0 & finite <= 1))
 })
 
-test_that("CreateMatisseObject (event mode): event_data is populated", {
+test_that("CalculatePSI (transcript mode): nPercent_isoform written to metadata", {
+  skip_if_not_installed("Seurat")
+  obj <- make_matisse_from_transcripts()
+  expect_true("nPercent_isoform" %in% colnames(MatisseMeta(obj)))
+  vals <- MatisseMeta(obj)$nPercent_isoform
+  expect_true(all(vals >= 0 & vals <= 100))
+})
+
+test_that("CreateMatisseObject (transcript mode): event_data is populated", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
   ed  <- GetEventData(obj)
@@ -229,20 +265,21 @@ test_that("CreateMatisseObject (event mode): event_data is populated", {
                     "exclusion_junctions") %in% colnames(ed)))
 })
 
-test_that("CreateMatisseObject (event mode): GetJunctionCounts returns NULL", {
+test_that("CreateMatisseObject (transcript mode): GetJunctionCounts returns NULL", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
   expect_null(GetJunctionCounts(obj))
 })
 
-test_that("CreateMatisseObject (event mode): inclusion + exclusion sums to total for covered entries", {
+test_that("CalculatePSI (transcript mode): inclusion + exclusion sums to total for covered entries", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
   obj    <- CreateMatisseObject(
     seurat = seu, transcript_counts = tx_mat,
-    ioe_files = f, min_coverage = 0L, verbose = FALSE)
+    ioe_files = f, verbose = FALSE)
+  obj    <- CalculatePSI(obj, min_coverage = 0L, verbose = FALSE)
 
   inc     <- as.matrix(GetInclusionCounts(obj))
   exc     <- as.matrix(GetExclusionCounts(obj))
@@ -253,7 +290,7 @@ test_that("CreateMatisseObject (event mode): inclusion + exclusion sums to total
                         psi_mat[covered]) < 1e-9))
 })
 
-test_that("CreateMatisseObject (event mode): errors if seurat is wrong type", {
+test_that("CreateMatisseObject (transcript mode): errors if seurat is wrong type", {
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
   expect_error(
@@ -262,7 +299,7 @@ test_that("CreateMatisseObject (event mode): errors if seurat is wrong type", {
     regexp = "must be a Seurat object")
 })
 
-test_that("CreateMatisseObject (event mode): errors if no cell overlap", {
+test_that("CreateMatisseObject (transcript mode): errors if no cell overlap", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   f      <- make_ioe_file()
@@ -276,7 +313,7 @@ test_that("CreateMatisseObject (event mode): errors if no cell overlap", {
     regexp = "No cell barcodes overlap")
 })
 
-test_that("CreateMatisseObject (event mode): errors if IOE file missing", {
+test_that("CreateMatisseObject (transcript mode): errors if IOE file missing", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
@@ -287,7 +324,7 @@ test_that("CreateMatisseObject (event mode): errors if IOE file missing", {
     regexp = "not found")
 })
 
-test_that("CreateMatisseObject (event mode): warns on partial cell overlap", {
+test_that("CreateMatisseObject (transcript mode): warns on partial cell overlap", {
   skip_if_not_installed("Seurat")
   seu        <- make_seurat()
   tx_partial <- make_transcript_counts()[, paste0("Cell", 1:9), drop = FALSE]
@@ -295,19 +332,17 @@ test_that("CreateMatisseObject (event mode): warns on partial cell overlap", {
   expect_warning(
     CreateMatisseObject(
       seurat = seu, transcript_counts = tx_partial,
-      ioe_files = f, min_coverage = 1L, verbose = FALSE),
+      ioe_files = f, verbose = FALSE),
     regexp = "9/10")
 })
 
-test_that("CreateMatisseObject (event mode): passes validObject check", {
+test_that("CreateMatisseObject (transcript mode): passes validObject check", {
   skip_if_not_installed("Seurat")
-  obj <- make_matisse_from_transcripts()
+  seu    <- make_seurat()
+  tx_mat <- make_transcript_counts()
+  f      <- make_ioe_file()
+  obj    <- CreateMatisseObject(
+    seurat = seu, transcript_counts = tx_mat,
+    ioe_files = f, verbose = FALSE)
   expect_no_error(methods::validObject(obj))
-})
-
-test_that("CreateMatisseObject (event mode): downstream QC works", {
-  skip_if_not_installed("Seurat")
-  obj <- make_matisse_from_transcripts()
-  obj <- ComputeIsoformQC(obj, verbose = FALSE)
-  expect_true("mean_psi" %in% colnames(MatisseMeta(obj)))
 })

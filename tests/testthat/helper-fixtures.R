@@ -147,27 +147,20 @@ make_matisse_with_umap <- function() {
   CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
-# ---- MatisseObject with QC computed ----------------------------------------
-
-make_matisse_with_qc <- function() {
-  obj <- make_matisse_with_umap()
-  ComputeIsoformQC(obj, verbose = FALSE)
-}
-
-# ---- MatisseObject from transcripts (event mode) ---------------------------
+# ---- MatisseObject from transcripts (transcript mode) ----------------------
 
 make_matisse_from_transcripts <- function() {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
-  CreateMatisseObject(
+  obj <- CreateMatisseObject(
     seurat            = seu,
     transcript_counts = tx_mat,
     ioe_files         = f,
-    min_coverage      = 1L,
     verbose           = FALSE
   )
+  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
 # ---- Realistic SE event fixtures for PlotSashimi --------------------------
@@ -296,7 +289,7 @@ make_se_transcript_counts <- function(n_cells = 20L, seed = 42L) {
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
-# Long-read (event mode): 20 cells, 2 types, SE event via transcripts + IOE
+# Long-read (transcript mode): 20 cells, 2 types, SE event via transcripts + IOE
 make_matisse_long_read <- function() {
   skip_if_not_installed("Seurat")
   n_cells <- 20L
@@ -307,11 +300,11 @@ make_matisse_long_read <- function() {
   seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
     embeddings = coords, key = "UMAP_"))
   seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
-  CreateMatisseObject(
+  obj <- CreateMatisseObject(
     seurat            = seu,
     transcript_counts = make_se_transcript_counts(n_cells = n_cells),
     ioe_files         = make_se_ioe_file(),
-    min_coverage      = 1L,
     verbose           = FALSE
   )
+  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }

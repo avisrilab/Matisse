@@ -56,7 +56,7 @@ reference:
       data into a single Matisse object ready for analysis. Pass
       <code>junction_counts</code> for short-read (junction) mode, or
       <code>transcript_counts</code> + <code>ioe_files</code> for long-read
-      (event) mode.
+      (transcript) mode.
     contents:
       - MatisseObject-class
       - CreateMatisseObject
@@ -82,8 +82,8 @@ reference:
   - title: "Normalisation"
     desc: >
       Normalise count data before clustering. <code>SCTransform</code> applies
-      variance stabilisation and scales for sequencing depth — in event mode
-      it targets the <code>transcript</code> assay automatically; in junction
+      variance stabilisation and scales for sequencing depth -- in transcript
+      mode it targets the <code>isoform</code> assay automatically; in junction
       mode it targets the gene-expression assay. <code>NormalizeData</code>,
       <code>ScaleData</code>, and <code>FindVariableFeatures</code> are
       log-normalisation alternatives.
@@ -135,10 +135,10 @@ reference:
 
   - title: "Calculate splicing ratios (PSI)"
     desc: >
-      Compute PSI (Percent Spliced In) — the fraction of transcripts in each
+      Compute PSI (Percent Spliced In) -- the fraction of transcripts in each
       cell that include a given exon. Values range from 0 (exon always skipped)
-      to 1 (exon always included). In event mode this is done at construction;
-      in junction mode call CalculatePSI() explicitly.
+      to 1 (exon always included). Call CalculatePSI() explicitly after
+      CreateMatisseObject() in both junction and transcript modes.
     contents:
       - CalculatePSI
       - SummarizePSI
@@ -146,9 +146,10 @@ reference:
   - title: "Quality control and filtering"
     desc: >
       Identify and remove cells or splicing events that don't have enough
-      data for reliable analysis.
+      data for reliable analysis. QC columns written automatically:
+      <code>nCount_isoform</code> and <code>nFeature_isoform</code> at
+      construction; <code>nPercent_isoform</code> after CalculatePSI().
     contents:
-      - ComputeIsoformQC
       - FilterCells
       - FilterEvents
 

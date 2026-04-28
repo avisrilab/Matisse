@@ -13,14 +13,14 @@ test_that("CreateMatisseObject: succeeds with minimal input", {
   expect_s4_class(obj, "MatisseObject")
 })
 
-test_that("CreateMatisseObject: mode is 'junction' when junction_counts supplied", {
+test_that("CreateMatisseObject: input.mode is 'junction' when junction_counts supplied", {
   obj <- make_matisse_object()
-  expect_equal(obj@mode, "junction")
+  expect_equal(obj@input.mode, "junction")
 })
 
-test_that("CreateMatisseObject: mode is 'event' when ioe_files supplied", {
+test_that("CreateMatisseObject: input.mode is 'transcript' when transcript_counts supplied", {
   obj <- make_matisse_from_transcripts()
-  expect_equal(obj@mode, "event")
+  expect_equal(obj@input.mode, "transcript")
 })
 
 test_that("CreateMatisseObject: cell count matches Seurat object", {
@@ -42,10 +42,10 @@ test_that("CreateMatisseObject: junction_data is stored correctly", {
   expect_true(all(c("junction_id", "chr", "start", "end") %in% colnames(jd)))
 })
 
-test_that("CreateMatisseObject: junction counts stored as Assay5('junction')", {
+test_that("CreateMatisseObject: junction counts stored as Assay5('isoform')", {
   obj <- make_matisse_object()
-  expect_false(is.null(GetSeurat(obj)[["junction"]]))
-  expect_true(inherits(GetSeurat(obj)[["junction"]], "Assay5"))
+  expect_false(is.null(GetSeurat(obj)[["isoform"]]))
+  expect_true(inherits(GetSeurat(obj)[["isoform"]], "Assay5"))
 })
 
 test_that("CreateMatisseObject: GetJunctionCounts row names match cells", {
@@ -66,7 +66,7 @@ test_that("CreateMatisseObject: .n_junctions returns junction count in junction 
   expect_equal(.n_junctions(obj), 6L)
 })
 
-test_that("CreateMatisseObject: .n_junctions returns 0 in event mode", {
+test_that("CreateMatisseObject: .n_junctions returns 0 in transcript mode", {
   obj <- make_matisse_from_transcripts()
   expect_equal(.n_junctions(obj), 0L)
 })
@@ -81,12 +81,12 @@ test_that("CreateMatisseObject: rejects event_data missing required columns", {
   )
 })
 
-test_that("CreateMatisseObject: accepts transcript_counts and creates 'transcript' assay", {
+test_that("CreateMatisseObject: accepts transcript_counts and creates 'isoform' assay", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   obj    <- CreateMatisseObject(seu, transcript_counts = tx_mat, verbose = FALSE)
-  expect_false(is.null(GetSeurat(obj)[["transcript"]]))
+  expect_false(is.null(GetSeurat(obj)[["isoform"]]))
   tx <- GetTranscriptCounts(obj)
   expect_equal(ncol(tx), 10L)
 })
@@ -101,9 +101,9 @@ test_that("show method: junction-based mode label in show output", {
   expect_output(show(obj), regexp = "junction-based")
 })
 
-test_that("show method: event-based mode label in show output", {
+test_that("show method: transcript-based mode label in show output", {
   obj <- make_matisse_from_transcripts()
-  expect_output(show(obj), regexp = "event-based")
+  expect_output(show(obj), regexp = "transcript-based")
 })
 
 test_that("show method: default assay is marked with * in Assays line", {
@@ -302,7 +302,7 @@ test_that("SetPSI: updates the data layer in the 'psi' assay", {
   expect_equal(as.matrix(updated), as.matrix(new_psi), tolerance = 1e-6)
 })
 
-test_that("GetJunctionCounts: returns NULL for event-mode objects", {
+test_that("GetJunctionCounts: returns NULL for transcript-mode objects", {
   obj <- make_matisse_from_transcripts()
   expect_null(GetJunctionCounts(obj))
 })
@@ -312,6 +312,6 @@ test_that("validity: passes for a valid object", {
   seu2 <- make_seurat(n_cells = 5L)
   obj  <- methods::new("MatisseObject",
                         seurat     = seu2,
-                        event_data = make_event_data())
+                        input.mode = "junction")
   expect_no_error(methods::validObject(obj))
 })

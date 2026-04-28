@@ -19,7 +19,7 @@ setGeneric("GetSeurat", function(object, ...) standardGeneric("GetSeurat"))
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells × events) of PSI values in \eqn{[0,1]}.
+#' @return A sparse matrix (cells x events) of PSI values in \eqn{[0,1]}.
 #'   \code{NULL} if no \code{"psi"} assay exists yet.
 #' @export
 setGeneric("GetPSI", function(object, ...) standardGeneric("GetPSI"))
@@ -30,20 +30,20 @@ setGeneric("GetPSI", function(object, ...) standardGeneric("GetPSI"))
 #' inside the embedded Seurat object.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param value A sparse matrix (cells × events) of PSI values.
+#' @param value A sparse matrix (cells x events) of PSI values.
 #' @return The updated \code{MatisseObject}.
 #' @export
 setGeneric("SetPSI", function(object, value) standardGeneric("SetPSI"))
 
-#' Get raw junction count matrix
+#' Get raw junction count matrix (junction mode only)
 #'
-#' Retrieves the per-junction read counts from the \code{"junction"}
-#' \code{Assay5} stored inside the embedded Seurat object.
+#' Retrieves the per-junction read counts from the \code{"isoform"}
+#' \code{Assay5} in junction mode.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells × junctions) of read counts, or \code{NULL}
-#'   if the object is in event mode or no junction assay exists.
+#' @return A sparse matrix (cells x junctions) of read counts, or \code{NULL}
+#'   if the object is in transcript mode.
 #' @export
 setGeneric("GetJunctionCounts",
            function(object, ...) standardGeneric("GetJunctionCounts"))
@@ -55,7 +55,7 @@ setGeneric("GetJunctionCounts",
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells × events) of inclusion read counts.
+#' @return A sparse matrix (cells x events) of inclusion read counts.
 #' @export
 setGeneric("GetInclusionCounts",
            function(object, ...) standardGeneric("GetInclusionCounts"))
@@ -67,20 +67,20 @@ setGeneric("GetInclusionCounts",
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells × events) of exclusion read counts.
+#' @return A sparse matrix (cells x events) of exclusion read counts.
 #' @export
 setGeneric("GetExclusionCounts",
            function(object, ...) standardGeneric("GetExclusionCounts"))
 
-#' Get transcript count matrix
+#' Get transcript count matrix (transcript mode only)
 #'
-#' Retrieves raw transcript counts from the \code{"transcript"} \code{Assay5}
-#' stored inside the embedded Seurat object.
+#' Retrieves raw transcript counts from the \code{"isoform"} \code{Assay5}
+#' in transcript mode.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param ... Additional arguments (unused).
-#' @return A sparse matrix (transcripts × cells) of raw counts, or \code{NULL}
-#'   if no \code{"transcript"} assay exists.
+#' @return A sparse matrix (transcripts x cells) of raw counts, or \code{NULL}
+#'   if the object is in junction mode.
 #' @export
 setGeneric("GetTranscriptCounts",
            function(object, ...) standardGeneric("GetTranscriptCounts"))
@@ -105,8 +105,9 @@ setGeneric("GetJunctionData",
 #'
 #' Returns the full \code{meta.data} of the embedded Seurat object, which
 #' includes all per-cell QC metrics and annotations added by Matisse (e.g.
-#' \code{n_junctions_detected}, \code{mean_psi}) alongside standard Seurat
-#' columns. Use \code{AddIsoformMetadata()} to add new columns.
+#' \code{nCount_isoform}, \code{nFeature_isoform}, \code{nPercent_isoform})
+#' alongside standard Seurat columns. Use \code{AddIsoformMetadata()} to add
+#' new columns.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param value A \code{data.frame} whose columns are added to cell metadata
@@ -142,10 +143,10 @@ setGeneric("AddIsoformMetadata",
 # Analysis generics
 # ---------------------------------------------------------------------------
 
-#' Calculate PSI matrix from junction counts
+#' Calculate PSI matrix from junction or transcript counts
 #'
-#' @param object A \code{MatisseObject} in junction mode, or a sparse count
-#'   matrix (cells × junctions).
+#' @param object A \code{MatisseObject}, or a sparse count matrix
+#'   (cells x junctions) for raw-matrix usage.
 #' @param events A \code{data.frame} defining splice events (see
 #'   \code{\link{CalculatePSI}} for required columns).
 #' @param ... Additional arguments passed to the method.
@@ -156,45 +157,42 @@ setGeneric("CalculatePSI",
                     na_fill = NA_real_, verbose = TRUE, ...)
              standardGeneric("CalculatePSI"))
 
-#' Compute per-cell isoform QC metrics
+#' Filter cells by QC thresholds
 #'
 #' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return The updated \code{MatisseObject} with QC columns added to
-#'   cell metadata.
-#' @export
-setGeneric("ComputeIsoformQC",
-           function(object, min_coverage = 5L, verbose = TRUE, ...)
-             standardGeneric("ComputeIsoformQC"))
-
-#' Filter cells by isoform QC thresholds
-#'
-#' @param object A \code{MatisseObject}.
-#' @param min_junctions Integer. Minimum \code{n_junctions_detected}. Default: \code{NULL}.
-#' @param max_junctions Integer. Maximum \code{n_junctions_detected}. Default: \code{NULL}.
-#' @param min_junction_reads Integer. Minimum \code{total_junction_reads}. Default: \code{NULL}.
-#' @param max_junction_reads Integer. Maximum \code{total_junction_reads}. Default: \code{NULL}.
-#' @param min_pct_covered Numeric (0–100). Minimum \code{pct_events_covered}. Default: \code{NULL}.
-#' @param custom_filters Named list of \code{c(min, max)} bounds for arbitrary metadata columns.
+#' @param min_features_isoform Integer. Minimum \code{nFeature_isoform}.
+#'   Default: \code{NULL}.
+#' @param max_features_isoform Integer. Maximum \code{nFeature_isoform}.
+#'   Default: \code{NULL}.
+#' @param min_counts_isoform Integer. Minimum \code{nCount_isoform}.
+#'   Default: \code{NULL}.
+#' @param max_counts_isoform Integer. Maximum \code{nCount_isoform}.
+#'   Default: \code{NULL}.
+#' @param min_pct_isoform Numeric (0-100). Minimum \code{nPercent_isoform}.
+#'   Default: \code{NULL}.
+#' @param custom_filters Named list of \code{c(min, max)} bounds for arbitrary
+#'   metadata columns. Use \code{NA} for one-sided bounds.
 #' @param verbose Logical. Default: \code{TRUE}.
 #' @return The filtered \code{MatisseObject}.
 #' @export
 setGeneric("FilterCells",
            function(object,
-                    min_junctions      = NULL,
-                    max_junctions      = NULL,
-                    min_junction_reads = NULL,
-                    max_junction_reads = NULL,
-                    min_pct_covered    = NULL,
-                    custom_filters     = NULL,
-                    verbose            = TRUE, ...)
+                    min_features_isoform = NULL,
+                    max_features_isoform = NULL,
+                    min_counts_isoform   = NULL,
+                    max_counts_isoform   = NULL,
+                    min_pct_isoform      = NULL,
+                    custom_filters       = NULL,
+                    verbose              = TRUE, ...)
              standardGeneric("FilterCells"))
 
 #' Filter splice events by coverage or variance
 #'
 #' @param object A \code{MatisseObject}.
-#' @param min_cells_covered Integer. Minimum cells with non-NA PSI. Default: \code{10}.
-#' @param min_psi_variance Numeric. Minimum PSI variance across covered cells. Default: \code{NULL}.
+#' @param min_cells_covered Integer. Minimum cells with non-NA PSI.
+#'   Default: \code{10}.
+#' @param min_psi_variance Numeric. Minimum PSI variance across covered cells.
+#'   Default: \code{NULL}.
 #' @param verbose Logical. Default: \code{TRUE}.
 #' @return The filtered \code{MatisseObject}.
 #' @export
@@ -232,19 +230,28 @@ setGeneric("PlotUMAP",
 
 #' Violin plot of feature values split by cell group
 #'
+#' When \code{feature} is \code{NULL} (the default), automatically plots the
+#' QC metrics \code{nCount_isoform}, \code{nFeature_isoform}, and
+#' \code{nPercent_isoform} as a faceted panel.
+#'
 #' @param object A \code{MatisseObject}.
-#' @param feature Character. Feature to visualise (PSI event, junction, or gene).
-#' @param group_by Character. Metadata column to split cells by. Default: \code{"seurat_clusters"}.
-#' @param colours Named character vector mapping group levels to colours. Default: \code{NULL}.
-#' @param add_points Logical. Overlay jittered cell values. Default: \code{FALSE}.
-#' @param title Character. Plot title. Default: feature name (single feature) or
-#'   \code{NULL} (multiple features).
-#' @param ncol Integer. Number of facet columns when \code{feature} is a vector.
-#'   Default: \code{2}.
+#' @param feature Character vector of features to plot (PSI event IDs,
+#'   junction IDs, gene names, or metadata columns). \code{NULL} defaults to
+#'   the standard QC metrics.
+#' @param group_by Character. Metadata column to split cells by.
+#'   Default: \code{"seurat_clusters"}.
+#' @param colours Named character vector mapping group levels to colours.
+#'   Default: \code{NULL}.
+#' @param add_points Logical. Overlay jittered cell values. Default:
+#'   \code{FALSE}.
+#' @param title Character. Plot title. Default: feature name (single feature)
+#'   or \code{NULL} (multiple features).
+#' @param ncol Integer. Number of facet columns when \code{feature} is a
+#'   vector. Default: \code{2}.
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotViolin",
-           function(object, feature,
+           function(object, feature = NULL,
                     group_by   = "seurat_clusters",
                     colours    = NULL,
                     add_points = FALSE,
@@ -255,12 +262,17 @@ setGeneric("PlotViolin",
 #' Heatmap of PSI values (events x cells, DoHeatmap style)
 #'
 #' @param object A \code{MatisseObject}.
-#' @param events Character vector of event IDs. Default: top-variance events up to \code{max_events}.
-#' @param cells Character vector of cell barcodes. Default: random sample up to \code{max_cells}.
-#' @param group_by Character. Metadata column to annotate and order cells. Default: \code{NULL}.
+#' @param events Character vector of event IDs. Default: top-variance events
+#'   up to \code{max_events}.
+#' @param cells Character vector of cell barcodes. Default: random sample up
+#'   to \code{max_cells}.
+#' @param group_by Character. Metadata column to annotate and order cells.
+#'   Default: \code{NULL}.
 #' @param max_cells Integer. Cell downsample cap. Default: \code{500}.
-#' @param max_events Integer. Event cap; top-variance events selected when exceeded. Default: \code{200}.
-#' @param na_colour Character. Colour for \code{NA} entries. Default: \code{"grey90"}.
+#' @param max_events Integer. Event cap; top-variance events selected when
+#'   exceeded. Default: \code{200}.
+#' @param na_colour Character. Colour for \code{NA} entries.
+#'   Default: \code{"grey90"}.
 #' @param title Character. Plot title. Default: \code{"PSI Heatmap"}.
 #' @return A \code{ggplot} object.
 #' @export
@@ -279,8 +291,8 @@ setGeneric("PlotHeatmap",
 #'
 #' Draws junction arcs scaled by read count over a schematic gene structure.
 #' Arcs are coloured by role: inclusion (blue) vs exclusion (red). Works in
-#' both junction mode (per-junction counts) and event mode (aggregated
-#' inclusion/exclusion counts). Optionally faceted by a cell metadata column.
+#' both junction mode and transcript mode. Optionally faceted by a cell
+#' metadata column.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param event_id Character. Event ID as stored in \code{event_data}.

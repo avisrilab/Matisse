@@ -10,32 +10,27 @@ NULL
 #'
 #' \itemize{
 #'   \item \strong{Junction mode} (short-read): pass \code{junction_counts}.
-#'     Junction counts are stored as \code{Assay5("junction")} inside the
+#'     Junction counts are stored as \code{Assay5("isoform")} inside the
 #'     Seurat object. Call \code{\link{CalculatePSI}} afterwards to compute
 #'     PSI values.
-#'   \item \strong{Event mode} (long-read): pass \code{transcript_counts} and
-#'     \code{ioe_files}. Transcript counts are stored as
-#'     \code{Assay5("transcript")} and PSI is computed immediately from the
-#'     supplied SUPPA2 \code{.ioe} event definitions, stored as
-#'     \code{Assay5("psi")}.
+#'   \item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
+#'     and optionally \code{ioe_files}. Transcript counts are stored as
+#'     \code{Assay5("isoform")}. Call \code{\link{CalculatePSI}} (with
+#'     \code{ioe_files}) to compute PSI values.
 #' }
-#'
-#' You can also pass \code{transcript_counts} alone (without \code{ioe_files})
-#' to store the transcript assay without computing PSI -- for example, when you
-#' want to run \code{\link[Seurat]{SCTransform}} on transcript-level counts and compute
-#' PSI separately.
 #'
 #' @param seurat A \code{Seurat} object. Required.
 #' @param junction_counts A sparse matrix (dgCMatrix, cells x junctions) of
 #'   raw per-junction read counts. Row names must match \code{colnames(seurat)}.
 #'   Triggers junction mode. Default: \code{NULL}.
 #' @param transcript_counts A matrix or sparse matrix (transcripts x cells) of
-#'   raw transcript-level counts. Stored as \code{Assay5("transcript")} in the
+#'   raw transcript-level counts. Stored as \code{Assay5("isoform")} in the
 #'   Seurat object. Column names must overlap with \code{colnames(seurat)}.
-#'   Default: \code{NULL}.
+#'   Triggers transcript mode. Default: \code{NULL}.
 #' @param ioe_files Character vector of paths to SUPPA2 \code{.ioe} files.
-#'   When supplied together with \code{transcript_counts}, triggers event mode
-#'   and PSI is computed at construction. Default: \code{NULL}.
+#'   When supplied together with \code{transcript_counts}, the parsed event
+#'   annotation is stored in the object and used by \code{\link{CalculatePSI}}.
+#'   Default: \code{NULL}.
 #' @param event_data A \code{data.frame} defining splice events (junction mode
 #'   only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
 #'   \code{strand}, \code{event_type}, \code{inclusion_junctions},
@@ -43,8 +38,6 @@ NULL
 #' @param junction_data A \code{data.frame} of junction annotations. Required
 #'   columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 #'   \code{strand}, \code{gene_id}. Default: \code{NULL}.
-#' @param min_coverage Integer. Minimum total transcript counts per cell per
-#'   event to report a PSI value (event mode only). Default: \code{5}.
 #' @param verbose Logical. Print construction progress. Default: \code{TRUE}.
 #'
 #' @return A \code{\linkS4class{MatisseObject}}.
@@ -60,11 +53,13 @@ NULL
 #' # Junction mode
 #' jxn <- make_junction_counts()
 #' obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn)
+#' obj <- CalculatePSI(obj)
 #'
-#' # Event mode
+#' # Transcript mode
 #' tx  <- make_transcript_counts()
 #' obj <- CreateMatisseObject(seurat = seu, transcript_counts = tx,
 #'                            ioe_files = "path/to/events.ioe")
+#' obj <- CalculatePSI(obj)
 #' }
 #'
 #' @export
@@ -75,7 +70,6 @@ CreateMatisseObject <- function(
     ioe_files         = NULL,
     event_data        = NULL,
     junction_data     = NULL,
-    min_coverage      = 5L,
     verbose           = TRUE
 ) {
   if (!inherits(seurat, "Seurat")) {
@@ -85,86 +79,72 @@ CreateMatisseObject <- function(
 
   # Detect mode ------------------------------------------------------------
   has_junctions   <- !is.null(junction_counts)
-  has_ioe         <- !is.null(ioe_files) && length(ioe_files) > 0
   has_transcripts <- !is.null(transcript_counts)
+  has_ioe         <- !is.null(ioe_files) && length(ioe_files) > 0
 
-  if (has_junctions && has_ioe) {
+  if (has_junctions && has_transcripts) {
     rlang::abort(
-      "Provide either `junction_counts` (junction mode) or `ioe_files` ",
-      "(event mode), not both.")
+      "Provide either `junction_counts` (junction mode) or ",
+      "`transcript_counts` (transcript mode), not both.")
   }
 
-  mode <- if (has_ioe) "event" else "junction"
+  input_mode <- if (has_transcripts) "transcript" else "junction"
 
   if (verbose) {
     cli::cli_alert_info(
-      "Creating MatisseObject ({mode} mode): {length(cells)} cells, ",
+      "Creating MatisseObject ({input_mode} mode): {length(cells)} cells, ",
       "{nrow(seurat)} gene features.")
   }
 
-  # --- validate and store junction_counts as Assay5("junction") ------------
+  # --- junction mode: store as Assay5("isoform") ---------------------------
   if (has_junctions) {
     junction_counts <- .validate_cell_matrix(junction_counts, cells,
-                                              "junction_counts")
-    seurat <- .add_junction_assay(seurat, junction_counts, cells, verbose)
+                                             "junction_counts")
+    seurat <- .add_isoform_assay_junction(seurat, junction_counts, verbose)
   }
 
-  # --- optional transcript counts -> "transcript" Assay5 -------------------
+  # --- transcript mode: subset seurat to cells present in tx counts --------
   if (has_transcripts) {
-    seurat <- .add_transcript_assay(seurat, transcript_counts, cells, verbose)
+    common_cells <- intersect(colnames(transcript_counts), cells)
+    if (length(common_cells) == 0) {
+      rlang::abort(
+        "No cell barcodes overlap between `transcript_counts` and `seurat`.")
+    }
+    if (length(common_cells) < length(cells)) {
+      rlang::warn(paste0(
+        "`transcript_counts` covers ", length(common_cells), "/",
+        length(cells), " Seurat cells. Subsetting Seurat object."))
+      seurat <- seurat[, common_cells]
+    }
+    seurat <- .add_isoform_assay_transcript(seurat, transcript_counts,
+                                            common_cells, verbose)
   }
 
-  # --- validate event_data -------------------------------------------------
-  if (is.null(event_data)) {
-    event_data <- data.frame()
-  } else {
-    required <- c("event_id", "gene_id", "chr", "strand",
-                  "event_type", "inclusion_junctions", "exclusion_junctions")
-    .check_required_columns(event_data, required, "event_data")
-    event_data <- as.data.frame(event_data)
+  # --- write nCount_isoform / nFeature_isoform to meta.data ----------------
+  if (has_junctions || has_transcripts) {
+    seurat <- .write_isoform_qc(seurat)
   }
 
-  # --- validate junction_data ----------------------------------------------
-  if (is.null(junction_data)) {
-    junction_data <- data.frame()
-  } else {
-    required <- c("junction_id", "chr", "start", "end", "strand", "gene_id")
-    .check_required_columns(junction_data, required, "junction_data")
-    junction_data <- as.data.frame(junction_data)
-  }
-
-  # --- event mode: parse IOE files and compute PSI -------------------------
+  # --- parse IOE files if provided; build and store event annotation -------
   if (has_ioe) {
     if (!has_transcripts) {
       rlang::abort(
         "`transcript_counts` must be supplied together with `ioe_files` ",
-        "for event-mode construction.")
+        "for transcript-mode construction.")
     }
-
     missing_files <- ioe_files[!file.exists(ioe_files)]
     if (length(missing_files) > 0) {
       rlang::abort(paste0("IOE file(s) not found: ",
                           paste(missing_files, collapse = ", ")))
     }
-
     if (verbose) cli::cli_alert_info("Parsing {length(ioe_files)} IOE file(s)...")
     events <- .parse_ioe_files(ioe_files)
-
     if (verbose) {
       cli::cli_alert_info(
         "Found {nrow(events)} events across ",
-        "{length(unique(events$event_type))} event type(s); ",
-        "mapping to {nrow(transcript_counts)} transcripts...")
+        "{length(unique(events$event_type))} event type(s).")
     }
-
-    common_cells <- intersect(colnames(transcript_counts), cells)
-    result <- .aggregate_transcript_counts(
-      tx_counts    = transcript_counts[, common_cells, drop = FALSE],
-      events       = events,
-      min_coverage = min_coverage,
-      cells        = common_cells
-    )
-
+    # Build event_data from parsed IOE
     event_data <- data.frame(
       event_id             = events$event_id,
       gene_id              = events$gene_id,
@@ -175,26 +155,25 @@ CreateMatisseObject <- function(
       exclusion_junctions  = events$exclusion_transcripts,
       stringsAsFactors     = FALSE
     )
+  }
 
-    # Subset Seurat to cells that are in transcript_counts
-    seurat <- seurat[, common_cells]
+  # --- validate and stage event_data in Misc() -----------------------------
+  if (!is.null(event_data) && nrow(as.data.frame(event_data)) > 0) {
+    required <- c("event_id", "gene_id", "chr", "strand",
+                  "event_type", "inclusion_junctions", "exclusion_junctions")
+    .check_required_columns(event_data, required, "event_data")
+    event_data <- as.data.frame(event_data)
+  } else {
+    event_data <- data.frame()
+  }
+  seurat <- `Misc<-`(seurat, slot = "matisse_event_data", value = event_data)
 
-    psi_result <- .create_psi_assay(
-      psi_mat = result$psi,
-      inc_mat = result$inclusion,
-      exc_mat = result$exclusion
-    )
-    seurat[["psi"]] <- psi_result$assay
-    # Sync event_data$event_id with stored names (SeuratObject may sanitize)
-    event_data$event_id <- psi_result$feature_names
-
-    if (verbose) {
-      pct <- round(100 * sum(.n_covered_per_event(result$psi)) /
-                     (as.double(nrow(result$psi)) * ncol(result$psi)), 1)
-      cli::cli_alert_success(
-        "PSI computed from transcript counts: {nrow(events)} events, ",
-        "{pct}% entries covered.")
-    }
+  # --- validate and stage junction_data in Misc() --------------------------
+  if (!is.null(junction_data) && nrow(as.data.frame(junction_data)) > 0) {
+    required <- c("junction_id", "chr", "start", "end", "strand", "gene_id")
+    .check_required_columns(junction_data, required, "junction_data")
+    seurat <- `Misc<-`(seurat, slot = "matisse_junction_data",
+                       value = as.data.frame(junction_data))
   }
 
   version_str <- tryCatch(
@@ -204,12 +183,10 @@ CreateMatisseObject <- function(
 
   obj <- methods::new(
     "MatisseObject",
-    seurat        = seurat,
-    event_data    = event_data,
-    junction_data = junction_data,
-    mode          = mode,
-    version       = version_str,
-    misc          = list()
+    seurat     = seurat,
+    input.mode = input_mode,
+    version    = version_str,
+    misc       = list()
   )
 
   if (verbose) cli::cli_alert_success("MatisseObject created successfully.")
@@ -222,30 +199,31 @@ CreateMatisseObject <- function(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-# Store junction counts as Assay5("junction") in the Seurat object.
+# Store junction counts as Assay5("isoform") in the Seurat object.
 # Input: cells x junctions (Matisse convention); stored as junctions x cells.
-.add_junction_assay <- function(seurat, jxn_counts, cells, verbose) {
+.add_isoform_assay_junction <- function(seurat, jxn_counts, verbose) {
   if (ncol(jxn_counts) < 2L) {
     rlang::abort(
       "`junction_counts` must have at least 2 junctions ",
       "(Assay5 requires >=2 features).")
   }
   # Transpose: cells x junctions -> junctions x cells for Seurat convention
-  jxn_ec  <- Matrix::t(jxn_counts)
-  jxn_assay <- SeuratObject::CreateAssay5Object(counts = jxn_ec)
-  seurat[["junction"]] <- jxn_assay
+  jxn_ec    <- Matrix::t(jxn_counts)
+  iso_assay <- SeuratObject::CreateAssay5Object(counts = jxn_ec)
+  seurat[["isoform"]] <- iso_assay
   if (verbose) {
-    cli::cli_alert_info("Added 'junction' assay: {ncol(jxn_counts)} junctions.")
+    cli::cli_alert_info("Added 'isoform' assay: {ncol(jxn_counts)} junctions.")
   }
   seurat
 }
 
-# Add a transcript count matrix as an Assay5 named "transcript" in the Seurat
-# object. The matrix must be transcripts x cells.
-.add_transcript_assay <- function(seurat, tx_counts, cells, verbose) {
+# Add transcript counts as Assay5("isoform") in the Seurat object.
+# Input: transcripts x cells (already in Seurat orientation).
+.add_isoform_assay_transcript <- function(seurat, tx_counts, cells, verbose) {
   if (!is.matrix(tx_counts) && !inherits(tx_counts, "Matrix")) {
     rlang::abort(
-      "`transcript_counts` must be a matrix or sparse Matrix (transcripts x cells).")
+      "`transcript_counts` must be a matrix or sparse Matrix ",
+      "(transcripts x cells).")
   }
   if (is.null(colnames(tx_counts))) {
     rlang::abort("`transcript_counts` must have column names (cell barcodes).")
@@ -253,25 +231,27 @@ CreateMatisseObject <- function(
   if (is.null(rownames(tx_counts))) {
     rlang::abort("`transcript_counts` must have row names (transcript IDs).")
   }
-  common <- intersect(colnames(tx_counts), cells)
-  if (length(common) == 0) {
-    rlang::abort(
-      "No cell barcodes overlap between `transcript_counts` and `seurat`.")
-  }
-  if (length(common) < length(cells)) {
-    rlang::warn(paste0(
-      "`transcript_counts` covers ", length(common), "/", length(cells),
-      " Seurat cells."))
-  }
-  tx_sub   <- tx_counts[, common, drop = FALSE]
-  tx_csc   <- methods::as(tx_sub, "CsparseMatrix")
-  tx_assay <- SeuratObject::CreateAssay5Object(counts = tx_csc)
-  seurat[["transcript"]] <- tx_assay
+  tx_sub    <- tx_counts[, cells, drop = FALSE]
+  tx_csc    <- methods::as(tx_sub, "CsparseMatrix")
+  iso_assay <- SeuratObject::CreateAssay5Object(counts = tx_csc)
+  seurat[["isoform"]] <- iso_assay
   if (verbose) {
     cli::cli_alert_info(
-      "Added 'transcript' assay: {nrow(tx_csc)} transcripts.")
+      "Added 'isoform' assay: {nrow(tx_csc)} transcripts.")
   }
   seurat
+}
+
+# Write nCount_isoform / nFeature_isoform to seurat@meta.data from "isoform" assay.
+.write_isoform_qc <- function(seurat) {
+  iso_assay  <- seurat[["isoform"]]
+  counts_ev  <- SeuratObject::GetAssayData(iso_assay, layer = "counts")
+  meta_df <- data.frame(
+    nCount_isoform   = as.integer(Matrix::colSums(counts_ev)),
+    nFeature_isoform = as.integer(Matrix::colSums(counts_ev > 0)),
+    row.names        = colnames(counts_ev)
+  )
+  SeuratObject::AddMetaData(seurat, meta_df)
 }
 
 # Build an Assay5 ("psi") from PSI, inclusion, and exclusion matrices.
@@ -432,8 +412,8 @@ CreateMatisseObject <- function(
                                           min_coverage, cells) {
   tx_names  <- rownames(tx_counts)
 
-  inc_lists <- strsplit(events$inclusion_transcripts, ";", fixed = TRUE)
-  exc_lists <- strsplit(events$exclusion_transcripts, ";", fixed = TRUE)
+  inc_lists <- strsplit(events$inclusion_junctions, ";", fixed = TRUE)
+  exc_lists <- strsplit(events$exclusion_junctions, ";", fixed = TRUE)
 
   A_inc <- .build_indicator_matrix(inc_lists, tx_names)
   A_exc <- .build_indicator_matrix(exc_lists, tx_names)

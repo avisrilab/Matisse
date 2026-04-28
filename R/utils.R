@@ -81,26 +81,33 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     }
   }
 
-  # Merge Seurat objects — this handles ALL assays (junction, psi, transcript,
-  # RNA) and cell metadata automatically. JoinLayers consolidates per-sample
-  # layers created by merge back into unified layers.
+  # Merge Seurat objects -- handles all assays (isoform, psi, RNA) and cell
+  # metadata automatically. JoinLayers consolidates per-sample layers back into
+  # unified layers (SeuratObject v5 splits them on merge).
   merged_seurat <- merge(
     x@seurat, y@seurat,
     add.cell.ids = add_cell_ids
   )
-  # SeuratObject v5 splits layers per sample on merge; join them back
   for (assay_name in SeuratObject::Assays(merged_seurat)) {
     merged_seurat <- SeuratObject::JoinLayers(merged_seurat, assay = assay_name)
   }
 
+  # Seurat's merge does not carry over Misc() slots; re-populate from x.
+  ev <- GetEventData(x)
+  if (!is.null(ev)) {
+    merged_seurat <- `Misc<-`(merged_seurat, slot = "matisse_event_data", value = ev)
+  }
+  jd <- GetJunctionData(x)
+  if (!is.null(jd)) {
+    merged_seurat <- `Misc<-`(merged_seurat, slot = "matisse_junction_data", value = jd)
+  }
+
   obj <- methods::new(
     "MatisseObject",
-    seurat        = merged_seurat,
-    event_data    = x@event_data,
-    junction_data = x@junction_data,
-    mode          = x@mode,
-    version       = x@version,
-    misc          = c(x@misc, y@misc)
+    seurat     = merged_seurat,
+    input.mode = x@input.mode,
+    version    = x@version,
+    misc       = c(x@misc, y@misc)
   )
 
   if (verbose) {

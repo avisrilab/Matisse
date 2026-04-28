@@ -3,14 +3,14 @@
 NULL
 
 # ---------------------------------------------------------------------------
-# CalculatePSI — MatisseObject method
+# CalculatePSI -- MatisseObject method
 # ---------------------------------------------------------------------------
 
-#' Calculate PSI matrix from junction counts
+#' Calculate PSI matrix from junction or transcript counts
 #'
-#' Computes a Percent Spliced In (PSI) matrix for all splice events defined in
-#' \code{event_data}. Only applies to objects in \strong{junction mode}; in
-#' event mode PSI is computed at construction time.
+#' Computes a Percent Spliced In (PSI) matrix for all splice events and stores
+#' it in the \code{"psi"} assay. Works in both junction mode and transcript
+#' mode. Call this after \code{\link{CreateMatisseObject}}.
 #'
 #' For each cell \eqn{c} and event \eqn{e}:
 #'
@@ -18,22 +18,24 @@ NULL
 #'                        {\sum \text{inclusion reads} +
 #'                         \sum \text{exclusion reads}}}
 #'
-#' Results are stored inside the embedded Seurat object as a
-#' \code{Assay5} named \code{"psi"}, with:
+#' Results are stored inside the embedded Seurat object as
+#' \code{Assay5("psi")}, with:
 #' \itemize{
-#'   \item \code{"data"} layer: PSI values in \eqn{[0,1]} (events × cells).
-#'   \item \code{"counts"} layer: inclusion read counts (events × cells).
-#'   \item \code{"exclusion"} layer: exclusion read counts (events × cells).
+#'   \item \code{"data"} layer: PSI values in \eqn{[0,1]} (events x cells).
+#'   \item \code{"counts"} layer: inclusion read counts (events x cells).
+#'   \item \code{"exclusion"} layer: exclusion read counts (events x cells).
 #' }
 #' Entries where total coverage falls below \code{min_coverage} are set to
 #' \code{NA} in the \code{"data"} layer.
 #'
-#' @param object A \code{\linkS4class{MatisseObject}} in junction mode, or a
-#'   sparse matrix (cells × junctions).
-#' @param events When \code{object} is a matrix: a \code{data.frame} with
-#'   columns \code{event_id}, \code{inclusion_junctions}, and
-#'   \code{exclusion_junctions}. When \code{object} is a
-#'   \code{MatisseObject} this defaults to \code{GetEventData(object)}.
+#' \code{nPercent_isoform} is also written to cell metadata: the percentage of
+#' splice events with a non-\code{NA} PSI value in each cell.
+#'
+#' @param object A \code{\linkS4class{MatisseObject}}, or a sparse matrix
+#'   (cells x junctions) when computing PSI outside the object.
+#' @param events A \code{data.frame} with columns \code{event_id},
+#'   \code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
+#'   \code{GetEventData(object)} (populated at construction).
 #' @param min_coverage Integer. Minimum total reads per cell per event to
 #'   report a PSI value. Default: \code{5}.
 #' @param na_fill Numeric. Replacement for low-coverage entries. Default:
@@ -43,47 +45,62 @@ NULL
 #' @return
 #' * \code{MatisseObject}: the input object with the \code{"psi"} assay
 #'   populated inside the embedded Seurat object.
-#' * matrix: a dense matrix (cells × events) of PSI values.
+#' * matrix: a dense matrix (cells x events) of PSI values.
 #'
-#' @seealso \code{\link{ComputeIsoformQC}}, \code{\link{PlotHeatmap}}
+#' @seealso \code{\link{FilterCells}}, \code{\link{FilterEvents}},
+#'   \code{\link{PlotHeatmap}}
 #'
 #' @rdname CalculatePSI
 #' @export
 setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE, ...) {
-  # In event mode PSI is already computed at construction — warn and return
-  if (object@mode == "event") {
-    if (!is.null(.get_assay_safe(object@seurat, "psi"))) {
-      rlang::warn(paste0(
-        "This object is in event mode and already has PSI computed at ",
-        "construction. CalculatePSI() only applies to junction-mode objects. ",
-        "Returning the object unchanged."))
-      return(object)
+
+  if (object@input.mode == "junction") {
+    # --- Junction mode: aggregate junction reads to splice events ------------
+    jxn_counts <- GetJunctionCounts(object)
+    if (is.null(jxn_counts)) {
+      rlang::abort(
+        "No junction assay found. ",
+        "Provide junction_counts via CreateMatisseObject().")
     }
   }
 
-  jxn_counts <- GetJunctionCounts(object)
-  if (is.null(jxn_counts)) {
-    rlang::abort(paste0(
-      "No junction assay found. ",
-      "Provide junction_counts via CreateMatisseObject()."))
-  }
-
-  if (is.null(events)) events <- object@event_data
-  if (nrow(events) == 0) {
+  if (is.null(events)) events <- GetEventData(object)
+  if (is.null(events) || nrow(events) == 0) {
     rlang::abort(
-      "No splice events defined. Provide event_data either via ",
-      "CreateMatisseObject() or the `events` argument.")
+      "No splice events defined. Provide event_data via CreateMatisseObject() ",
+      "or the `events` argument.")
   }
 
-  result <- .calculate_psi_matrix(
-    jxn_counts   = jxn_counts,
-    events       = events,
-    min_coverage = min_coverage,
-    na_fill      = na_fill,
-    verbose      = verbose
-  )
+  if (object@input.mode == "junction") {
+    result <- .calculate_psi_matrix(
+      jxn_counts   = jxn_counts,
+      events       = events,
+      min_coverage = min_coverage,
+      na_fill      = na_fill,
+      verbose      = verbose
+    )
+  } else {
+    # --- Transcript mode: aggregate transcript counts to splice events -------
+    tx_counts <- GetTranscriptCounts(object)
+    if (is.null(tx_counts)) {
+      rlang::abort(
+        "No 'isoform' assay found. ",
+        "Provide transcript_counts via CreateMatisseObject().")
+    }
+    if (verbose) {
+      cli::cli_alert_info(
+        "Calculating PSI for {nrow(events)} events across ",
+        "{ncol(tx_counts)} cells...")
+    }
+    result <- .aggregate_transcript_counts(
+      tx_counts    = tx_counts,
+      events       = events,
+      min_coverage = min_coverage,
+      cells        = colnames(tx_counts)
+    )
+  }
 
   # Store PSI, inclusion, and exclusion in an Assay5 named "psi"
   psi_result <- .create_psi_assay(
@@ -92,11 +109,33 @@ setMethod("CalculatePSI", "MatisseObject",
     exc_mat = result$exclusion
   )
   object@seurat[["psi"]] <- psi_result$assay
-  # Sync event_data$event_id with the names actually stored
-  if (nrow(object@event_data) > 0) {
-    idx <- match(events$event_id, object@event_data$event_id)
+
+  # Sync event_data$event_id with the feature names actually stored by Seurat
+  # (Seurat may sanitize names, e.g. underscore -> dash). Always write back.
+  stored_names <- psi_result$feature_names
+  ev <- GetEventData(object)
+  if (!is.null(ev) && nrow(ev) > 0) {
+    idx <- match(events$event_id, ev$event_id)
     idx <- idx[!is.na(idx)]
-    object@event_data$event_id[idx] <- psi_result$feature_names
+    if (length(idx) > 0) ev$event_id[idx] <- stored_names
+  } else {
+    # events were passed explicitly (not from Misc); store them now
+    ev <- as.data.frame(events, stringsAsFactors = FALSE)
+    ev$event_id <- stored_names
+  }
+  object@seurat <- `Misc<-`(object@seurat, slot = "matisse_event_data", value = ev)
+
+  # Write nPercent_isoform to meta.data
+  psi_cx  <- GetPSI(object)         # cells x events (uses updated Misc)
+  n_total <- ncol(psi_cx)
+  if (n_total > 0L) {
+    psi_dense      <- .psi_to_dense_na(psi_cx)
+    n_cov_per_cell <- as.integer(rowSums(!is.na(psi_dense)))
+    meta_df <- data.frame(
+      nPercent_isoform = round(100 * n_cov_per_cell / n_total, 2),
+      row.names        = rownames(psi_cx)
+    )
+    object@seurat <- SeuratObject::AddMetaData(object@seurat, meta_df)
   }
 
   if (verbose) {
@@ -189,8 +228,7 @@ setMethod("CalculatePSI", "ANY",
 #' Summarize PSI distribution across cells for each event
 #'
 #' Returns a summary table with per-event PSI statistics across all (or a
-#' subset of) cells. Call this after \code{\link{CalculatePSI}} or after
-#' creating an event-mode object with \code{\link{CreateMatisseObject}}.
+#' subset of) cells. Call this after \code{\link{CalculatePSI}}.
 #'
 #' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param cells Optional character vector of cell barcodes to subset.
@@ -219,7 +257,7 @@ SummarizePSI <- function(object, cells = NULL) {
   # Coverage (number of non-NA entries per event column)
   n_cov <- tabulate(col_idx[not_na], nbins = ncol(psi_csc))
 
-  # Mean: colSums(non-NA values) / n_cov  — no dense matrix
+  # Mean: colSums(non-NA values) / n_cov -- no dense matrix
   x_zeroed        <- x; x_zeroed[!not_na] <- 0
   psi_for_sum     <- psi_csc; psi_for_sum@x <- x_zeroed
   col_sums        <- as.numeric(Matrix::colSums(psi_for_sum))
@@ -234,7 +272,7 @@ SummarizePSI <- function(object, cells = NULL) {
     NA_real_
   )
 
-  # Median: tapply over the non-NA stored values — avoids full dense alloc
+  # Median: tapply over the non-NA stored values -- avoids full dense alloc
   vals_non_na <- x[not_na]
   cols_non_na <- col_idx[not_na]
   median_psi  <- rep(NA_real_, ncol(psi_csc))

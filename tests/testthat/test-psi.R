@@ -199,18 +199,12 @@ test_that("SummarizePSI: no NaN in output (uncovered events yield NA)", {
   expect_true(all(is.na(s$mean_psi)))
 })
 
-# ---- CalculatePSI on event-mode object (already has PSI) ------------------
+# ---- CalculatePSI can be called repeatedly (idempotent) --------------------
 
-test_that("CalculatePSI: warns and returns unchanged on event-mode object", {
+test_that("CalculatePSI: can be called again on an object that already has PSI", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
-  psi_before <- GetPSI(obj)
-  expect_warning(
-    obj2 <- CalculatePSI(obj, verbose = FALSE),
-    regexp = "event mode"
-  )
-  # PSI should be unchanged
-  expect_equal(as.matrix(GetPSI(obj2)), as.matrix(psi_before))
+  expect_no_error(CalculatePSI(obj, verbose = FALSE))
 })
 
 # ---- Internal PSI helpers --------------------------------------------------

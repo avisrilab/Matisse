@@ -95,6 +95,32 @@ test_that("PlotViolin: custom title is applied", {
   expect_equal(p$labels$title, "Splicing switch")
 })
 
+test_that("PlotViolin: feature = NULL auto-selects isoform QC metrics", {
+  obj <- make_matisse_with_umap()
+  # nCount_isoform and nFeature_isoform exist from construction;
+  # nPercent_isoform added by CalculatePSI (already called inside make_matisse_with_umap)
+  p <- PlotViolin(obj, feature = NULL, group_by = "cell_type")
+  expect_s3_class(p, "gg")
+  # Should be faceted (multiple metrics)
+  expect_s3_class(p$facet, "FacetWrap")
+})
+
+test_that("PlotViolin: feature = NULL errors when no QC metrics are present", {
+  # A fresh object with no isoform assay has no isoform QC columns
+  skip_if_not_installed("Seurat")
+  seu <- make_seurat_with_umap()
+  # Create a MatisseObject without any junction or transcript counts
+  obj <- methods::new("MatisseObject",
+                      seurat     = seu,
+                      input.mode = "junction",
+                      version    = "test",
+                      misc       = list())
+  expect_error(
+    PlotViolin(obj, feature = NULL, group_by = "cell_type"),
+    regexp = "No QC metrics found"
+  )
+})
+
 test_that("PlotViolin: errors if PSI matrix is NULL", {
   obj <- make_matisse_object()
   expect_error(PlotViolin(obj, feature = "SE-gene1-e2"),
@@ -116,9 +142,9 @@ test_that("PlotViolin: errors for an unknown group_by column", {
 })
 
 test_that("PlotViolin: vector of features returns a faceted ggplot", {
-  obj <- make_matisse_with_qc()
+  obj <- make_matisse_with_umap()  # has PSI + cell_type
   p   <- PlotViolin(obj,
-                    feature  = c("SE-gene1-e2", "mean_psi"),
+                    feature  = c("SE-gene1-e2", "nPercent_isoform"),
                     group_by = "cell_type")
   expect_s3_class(p, "gg")
   # facet_wrap adds a FacetWrap component
@@ -126,15 +152,15 @@ test_that("PlotViolin: vector of features returns a faceted ggplot", {
 })
 
 test_that("PlotViolin: metadata column (QC metric) is accepted as feature", {
-  obj <- make_matisse_with_qc()
-  p   <- PlotViolin(obj, feature = "mean_psi", group_by = "cell_type")
+  obj <- make_matisse_with_umap()
+  p   <- PlotViolin(obj, feature = "nPercent_isoform", group_by = "cell_type")
   expect_s3_class(p, "gg")
 })
 
 test_that("PlotViolin: ncol controls facet columns for multiple features", {
-  obj <- make_matisse_with_qc()
+  obj <- make_matisse_with_umap()
   p   <- PlotViolin(obj,
-                    feature  = c("SE-gene1-e2", "mean_psi"),
+                    feature  = c("SE-gene1-e2", "nPercent_isoform"),
                     group_by = "cell_type",
                     ncol     = 1L)
   expect_s3_class(p, "gg")
@@ -264,9 +290,12 @@ test_that("PlotSashimi: errors for unknown event_id", {
   )
 })
 
-test_that("PlotSashimi: errors in event mode for unsupported event type", {
+test_that("PlotSashimi: errors in transcript mode for unsupported event type", {
   obj <- make_matisse_long_read()
-  obj@event_data$event_id <- "A3:chr1:1201-2999:3201-4999:+"
+  # Rewrite event_data with an A3SS event ID (unsupported type)
+  ed <- GetEventData(obj)
+  ed$event_id[1] <- "A3:chr1:1201-2999:3201-4999:+"
+  obj@seurat <- `Misc<-`(obj@seurat, slot = "matisse_event_data", value = ed)
   expect_error(
     PlotSashimi(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
     regexp = "does not yet support"
@@ -307,9 +336,9 @@ test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
     seurat            = seu,
     transcript_counts = tx_mat,
     ioe_files         = ioe,
-    min_coverage      = 1L,
     verbose           = FALSE
   )
+  obj <- CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
   p <- PlotSashimi(obj, event_id = ri_event_id)
   expect_s3_class(p, "gg")
 })

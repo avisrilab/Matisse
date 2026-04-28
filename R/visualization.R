@@ -83,14 +83,17 @@ setMethod("PlotUMAP", "MatisseObject",
 #' Violin plot of one or more features split by cell group
 #'
 #' Plots any feature -- PSI event ID, junction ID, gene name, or metadata
-#' column (e.g. QC metrics from \code{\link{ComputeIsoformQC}}) -- as a
-#' violin/box split by a cell-level grouping variable.
+#' column -- as a violin/box split by a cell-level grouping variable.
+#' When \code{feature = NULL} (the default), automatically plots the standard
+#' QC metrics \code{nCount_isoform}, \code{nFeature_isoform}, and
+#' \code{nPercent_isoform} as a faceted panel.
 #' Pass a character vector to \code{feature} to plot multiple features in
 #' facets with free y-axis scales.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param feature Character scalar or vector. Feature(s) to plot. Each entry
-#'   can be a PSI event ID, junction ID, gene name, or metadata column name.
+#' @param feature Character scalar or vector of features to plot (PSI event
+#'   IDs, junction IDs, gene names, or metadata column names). \code{NULL}
+#'   (the default) selects the standard QC metrics automatically.
 #' @param group_by Character. Column in \code{Seurat::meta.data} to split
 #'   cells by. Default: \code{"seurat_clusters"}.
 #' @param colours Named character vector mapping group levels to colours.
@@ -108,12 +111,23 @@ setMethod("PlotUMAP", "MatisseObject",
 #' @rdname PlotViolin
 #' @export
 setMethod("PlotViolin", "MatisseObject",
-          function(object, feature,
+          function(object, feature = NULL,
                    group_by   = "seurat_clusters",
                    colours    = NULL,
                    add_points = FALSE,
                    title      = NULL,
                    ncol       = 2L, ...) {
+  # Auto-select QC metrics when no feature is specified
+  if (is.null(feature)) {
+    candidates <- c("nCount_isoform", "nFeature_isoform", "nPercent_isoform")
+    feature    <- intersect(candidates, colnames(MatisseMeta(object)))
+    if (length(feature) == 0L) {
+      rlang::abort(
+        "No QC metrics found in cell metadata. ",
+        "Run CreateMatisseObject() and CalculatePSI() first.")
+    }
+  }
+
   # Resolve feature values first -- gives the right error when PSI is NULL
   vals_list  <- lapply(feature, function(f) .get_feature_values(object, f))
   group_vals <- .get_seurat_meta_col(object, group_by)
@@ -335,8 +349,8 @@ setMethod("PlotSashimi", "MatisseObject",
                    title     = NULL, ...) {
   arc_scale <- match.arg(arc_scale)
 
-  ed <- object@event_data
-  if (!event_id %in% ed$event_id) {
+  ed <- GetEventData(object)
+  if (is.null(ed) || !event_id %in% ed$event_id) {
     rlang::abort(paste0("'", event_id, "' not found in event_data."))
   }
   ev        <- ed[ed$event_id == event_id, , drop = FALSE]
@@ -368,11 +382,11 @@ setMethod("PlotSashimi", "MatisseObject",
 
 # Return data.frame: junction_id | start | end | role
 .cov_jxn_coords <- function(object, ev) {
-  if (object@mode == "junction") {
+  if (object@input.mode == "junction") {
     inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
     exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
     ids <- c(inc, exc)
-    jd  <- object@junction_data
+    jd  <- GetJunctionData(object)
     idx <- match(ids, jd$junction_id)
     if (anyNA(idx)) {
       missing <- ids[is.na(idx)]
@@ -456,7 +470,7 @@ setMethod("PlotSashimi", "MatisseObject",
 
 # Return data.frame: junction_id | count
 .cov_counts <- function(object, ev, cells) {
-  if (object@mode == "junction") {
+  if (object@input.mode == "junction") {
     jxn <- GetJunctionCounts(object)
     inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
     exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]

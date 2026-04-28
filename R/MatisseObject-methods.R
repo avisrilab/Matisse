@@ -35,7 +35,7 @@ setMethod("show", "MatisseObject", function(object) {
   n_cells  <- .n_cells(object)
   n_events <- .n_events(object)
 
-  mode_label <- if (object@mode == "junction") "junction-based" else "event-based"
+  mode_label <- if (object@input.mode == "junction") "junction-based" else "transcript-based"
   cat("A MatisseObject (", mode_label, " mode)\n", sep = "")
   cat("  Cells        :", n_cells, "\n")
   cat("  Splice events:", n_events, "\n")
@@ -133,29 +133,27 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
     event_ids <- character(0)
   }
 
-  # Subset Seurat by cells (handles ALL assays: junction, psi, transcript,
+  # Subset Seurat by cells (handles ALL assays: isoform, psi,
   # gene expression, plus cell metadata and reductions automatically)
   new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
 
-  # Subset event_data to selected events (PSI assay keeps all features;
-  # GetPSI/GetInclusionCounts/GetExclusionCounts filter by event_data)
-  if (missing(j)) {
-    new_event_data <- x@event_data
-  } else if (length(event_ids) == 0L) {
-    new_event_data <- x@event_data[integer(0), , drop = FALSE]
-  } else if (nrow(x@event_data) > 0) {
-    new_event_data <- x@event_data[match(event_ids, x@event_data$event_id), , drop = FALSE]
-  } else {
-    new_event_data <- x@event_data
+  # When subsetting events (j), update the event annotation in Misc()
+  if (!missing(j) && !is.null(new_seurat)) {
+    ev <- .get_event_data_internal(x)
+    if (!is.null(ev) && nrow(ev) > 0 && length(event_ids) > 0) {
+      new_ev <- ev[match(event_ids, ev$event_id), , drop = FALSE]
+      new_seurat <- `Misc<-`(new_seurat, slot = "matisse_event_data", value = new_ev)
+    } else if (length(event_ids) == 0L && !is.null(ev)) {
+      new_seurat <- `Misc<-`(new_seurat, slot = "matisse_event_data",
+                              value = ev[integer(0), , drop = FALSE])
+    }
   }
 
   methods::new("MatisseObject",
-    seurat        = new_seurat,
-    event_data    = new_event_data,
-    junction_data = x@junction_data,
-    mode          = x@mode,
-    version       = x@version,
-    misc          = x@misc
+    seurat     = new_seurat,
+    input.mode = x@input.mode,
+    version    = x@version,
+    misc       = x@misc
   )
 })
 
@@ -170,12 +168,13 @@ setMethod("GetSeurat", "MatisseObject", function(object, ...) object@seurat)
 setMethod("GetPSI", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
-  # Seurat: events x cells → return cells x events (Matisse convention)
+  # Seurat: events x cells -> return cells x events (Matisse convention)
   psi_ec  <- .get_assay_layer(psi_assay, "data")
   psi_ce  <- Matrix::t(psi_ec)
   # Filter to events active in event_data (assay may hold a superset)
-  if (nrow(object@event_data) > 0) {
-    active <- intersect(object@event_data$event_id, colnames(psi_ce))
+  ev <- .get_event_data_internal(object)
+  if (!is.null(ev) && nrow(ev) > 0) {
+    active <- intersect(ev$event_id, colnames(psi_ce))
     psi_ce <- psi_ce[, active, drop = FALSE]
   }
   psi_ce
@@ -197,10 +196,11 @@ setMethod("SetPSI", "MatisseObject", function(object, value) {
 
 #' @rdname GetJunctionCounts
 setMethod("GetJunctionCounts", "MatisseObject", function(object, ...) {
-  jxn_assay <- .get_assay_safe(object@seurat, "junction")
-  if (is.null(jxn_assay)) return(NULL)
+  if (object@input.mode != "junction") return(NULL)
+  iso_assay <- .get_assay_safe(object@seurat, "isoform")
+  if (is.null(iso_assay)) return(NULL)
   # Assay5 is junctions x cells; return cells x junctions (Matisse convention)
-  jxn_ec <- .get_assay_layer(jxn_assay, "counts")
+  jxn_ec <- .get_assay_layer(iso_assay, "counts")
   Matrix::t(jxn_ec)
 })
 
@@ -210,8 +210,9 @@ setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
   if (is.null(psi_assay)) return(NULL)
   inc_ec <- .get_assay_layer(psi_assay, "counts")
   inc_ce <- Matrix::t(inc_ec)
-  if (nrow(object@event_data) > 0) {
-    active <- intersect(object@event_data$event_id, colnames(inc_ce))
+  ev <- .get_event_data_internal(object)
+  if (!is.null(ev) && nrow(ev) > 0) {
+    active <- intersect(ev$event_id, colnames(inc_ce))
     inc_ce <- inc_ce[, active, drop = FALSE]
   }
   inc_ce
@@ -224,8 +225,9 @@ setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
   exc_ec <- .get_assay_layer(psi_assay, "exclusion")
   if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
   exc_ce <- Matrix::t(exc_ec)
-  if (nrow(object@event_data) > 0) {
-    active <- intersect(object@event_data$event_id, colnames(exc_ce))
+  ev <- .get_event_data_internal(object)
+  if (!is.null(ev) && nrow(ev) > 0) {
+    active <- intersect(ev$event_id, colnames(exc_ce))
     exc_ce <- exc_ce[, active, drop = FALSE]
   }
   exc_ce
@@ -233,19 +235,25 @@ setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
 
 #' @rdname GetTranscriptCounts
 setMethod("GetTranscriptCounts", "MatisseObject", function(object, ...) {
-  tx_assay <- .get_assay_safe(object@seurat, "transcript")
-  if (is.null(tx_assay)) return(NULL)
-  # Already in transcripts x cells (Seurat convention); return as-is
-  SeuratObject::GetAssayData(tx_assay, layer = "counts")
+  if (object@input.mode != "transcript") return(NULL)
+  iso_assay <- .get_assay_safe(object@seurat, "isoform")
+  if (is.null(iso_assay)) return(NULL)
+  # transcripts x cells (Seurat features x cells convention); return as-is
+  .get_assay_layer(iso_assay, "counts")
 })
 
 #' @rdname GetEventData
-setMethod("GetEventData", "MatisseObject",
-          function(object, ...) object@event_data)
+setMethod("GetEventData", "MatisseObject", function(object, ...) {
+  .get_event_data_internal(object)
+})
 
 #' @rdname GetJunctionData
-setMethod("GetJunctionData", "MatisseObject",
-          function(object, ...) object@junction_data)
+setMethod("GetJunctionData", "MatisseObject", function(object, ...) {
+  if (is.null(object@seurat)) return(NULL)
+  val <- SeuratObject::Misc(object@seurat, slot = "matisse_junction_data")
+  if (is.null(val)) return(NULL)
+  as.data.frame(val, stringsAsFactors = FALSE)
+})
 
 #' @rdname MatisseMeta
 setMethod("MatisseMeta", "MatisseObject", function(object, ...) {
@@ -266,7 +274,7 @@ setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
 #' @describeIn AddIsoformMetadata Add or update columns in the cell metadata.
 setMethod("AddIsoformMetadata", "MatisseObject",
           function(object, metadata, ...) {
-  # Delegate to Seurat's AddMetaData — it handles data.frames and named vectors
+  # Delegate to Seurat's AddMetaData -- it handles data.frames and named vectors
   result <- SeuratObject::AddMetaData(object@seurat, metadata = metadata)
   if (inherits(result, "Seurat")) object@seurat <- result
   object
@@ -291,7 +299,7 @@ setMethod("[[", "MatisseObject", function(x, i, j, ...) {
 })
 
 # ---------------------------------------------------------------------------
-# $ operator: hybrid dispatch (Seurat metadata → Seurat/Signac fn → Seurat [[)
+# $ operator: hybrid dispatch (Seurat metadata -> Seurat/Signac fn -> Seurat [[)
 # ---------------------------------------------------------------------------
 
 #' @rdname MatisseObject-class
@@ -303,7 +311,7 @@ setMethod("$", "MatisseObject", function(x, name) {
     return(x@seurat@meta.data[[name]])
   }
 
-  # Priority 2: Seurat or Signac exported function → return a forwarding closure
+  # Priority 2: Seurat or Signac exported function -> return a forwarding closure
   fn <- .find_package_function(name)
   if (!is.null(fn)) {
     force(x)
