@@ -1,26 +1,26 @@
-# Matisse (Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments)
+# Matisse
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml)
 [![pkgdown](https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg)](https://avisrilab.github.io/Matisse)
 <!-- badges: end -->
 
-**Understand your cells, layer by layer — splicing and chromatin together**
+**Understand your cells, layer by layer — splicing and gene expression together**
 
-Most single-cell tools stop at gene expression. Matisse goes further: it measures *which isoform* each cell is making and links those choices to chromatin accessibility in the same cells. Some cell types skip exons. Others include them. Open chromatin at a splice site may predict which. Matisse lets you see all of this, in the same object, on the same UMAP.
+Most single-cell tools stop at gene expression. Matisse goes further: it measures *which isoform* each cell is making, and links those choices to cell identity. Some cell types skip exons. Others include them. Matisse lets you see all of this, in the same object, on the same UMAP.
 
-![PSI values for PTBP1 exon 9 on a UMAP of mouse cortex cells. Neurons (left) consistently skip this exon; astrocytes (right) include it.](man/figures/ptbp1_umap.png)
-
-*Neurons and astrocytes express the same gene — but splice it differently. Matisse finds these differences automatically, alongside your existing chromatin and gene expression layers.*
+<!-- TODO: replace with final figure once paper figures are locked -->
+<!-- ![PSI values for PTBP1 exon 9 on a UMAP of mouse cortex cells.](man/figures/ptbp1_umap.png) -->
+<!-- TODO: one-sentence figure caption -->
 
 ---
 
 ## What you can discover
 
 - **Cell-type-specific splicing** — Do my neurons and astrocytes process this exon differently?
-- **Chromatin shapes isoforms** — Is the splicing switch I see linked to chromatin accessibility changes at the same locus?
 - **Splicing along a trajectory** — Is there a coordinated isoform switch as cells differentiate?
 - **Context for bulk data** — I see a splicing change in bulk RNA-seq — which cell type is driving it?
+- **Chromatin shapes isoforms** — Is the splicing switch linked to chromatin accessibility at the same locus? *(via Signac integration)*
 
 ---
 
@@ -32,25 +32,19 @@ For each cell and each splicing event, Matisse calculates a **PSI value** (Perce
 - **PSI = 0** — every transcript skips the exon
 - **PSI = 0.5** — half include, half skip
 
-PSI values are stored alongside your gene expression and chromatin data in a single object, so you can overlay splicing on any plot you've already made — UMAPs, violin plots, heatmaps — and directly compare with ATAC peaks in the same cells.
+PSI values are stored as a Seurat `Assay5` alongside your gene expression data in a single object, so you can overlay splicing on any plot you have already made — UMAPs, violin plots, heatmaps.
 
 ---
 
 ## Works with your existing setup
 
-Matisse layers on top of [Seurat](https://satijalab.org/seurat/) and [Signac](https://stuartlab.org/signac/) — your clustering, UMAP, chromatin peaks, and cell-type labels stay exactly as they are.
+Matisse layers on top of [Seurat](https://satijalab.org/seurat/) and [Signac](https://stuartlab.org/signac/) — your clustering, UMAP, and cell-type labels stay exactly as they are.
 
-**Short-read RNA data (10x Chromium):**
-Aligned with STAR or STARsolo → junction count matrix → Matisse
-
-**Long-read / isoform-resolved data:**
-Quantified with Bagpiper, FLAMES, or LIQA → transcript count table + SUPPA2 `.ioe` files → Matisse
-
-**ATAC / chromatin accessibility (10x Multiome, Signac, ArchR):**
-Your existing Signac object is embedded directly — chromatin and splicing layers stay synchronized
-
-**Splice event annotations:**
-Compatible with SUPPA2 `generateEvents`, rMATS output, or a simple table you build yourself.
+| Input | Tool | Format |
+|---|---|---|
+| Short-read RNA (10x Chromium) | STARsolo | junction count matrix |
+| Long-read / isoform-resolved | Bagpiper, FLAMES, LIQA | transcript counts + SUPPA2 `.ioe` files |
+| Chromatin accessibility | Signac, ArchR | embedded Signac object |
 
 ---
 
@@ -65,19 +59,19 @@ remotes::install_github("avisrilab/Matisse")
 
 ## Quick start
 
-### Starting from junction counts (10x / STARsolo)
+### Short-read RNA (10x / STARsolo junction counts)
 
 ```r
 library(Matisse)
 library(Seurat)
 
-# 1. Your existing Seurat object — clusters, UMAP, everything intact
+# 1. Your existing Seurat object -- clusters, UMAP, everything intact
 seu <- readRDS("my_seurat.rds")
 
-# 2. Junction count matrix from STARsolo (cells × junctions)
+# 2. Junction count matrix from STARsolo (cells x junctions)
 jxn_counts <- readRDS("junction_counts.rds")
 
-# 3. Splice event table (from SUPPA2, rMATS, or BuildSimpleEvents)
+# 3. Splice event table (from SUPPA2 generateEvents or rMATS)
 event_data <- read.csv("events.csv")
 
 # 4. Build the Matisse object
@@ -91,27 +85,57 @@ obj <- CreateMatisseObject(
 obj <- CalculatePSI(obj, min_coverage = 5)
 
 # 6. Quality control
-obj <- ComputeIsoformQC(obj)
-obj <- FilterCells(obj, min_junctions = 5, min_pct_covered = 10)
+PlotViolin(obj)                             # inspect nCount/nFeature/nPercent
+obj <- FilterCells(obj,
+                   min_features_isoform = 5,
+                   min_pct_isoform      = 10)
 obj <- FilterEvents(obj, min_cells_covered = 20)
 
-# 7. Visualise — overlay splicing on your UMAP
-PlotPSIUMAP(obj, event_id = "SE_PTBP1_e9")
-PlotPSIViolin(obj, event_id = "SE_PTBP1_e9", group_by = "seurat_clusters")
+# 7. Visualise -- overlay splicing on your UMAP
+PlotUMAP(obj,   feature  = "SE_PTBP1_e9")
+PlotViolin(obj, feature  = "SE_PTBP1_e9", group_by = "seurat_clusters")
+PlotHeatmap(obj)
 ```
 
-### Starting from transcript counts (Bagpiper / long-read)
+### Long-read / isoform-resolved (Bagpiper / FLAMES / LIQA)
 
 ```r
-obj <- CreateMatisseObjectFromTranscripts(
+# 1. Transcript count matrix (transcripts x cells) + SUPPA2 .ioe annotation
+obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
-  ioe_files         = c("events_SE.ioe", "events_RI.ioe"),
-  min_coverage      = 5L
+  ioe_files         = c("events_SE.ioe", "events_RI.ioe")
 )
+
+# 2. Calculate PSI (explicit call required in both modes)
+obj <- CalculatePSI(obj, min_coverage = 5)
+
+# 3. QC, filtering, and visualisation are identical from here
 ```
 
-From here, QC, filtering, and visualisation are identical to the junction-count workflow.
+### With Signac (chromatin + splicing)
+
+<!-- TODO: add multiome/Signac integration example once tested end-to-end -->
+
+---
+
+## Key functions
+
+| Function | What it does |
+|---|---|
+| `CreateMatisseObject()` | Build the object from Seurat + junction or transcript counts |
+| `CalculatePSI()` | Compute PSI matrix; write `nPercent_isoform` to metadata |
+| `FilterCells()` | Remove low-quality cells by isoform QC thresholds |
+| `FilterEvents()` | Remove low-coverage or low-variance splice events |
+| `GetPSI()` | Extract the PSI matrix (cells x events) |
+| `GetJunctionCounts()` | Extract raw junction counts (junction mode) |
+| `GetTranscriptCounts()` | Extract raw transcript counts (transcript mode) |
+| `PlotUMAP()` | UMAP coloured by any PSI event, junction, or gene |
+| `PlotViolin()` | Violin plot of PSI or QC metrics by cell group |
+| `PlotHeatmap()` | PSI heatmap across events and cells |
+| `PlotSashimi()` | Sashimi arc plot for a single splice event |
+| `SummarizePSI()` | Per-event mean / median / SD / coverage table |
+| `MergeMatisse()` | Merge two MatisseObjects by cells |
 
 ---
 
@@ -123,6 +147,7 @@ Full walkthrough and function reference: **<https://avisrilab.github.io/Matisse>
 
 ## Citation
 
+<!-- TODO: update when preprint / paper is posted -->
 If you use Matisse in your research, please cite:
 
 > Srivastava A. (2026). *Matisse: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments*. R package version 0.1.0. https://github.com/avisrilab/Matisse
