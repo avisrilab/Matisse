@@ -94,8 +94,9 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).</p>
 
 
 <dt id="arg-event-id">event_id<a class="anchor" aria-label="anchor" href="#arg-event-id"></a></dt>
-<dd><p>Character. Event ID as stored in <code>event_data</code>, e.g.
-<code>"SE:chr1:1201-2999:3201-4999:+"</code>.</p></dd>
+<dd><p>Character. A single event ID. Run
+<code>rownames(GetSeurat(obj)[["psi"]])</code> to list available IDs;
+typical SE format is <code>"SE:chr1:1201-2999:3201-4999:+"</code>.</p></dd>
 
 
 <dt id="arg-cells">cells<a class="anchor" aria-label="anchor" href="#arg-cells"></a></dt>
@@ -134,12 +135,17 @@ Default: <code>NULL</code> (all cells pooled).</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>In <strong>junction mode</strong> each arc corresponds to an individual junction
-with its own read count. In <strong>event mode</strong> the SE event_id is parsed
-to derive junction coordinates; inclusion and exclusion counts come from the
-<code>"counts"</code> and <code>"exclusion"</code> layers of the PSI assay.</p>
-<p>Supported event types in event mode: <strong>SE</strong> (skipped exon) and
+with its own read count. In <strong>transcript mode</strong> the SE event_id is
+parsed to derive junction coordinates; inclusion and exclusion counts come
+from the <code>"counts"</code> and <code>"exclusion"</code> layers of the PSI assay.</p>
+<p>Supported event types in transcript mode: <strong>SE</strong> (skipped exon) and
 <strong>RI</strong> (retained intron). Junction mode supports all event types
-since coordinates come directly from <code>junction_data</code>.</p>
+since coordinates are auto-parsed from junction IDs.</p>
+<p><strong>Note on transcript-mode SE arcs:</strong> transcript-level counting
+aggregates reads to events, not to individual junctions. The total
+inclusion-event count is therefore split evenly across the two SE
+inclusion arcs in the plot. The two arcs may have differed in reality;
+use junction-mode input if you need per-junction read counts.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

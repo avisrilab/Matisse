@@ -42,7 +42,80 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="matisse-010">Matisse 0.1.0<a class="anchor" aria-label="anchor" href="#matisse-010"></a></h2>
 <div class="section level3">
-<h3 id="initial-release-0-1-0">Initial release<a class="anchor" aria-label="anchor" href="#initial-release-0-1-0"></a></h3>
+<h3 id="phase-april-unify-event-input-drop-junction_data-0-1-0">Phase 6 (April 2026): unify event input, drop junction_data<a class="anchor" aria-label="anchor" href="#phase-april-unify-event-input-drop-junction_data-0-1-0"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code> now takes a single <code>events</code> parameter</strong> that accepts either a SUPPA2 <code>.ioe</code> path (or vector of paths) or a pre-built <code>data.frame</code>. The previous <code>ioe_files</code> and <code>event_data</code> parameters are removed — Matisse auto-dispatches on input class. The IOE-precedence warning that gated the two-parameter form (P14) is gone, since the conflict isn’t possible anymore.</li>
+<li>
+<strong><code>junction_data</code> parameter dropped (P7).</strong> Per-junction genomic coordinates are auto-parsed from junction IDs at construction and written to <code>seurat[["isoform"]][[]]</code> (the isoform assay’s feature-metadata table). Supported ID formats: <code>chr-start-end-strand</code>, <code>chr:start-end:strand</code>, <code>chr_start_end_strand</code>. Names that don’t match get NA coords with a warning — counts still work, only sashimi plots degrade.</li>
+<li>
+<strong>Renamed event-annotation columns:</strong> <code>inclusion_junctions</code> / <code>exclusion_junctions</code> → <code>inclusion_features</code> / <code>exclusion_features</code> (mode-agnostic — they hold junction IDs in junction mode, transcript IDs in transcript mode).</li>
+<li>
+<code>PlotSashimi</code> now reads junction coords from <code>seurat[["isoform"]][[]]</code> instead of <code>obj@misc[["junction_data"]]</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="code-review-pass-april-api-surface-tightened-several-bug-fixes-0-1-0">Code-review pass (April 2026): API surface tightened, several bug fixes<a class="anchor" aria-label="anchor" href="#code-review-pass-april-api-surface-tightened-several-bug-fixes-0-1-0"></a></h3>
+<p>This release applies a multi-phase code-review pass that simplifies the API surface, fixes four real correctness bugs, and refactors event annotation storage so it lives natively inside the embedded Seurat object.</p>
+<div class="section level4">
+<h4 id="architectural-changes-0-1-0">Architectural changes<a class="anchor" aria-label="anchor" href="#architectural-changes-0-1-0"></a></h4>
+<ul><li>Per-event annotation now lives in <code>seurat[["psi"]]@meta.data</code> (the Assay5 feature-metadata table), accessed via the <code>[[ ]]</code> API. Previously stored in <code>MatisseObject@misc[["event_data"]]</code>. Single source of truth — annotation rides with the assay through any subset/merge automatically.</li>
+<li>
+<code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code> now folds the PSI calculation into construction by default. The two-step “construct then <code>CalculatePSI</code>” flow collapses to one. Pass <code>defer_psi = TRUE</code> to skip the PSI step (rare; for power users who want to inspect intermediate state). <code>min_coverage</code> parameter added to the constructor.</li>
+<li>
+<code>MatisseObject@misc[["event_data_path"]]</code> records the source path of the event annotation (normalized) for provenance, or <code>NA_character_</code> when annotation was passed as a <code>data.frame</code> directly.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="breaking-api-changes-0-1-0">Breaking API changes<a class="anchor" aria-label="anchor" href="#breaking-api-changes-0-1-0"></a></h4>
+<ul><li>
+<strong>Removed accessor wrappers</strong> (use the native Seurat API instead):
+<ul><li>
+<code>GetJunctionCounts(obj)</code> → <code>Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts"))</code>
+</li>
+<li>
+<code>GetTranscriptCounts(obj)</code> → <code>SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")</code>
+</li>
+<li>
+<code>GetInclusionCounts(obj)</code> → <code>Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts"))</code>
+</li>
+<li>
+<code>GetExclusionCounts(obj)</code> → <code>Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "exclusion"))</code>
+</li>
+<li>
+<code>GetEventData(obj)</code> → <code>GetSeurat(obj)[["psi"]][[]]</code> (post-CalculatePSI)</li>
+<li>
+<code>GetJunctionData(obj)</code> → <code>obj@misc[["junction_data"]]</code>
+</li>
+<li>
+<code>AddIsoformMetadata(obj, df)</code> → <code>SeuratObject::AddMetaData(matisse_obj, df)</code> (S3 method delegates)</li>
+</ul></li>
+<li>
+<strong>Removed <code>BuildSimpleEvents()</code>.</strong> Matisse no longer ships a heuristic event caller. Junction-mode users must bring an external event annotation (SUPPA2 IOE, rMATS, or equivalent), as transcript-mode already requires <code>ioe_files</code>.</li>
+<li>
+<strong>Single-event MatisseObjects are no longer representable.</strong> SeuratObject’s <code>Assay5</code> requires at least 2 features, so the <code>[</code> operator now errors when an event subset would leave fewer than 2 events. For single-event values, use <code>GetPSI(obj)[, event_id]</code> directly.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="bug-fixes-0-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-0"></a></h4>
+<ul><li>
+<code>MatisseMeta(obj) &lt;- value</code> previously wrote columns by positional index, silently writing the wrong values when <code>value</code>’s rownames disagreed with <code>meta.data</code>’s ordering. Now delegates to <code><a href="https://satijalab.github.io/seurat-object/reference/AddMetaData.html" class="external-link">SeuratObject::AddMetaData</a></code> for proper barcode alignment.</li>
+<li>
+<code><a href="https://rlang.r-lib.org/reference/abort.html" class="external-link">rlang::abort()</a></code> was being called with multiple positional string arguments at 8 sites; this silently truncated the message and consumed the second string as the error class. All sites collapsed to a single string so the full message reaches the user.</li>
+<li>
+<code>cli::cli_alert_*()</code> had the same multi-arg truncation bug at 5 sites (the second string is <code>id</code>, not message-continuation). Fixed.</li>
+<li>
+<code>SCTransform.MatisseObject</code> referenced <code>object@mode == "event"</code>, but the slot is <code>input.mode</code> and valid values are <code>"junction"</code> / <code>"transcript"</code>. The function crashed on every call; it was untested. The default assay in transcript mode also pointed to a non-existent <code>"transcript"</code> assay (the actual assay name is <code>"isoform"</code>). Both fixed; new tests cover both modes.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="removed-dead-code-0-1-0">Removed dead code<a class="anchor" aria-label="anchor" href="#removed-dead-code-0-1-0"></a></h4>
+<ul><li>
+<code>.psi_rowmeans_sparse</code> (utils.R) — only caller was its own test.</li>
+<li>
+<code>.parse_junction_list</code> (psi.R) — never called; <code>.calculate_psi_matrix</code> inlined the same logic.</li>
+<li>
+<code>na_fill</code> parameter — declared on <code>CalculatePSI</code> and threaded through the implementation, but never actually applied. Removed in P5.</li>
+</ul></div>
+</div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="matisse-010-initial-release">Matisse 0.1.0 (initial release)<a class="anchor" aria-label="anchor" href="#matisse-010-initial-release"></a></h2>
 <ul><li>New <code>MatisseObject</code> S4 class wrapping a <code>Seurat</code> object with isoform-resolved layers: junction counts, PSI matrix, inclusion/exclusion counts, event and junction annotation tables, and per-cell isoform metadata.</li>
 <li>
 <code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code>: primary constructor with input validation and automatic cell-barcode alignment.</li>
@@ -51,17 +124,12 @@
 <li>
 <code><a href="../reference/SummarizePSI.html">SummarizePSI()</a></code>: per-event summary statistics (mean, median, sd, coverage).</li>
 <li>
-<code>ComputeIsoformQC()</code>: per-cell QC metrics including junction detection rate, total junction reads, event coverage, and mean PSI.</li>
-<li>
 <code><a href="../reference/FilterCells.html">FilterCells()</a></code> and <code><a href="../reference/FilterEvents.html">FilterEvents()</a></code>: threshold-based filtering with informative removal summaries.</li>
-<li>Visualization: <code>PlotPSIUMAP()</code>, <code>PlotPSIViolin()</code>, <code>PlotPSIHeatmap()</code>, <code>PlotJunctionCoverage()</code>, <code>PlotQCMetrics()</code>.</li>
-<li>
-<code><a href="../reference/BuildSimpleEvents.html">BuildSimpleEvents()</a></code>: convenience helper for generating one-vs-rest event tables from a junction annotation.</li>
+<li>Visualization: <code><a href="../reference/PlotUMAP.html">PlotUMAP()</a></code>, <code><a href="../reference/PlotViolin.html">PlotViolin()</a></code>, <code><a href="../reference/PlotHeatmap.html">PlotHeatmap()</a></code>, <code><a href="../reference/PlotSashimi.html">PlotSashimi()</a></code>.</li>
 <li>
 <code><a href="../reference/MergeMatisse.html">MergeMatisse()</a></code>: concatenate two <code>MatisseObject</code>s with cell-prefix deduplication.</li>
 <li>GitHub Actions workflows for R CMD check (multi-OS), pkgdown website deployment, and test coverage reporting.</li>
 </ul></div>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

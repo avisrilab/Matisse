@@ -82,9 +82,12 @@ PSI values are stored as `Assay5("psi")` (splice events x cells).
 
 - `show(MatisseObject)`: Display a summary of a `MatisseObject`.
 
-- `x[[i`: Access cell metadata or Seurat slots via `[[`. Checks
-  `seurat@meta.data` first; falls back to the embedded Seurat object
-  (assays, reductions, etc.).
+- `x[[i`: Access cell metadata or Seurat slots via `[[`. Returns
+  metadata columns as bare vectors (matching Matisse convention), then
+  falls back to the embedded Seurat object's `[[` for assays,
+  reductions, etc. The explicit metadata check is load-bearing —
+  Seurat's own `[[` returns metadata columns wrapped in a 1-column
+  data.frame.
 
 ## Slots
 

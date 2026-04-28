@@ -3,9 +3,10 @@
 ## Creating a Matisse object
 
 Start here. This function combines your Seurat object with splicing data
-into a single Matisse object ready for analysis. Pass `junction_counts`
-for short-read (junction) mode, or `transcript_counts` + `ioe_files` for
-long-read (transcript) mode.
+into a single Matisse object (and computes PSI) in one call. Pass
+`junction_counts` for short-read (junction) mode, or `transcript_counts`
+for long-read (transcript) mode, plus splice events via `events`
+(data.frame or path to a SUPPA2 `.ioe` file).
 
 - [`show(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
   [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
@@ -18,8 +19,11 @@ long-read (transcript) mode.
 
 ## Retrieve or update your data
 
-Functions for pulling specific data tables out of your Matisse object,
-or putting updated tables back in.
+Matisse-specific accessors. For raw count and annotation matrices, use
+the native Seurat API on the embedded Seurat object:
+e.g. `SeuratObject::GetAssayData(GetSeurat(obj)[[“isoform”]], “counts”)`
+for junction or transcript counts, or `GetSeurat(obj)[[“psi”]][[]]` for
+the per-event annotation table.
 
 - [`GetSeurat()`](https://avisrilab.github.io/Matisse/reference/GetSeurat.md)
   : Get the embedded Seurat object
@@ -27,23 +31,9 @@ or putting updated tables back in.
   : Get the PSI matrix
 - [`SetPSI()`](https://avisrilab.github.io/Matisse/reference/SetPSI.md)
   : Set the PSI matrix
-- [`GetJunctionCounts()`](https://avisrilab.github.io/Matisse/reference/GetJunctionCounts.md)
-  : Get raw junction count matrix (junction mode only)
-- [`GetInclusionCounts()`](https://avisrilab.github.io/Matisse/reference/GetInclusionCounts.md)
-  : Get inclusion read count matrix
-- [`GetExclusionCounts()`](https://avisrilab.github.io/Matisse/reference/GetExclusionCounts.md)
-  : Get exclusion read count matrix
-- [`GetTranscriptCounts()`](https://avisrilab.github.io/Matisse/reference/GetTranscriptCounts.md)
-  : Get transcript count matrix (transcript mode only)
-- [`GetEventData()`](https://avisrilab.github.io/Matisse/reference/GetEventData.md)
-  : Get splice event annotation table
-- [`GetJunctionData()`](https://avisrilab.github.io/Matisse/reference/GetJunctionData.md)
-  : Get junction annotation table
 - [`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
   [`` `MatisseMeta<-`() ``](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
   : Get or set cell-level metadata
-- [`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
-  : Add columns to the cell metadata
 
 ## Normalisation
 
@@ -116,8 +106,13 @@ Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
 
 Compute PSI (Percent Spliced In) – the fraction of transcripts in each
 cell that include a given exon. Values range from 0 (exon always
-skipped) to 1 (exon always included). Call CalculatePSI() explicitly
-after CreateMatisseObject() in both junction and transcript modes.
+skipped) to 1 (exon always included).
+[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+calls
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+automatically; you only call it directly to recompute with different
+parameters (e.g. `min_coverage`) or after constructing with
+`defer_psi = TRUE`.
 
 - [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
   : Calculate PSI matrix from junction or transcript counts
@@ -154,9 +149,7 @@ interest. Pass the feature name via the `feature` argument.
 
 ## Utilities
 
-Helper functions for building event tables and combining datasets.
+Helper functions for combining datasets.
 
-- [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md)
-  : Build a minimal junction event annotation table
 - [`MergeMatisse()`](https://avisrilab.github.io/Matisse/reference/MergeMatisse.md)
   : Merge two MatisseObjects by cells

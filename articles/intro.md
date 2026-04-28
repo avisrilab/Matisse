@@ -29,10 +29,10 @@ added alongside them.
 Matisse supports two data types via a single constructor. What you pass
 in determines the mode:
 
-| Data type                                                          | How to create                                               | When to use                                                                 |
-|--------------------------------------------------------------------|-------------------------------------------------------------|-----------------------------------------------------------------------------|
-| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObject(transcript_counts=..., ioe_files=...)` | You have a transcripts x cells count matrix and SUPPA2 IOE files            |
-| **Short-read 10x Chromium** (STARsolo junction counts)             | `CreateMatisseObject(junction_counts=..., event_data=...)`  | You have a cells x junctions count matrix from STARsolo `--soloFeatures SJ` |
+| Data type                                                          | How to create                                            | When to use                                                                 |
+|--------------------------------------------------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------|
+| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObject(transcript_counts=..., events=...)` | You have a transcripts x cells count matrix and SUPPA2 IOE files            |
+| **Short-read 10x Chromium** (STARsolo junction counts)             | `CreateMatisseObject(junction_counts=..., events=...)`   | You have a cells x junctions count matrix from STARsolo `--soloFeatures SJ` |
 
 Once the object is built, all downstream functions – QC, filtering,
 normalisation, visualisation – are identical for both data types.
@@ -44,16 +44,18 @@ normalisation, visualisation – are identical for both data types.
 ``` r
 library(Matisse)
 
+# transcript_counts: transcripts x cells (e.g. from Bagpiper, FLAMES, LIQA)
+# events: SUPPA2 .ioe file path(s); CreateMatisseObject parses internally.
+# PSI is computed automatically at construction.
 obj <- CreateMatisseObject(
   seurat            = seu,
-  transcript_counts = tx_counts,    # transcripts x cells from Bagpiper/FLAMES
-  ioe_files         = "events_SE.ioe",
+  transcript_counts = tx_counts,
+  events            = "events_SE.ioe",
   min_coverage      = 5L
 )
-# PSI is computed at construction; summarise before clustering
+
+# Summarise PSI per event, then normalise + reduce + cluster on transcripts
 psi_summary <- SummarizePSI(obj)
-obj <- ComputeIsoformQC(obj)
-# Normalise transcript counts, then reduce and cluster
 obj <- SCTransform(obj)
 obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 obj <- RunUMAP(obj, dims = 1:50)
@@ -72,13 +74,16 @@ workflow](https://avisrilab.github.io/Matisse/articles/long-reads.md)
 ``` r
 library(Matisse)
 
+# junction_counts: cells x junctions matrix from STARsolo (--soloFeatures SJ).
+# Junction IDs encode coordinates (e.g. "chr1-12345-67890-+"), auto-parsed
+# for sashimi plots.
+# events: data.frame OR path(s) to a SUPPA2-style .ioe file.
 obj <- CreateMatisseObject(
-  seurat          = seu,          # your existing Seurat object
-  junction_counts = jxn_counts,   # cells x junctions from STARsolo
-  event_data      = event_df      # splice event annotation
+  seurat          = seu,
+  junction_counts = jxn_counts,
+  events          = event_df,
+  min_coverage    = 5L
 )
-obj <- CalculatePSI(obj, min_coverage = 5)
-obj <- ComputeIsoformQC(obj)
 PlotUMAP(obj, feature = "PTBP1:SE:chr18:3433647-3436055")
 ```
 

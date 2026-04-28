@@ -3,9 +3,9 @@
 Returns the full `meta.data` of the embedded Seurat object, which
 includes all per-cell QC metrics and annotations added by Matisse (e.g.
 `nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) alongside
-standard Seurat columns. Use
-[`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
-to add new columns.
+standard Seurat columns. To add new columns, use Seurat's
+[`AddMetaData`](https://satijalab.github.io/seurat-object/reference/AddMetaData.html)
+(an S3 method dispatches on `MatisseObject`).
 
 ## Usage
 

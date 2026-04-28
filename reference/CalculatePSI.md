@@ -1,41 +1,28 @@
 # Calculate PSI matrix from junction or transcript counts
 
+Typically called automatically by
+[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md);
+call directly only to recompute with different parameters (e.g. a
+different `min_coverage`).
+
 Computes a Percent Spliced In (PSI) matrix for all splice events and
 stores it in the `"psi"` assay. Works in both junction mode and
-transcript mode. Call this after
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md).
+transcript mode.
+[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+calls this automatically by default; you only call it directly to
+recompute with different parameters (e.g. a different `min_coverage`) or
+after constructing with `defer_psi = TRUE`.
 
 ## Usage
 
 ``` r
-CalculatePSI(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 
 # S4 method for class 'MatisseObject'
-CalculatePSI(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 
 # S4 method for class 'ANY'
-CalculatePSI(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 ```
 
 ## Arguments
@@ -49,18 +36,15 @@ CalculatePSI(
 
 - events:
 
-  A `data.frame` with columns `event_id`, `inclusion_junctions`, and
-  `exclusion_junctions`. Defaults to `GetEventData(object)` (populated
-  at construction).
+  A `data.frame` with columns `event_id`, `inclusion_features`, and
+  `exclusion_features`. Defaults to the event annotation staged at
+  construction time (`object@misc[["event_data"]]`, populated by
+  [`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)).
 
 - min_coverage:
 
   Integer. Minimum total reads per cell per event to report a PSI value.
   Default: `5`.
-
-- na_fill:
-
-  Numeric. Replacement for low-coverage entries. Default: `NA_real_`.
 
 - verbose:
 

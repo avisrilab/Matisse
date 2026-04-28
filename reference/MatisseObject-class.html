@@ -128,8 +128,10 @@ Call <code><a href="CalculatePSI.html">CalculatePSI</a></code> to compute PSI va
 
 <ul><li><p><code>show(MatisseObject)</code>: Display a summary of a <code>MatisseObject</code>.</p></li>
 <li><p><code>x[[i</code>: Access cell metadata or Seurat slots via <code>[[</code>.
-Checks <code>seurat@meta.data</code> first; falls back to the embedded
-Seurat object (assays, reductions, etc.).</p></li>
+Returns metadata columns as bare vectors (matching Matisse convention),
+then falls back to the embedded Seurat object's <code>[[</code> for assays,
+reductions, etc. The explicit metadata check is load-bearing — Seurat's
+own <code>[[</code> returns metadata columns wrapped in a 1-column data.frame.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>

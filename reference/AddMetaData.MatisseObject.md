@@ -40,5 +40,4 @@ The updated `MatisseObject` with new metadata columns.
 
 ## See also
 
-[`MatisseMeta`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md),
-[`AddIsoformMetadata`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
+[`MatisseMeta`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)

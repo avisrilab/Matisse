@@ -9,9 +9,7 @@
 <url><loc>https://avisrilab.github.io/Matisse/authors.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/index.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/news/index.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/AddMetaData.MatisseObject.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/CalculatePSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FilterCells.html</loc></url>
@@ -21,14 +19,8 @@
 <url><loc>https://avisrilab.github.io/Matisse/reference/FindNeighbors.MatisseObject.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FindTopFeatures.MatisseObject.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/FindVariableFeatures.MatisseObject.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetEventData.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetExclusionCounts.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetInclusionCounts.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetJunctionCounts.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetJunctionData.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetPSI.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/GetSeurat.html</loc></url>
-<url><loc>https://avisrilab.github.io/Matisse/reference/GetTranscriptCounts.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/Matisse-package.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/MatisseMeta.html</loc></url>
 <url><loc>https://avisrilab.github.io/Matisse/reference/MatisseObject-class.html</loc></url>

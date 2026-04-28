@@ -9,16 +9,14 @@ Key capabilities:
   co-stores raw isoform counts, PSI matrices, and splice event
   annotations, keeping gene expression and isoform layers synchronised.
 
-- **PSI calculation** –
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-  computes per-cell Percent Spliced In values from raw junction or
-  transcript counts. Works in both junction mode (STARsolo) and
-  transcript mode (Bagpiper, FLAMES, LIQA).
+- **Single-step construction with PSI** –
+  [`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+  computes per-cell Percent Spliced In values as part of construction
+  (pass `defer_psi = TRUE` to skip). Works in both junction mode
+  (STARsolo) and transcript mode (Bagpiper, FLAMES, LIQA).
 
-- **Isoform QC** – per-cell metrics (`nCount_isoform`,
-  `nFeature_isoform`, `nPercent_isoform`) are written automatically at
-  construction and by
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md);
+- **Isoform QC** – `nCount_isoform` and `nFeature_isoform` are written
+  at construction; `nPercent_isoform` is written by the PSI step.
   [`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
   and
   [`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
@@ -26,6 +24,37 @@ Key capabilities:
 
 - **Visualization** – UMAP overlays, violin plots, PSI heatmaps, and
   sashimi junction-arc plots via a consistent ggplot2-based API.
+
+## Storage convention
+
+Matisse stores everything inside the embedded Seurat object. To access
+raw data with native Seurat verbs:
+
+- Junction or transcript counts:
+
+  `SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")`
+
+- PSI values (events x cells):
+
+  `SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "data")`
+
+- Inclusion / exclusion read counts:
+
+  `SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts")` and
+  `... ([["psi"]], "exclusion")`
+
+- Per-event annotation:
+
+  `GetSeurat(obj)[["psi"]][[]]` (data.frame keyed by event_id rownames)
+
+- Per-junction coordinates (junction mode):
+
+  `GetSeurat(obj)[["isoform"]][[]]` – chr/start/end/strand auto-parsed
+  from junction IDs at construction.
+
+- Per-cell metadata:
+
+  `MatisseMeta(obj)` or `GetSeurat(obj)@meta.data`
 
 ## Package website
 

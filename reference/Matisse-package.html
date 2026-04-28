@@ -5,13 +5,14 @@ Key capabilities:
 MatisseObject – an S4 class that wraps a Seurat
 object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.
-PSI calculation – CalculatePSI computes
-per-cell Percent Spliced In values from raw junction or transcript
-counts. Works in both junction mode (STARsolo) and transcript mode
-(Bagpiper, FLAMES, LIQA).
-Isoform QC – per-cell metrics (nCount_isoform,
-nFeature_isoform, nPercent_isoform) are written
-automatically at construction and by CalculatePSI;
+Single-step construction with PSI –
+CreateMatisseObject computes per-cell Percent Spliced In
+values as part of construction (pass defer_psi = TRUE to skip).
+Works in both junction mode (STARsolo) and transcript mode (Bagpiper,
+FLAMES, LIQA).
+Isoform QC – nCount_isoform and
+nFeature_isoform are written at construction;
+nPercent_isoform is written by the PSI step.
 FilterCells and FilterEvents enforce
 quality thresholds.
 Visualization – UMAP overlays, violin plots, PSI
@@ -24,13 +25,14 @@ Key capabilities:
 MatisseObject – an S4 class that wraps a Seurat
 object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.
-PSI calculation – CalculatePSI computes
-per-cell Percent Spliced In values from raw junction or transcript
-counts. Works in both junction mode (STARsolo) and transcript mode
-(Bagpiper, FLAMES, LIQA).
-Isoform QC – per-cell metrics (nCount_isoform,
-nFeature_isoform, nPercent_isoform) are written
-automatically at construction and by CalculatePSI;
+Single-step construction with PSI –
+CreateMatisseObject computes per-cell Percent Spliced In
+values as part of construction (pass defer_psi = TRUE to skip).
+Works in both junction mode (STARsolo) and transcript mode (Bagpiper,
+FLAMES, LIQA).
+Isoform QC – nCount_isoform and
+nFeature_isoform are written at construction;
+nPercent_isoform is written by the PSI step.
 FilterCells and FilterEvents enforce
 quality thresholds.
 Visualization – UMAP overlays, violin plots, PSI
@@ -84,13 +86,14 @@ RNA-seq analysis, built on top of <span class="pkg">Seurat</span> and <span clas
 <p>Key capabilities:</p><ul><li><p><strong>MatisseObject</strong> – an S4 class that wraps a <code>Seurat</code>
 object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.</p></li>
-<li><p><strong>PSI calculation</strong> – <code><a href="CalculatePSI.html">CalculatePSI</a></code> computes
-per-cell Percent Spliced In values from raw junction or transcript
-counts. Works in both junction mode (STARsolo) and transcript mode
-(Bagpiper, FLAMES, LIQA).</p></li>
-<li><p><strong>Isoform QC</strong> – per-cell metrics (<code>nCount_isoform</code>,
-<code>nFeature_isoform</code>, <code>nPercent_isoform</code>) are written
-automatically at construction and by <code><a href="CalculatePSI.html">CalculatePSI</a></code>;
+<li><p><strong>Single-step construction with PSI</strong> –
+<code><a href="CreateMatisseObject.html">CreateMatisseObject</a></code> computes per-cell Percent Spliced In
+values as part of construction (pass <code>defer_psi = TRUE</code> to skip).
+Works in both junction mode (STARsolo) and transcript mode (Bagpiper,
+FLAMES, LIQA).</p></li>
+<li><p><strong>Isoform QC</strong> – <code>nCount_isoform</code> and
+<code>nFeature_isoform</code> are written at construction;
+<code>nPercent_isoform</code> is written by the PSI step.
 <code><a href="FilterCells.html">FilterCells</a></code> and <code><a href="FilterEvents.html">FilterEvents</a></code> enforce
 quality thresholds.</p></li>
 <li><p><strong>Visualization</strong> – UMAP overlays, violin plots, PSI
@@ -99,6 +102,33 @@ ggplot2-based API.</p></li>
 </ul></div>
 
 
+    <div class="section level2">
+    <h2 id="storage-convention">Storage convention<a class="anchor" aria-label="anchor" href="#storage-convention"></a></h2>
+
+
+<p>Matisse stores everything inside the embedded Seurat object. To access
+raw data with native Seurat verbs:</p><dl><dt>Junction or transcript counts</dt>
+<dd><p><code>SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")</code></p></dd>
+
+<dt>PSI values (events x cells)</dt>
+<dd><p><code>SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "data")</code></p></dd>
+
+<dt>Inclusion / exclusion read counts</dt>
+<dd><p><code>SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts")</code> and
+<code>... ([["psi"]], "exclusion")</code></p></dd>
+
+<dt>Per-event annotation</dt>
+<dd><p><code>GetSeurat(obj)[["psi"]][[]]</code> (data.frame keyed by event_id rownames)</p></dd>
+
+<dt>Per-junction coordinates (junction mode)</dt>
+<dd><p><code>GetSeurat(obj)[["isoform"]][[]]</code> – chr/start/end/strand auto-parsed
+from junction IDs at construction.</p></dd>
+
+<dt>Per-cell metadata</dt>
+<dd><p><code>MatisseMeta(obj)</code> or <code>GetSeurat(obj)@meta.data</code></p></dd>
+
+
+</dl></div>
     <div class="section level2">
     <h2 id="package-website">Package website<a class="anchor" aria-label="anchor" href="#package-website"></a></h2>
 

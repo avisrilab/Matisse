@@ -2,9 +2,9 @@
 
 Runs
 [`SCTransform`](https://satijalab.org/seurat/reference/SCTransform.html)
-with mode-aware defaults. In **event mode** (long-read), normalises the
-`"transcript"` assay by default, so that transcript-level abundances are
-variance-stabilised before dimensionality reduction. In **junction
+with mode-aware defaults. In **transcript mode** (long-read), normalises
+the `"isoform"` assay by default, so that transcript-level abundances
+are variance-stabilised before dimensionality reduction. In **junction
 mode** (short-read), normalises the active default assay (typically
 `"RNA"`).
 
@@ -23,8 +23,8 @@ SCTransform(object, assay = NULL, vars_to_regress = NULL, verbose = TRUE, ...)
 
 - assay:
 
-  Character. Assay to normalise. Default: `"transcript"` in event mode;
-  the active default assay in junction mode.
+  Character. Assay to normalise. Default: `"isoform"` in transcript
+  mode; the active default assay in junction mode.
 
 - vars_to_regress:
 

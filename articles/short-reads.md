@@ -17,69 +17,58 @@ instead.
 
 ## What you need
 
-| Input                      | Description                                                                                                                                                                                                                                                            |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Seurat object**          | Already processed: normalisation, UMAP, cluster labels.                                                                                                                                                                                                                |
-| **Junction count matrix**  | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`.                                                                                                           |
-| **Event annotation table** | A data frame with one row per splicing event, specifying which junctions support inclusion versus exclusion. Can be built with [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md) or loaded from a SUPPA2 / rMATS annotation. |
+| Input                     | Description                                                                                                                                                                                                                                                                                                                                                  |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Seurat object**         | Already processed: normalisation, UMAP, cluster labels.                                                                                                                                                                                                                                                                                                      |
+| **Junction count matrix** | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`.                                                                                                                                                                                                 |
+| **Event annotation**      | A `data.frame` with one row per splicing event, or a path to a SUPPA2 `.ioe` file. Required columns when supplied as a `data.frame`: `event_id`, `gene_id`, `chr`, `strand`, `event_type`, `inclusion_features`, `exclusion_features` (the last two hold semicolon-separated junction IDs). Matisse does not ship a heuristic event caller — bring your own. |
 
 ------------------------------------------------------------------------
 
-## Step 1 – Build the Matisse object
+## Step 1 – Build the Matisse object (PSI is computed in the same call)
 
 ``` r
 library(Matisse)
 
 obj <- CreateMatisseObject(
   seurat          = seu,
-  junction_counts = jxn_counts,   # cells x junctions matrix from STARsolo
-  event_data      = event_df,     # splice event annotation table
-  junction_data   = junction_df   # optional: genomic coordinates per junction
+  junction_counts = jxn_counts,   # cells x junctions from STARsolo
+                                   # (junction IDs encode coordinates, e.g.
+                                   #  "chr1-12345-67890-+", auto-parsed for
+                                   #  sashimi plots)
+  events          = event_df,     # data.frame OR path(s) to SUPPA2 .ioe
+  min_coverage    = 5L            # minimum reads per cell per event for PSI
 )
 ```
 
-If you don’t have a hand-curated event annotation,
-[`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md)
-can generate one automatically from the junction table – each junction
-becomes its own “simple” event with all other junctions for the same
-gene treated as exclusion evidence:
+[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+calculates PSI as part of construction. After it returns, the object
+holds three things ready to use:
 
-``` r
-event_df <- BuildSimpleEvents(junction_df)
-```
+- `nCount_isoform` – total junction read counts per cell (in cell
+  metadata)
+- `nFeature_isoform` – number of junctions with ≥1 read per cell (in
+  cell metadata)
+- `nPercent_isoform` – percentage of splice events with a non-NA PSI
+  value per cell (in cell metadata)
+- A `Assay5("psi")` holding the PSI matrix and the per-event annotation
+  as feature metadata
 
-After construction, two QC columns are written to cell metadata:
-
-- `nCount_isoform` – total junction read counts per cell
-- `nFeature_isoform` – number of junctions with at least one read per
-  cell
-
-------------------------------------------------------------------------
-
-## Step 2 – Calculate PSI
-
-For each cell and each splice event, Matisse sums the reads from
-inclusion-supporting junctions and exclusion-supporting junctions, then
-computes:
+For each cell and event, Matisse sums the inclusion-supporting junctions
+and exclusion-supporting junctions, then computes:
 
 $$PSI_{c,e} = \frac{\sum\text{inclusion junction reads}}{\sum\text{inclusion reads} + \sum\text{exclusion reads}}$$
 
 Cells with fewer than `min_coverage` total reads for an event are left
-as `NA`.
-
-``` r
-obj <- CalculatePSI(obj, min_coverage = 5L)
-```
-
+as `NA`. To re-compute PSI with different parameters later, call
+`CalculatePSI(obj, min_coverage = ...)`. To skip the PSI step at
+construction (rare), pass `defer_psi = TRUE` and call
 [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-also writes a third QC column:
-
-- `nPercent_isoform` – percentage of splice events with a non-NA PSI
-  value in each cell (a measure of junction coverage breadth)
+manually.
 
 ------------------------------------------------------------------------
 
-## Step 3 – Quality control
+## Step 2 – Quality control
 
 ### Visualise QC metrics
 
@@ -111,7 +100,7 @@ obj <- FilterEvents(obj, min_cells_covered = 20)
 
 ------------------------------------------------------------------------
 
-## Step 4 – Visualise splicing patterns
+## Step 3 – Visualise splicing patterns
 
 ### Where does the splicing switch happen on the UMAP?
 
@@ -170,8 +159,9 @@ obj$cell_type
 # PSI matrix: cells x splice events
 psi <- GetPSI(obj)
 
-# Raw junction counts: cells x junctions
-jxn <- GetJunctionCounts(obj)
+# Raw junction counts: cells x junctions (via the native Seurat layer API)
+jxn <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]],
+                                            "counts"))
 
 # Subset to a specific cell type
 neurons <- obj[obj$cell_type == "Neuron", ]
@@ -185,8 +175,8 @@ If you have multiple samples and want to analyse them together, merge
 the individual Matisse objects before running QC:
 
 ``` r
-# Process each sample independently up to CreateMatisseObject + CalculatePSI,
-# then merge
+# Build each sample's MatisseObject (PSI is computed at construction), then
+# merge. Both objects must share the same `input.mode` and event set.
 combined <- MergeMatisse(
   obj_sample1, obj_sample2,
   add_cell_ids = c("S1", "S2")

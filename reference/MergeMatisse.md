@@ -3,8 +3,8 @@
 Concatenates two `MatisseObject`s that share the same set of splice
 events. The embedded Seurat objects are merged via
 [`merge()`](https://rdrr.io/r/base/merge.html) (which dispatches to
-Seurat's merge method, combining all assays including `"psi"` and
-`"transcript"`).
+Seurat's merge method, combining all assays including `"isoform"` and
+`"psi"`). Both objects must have the same `input.mode`.
 
 ## Usage
 

@@ -26,63 +26,53 @@ instead.
 
 ------------------------------------------------------------------------
 
-## Step 1 – Build the Matisse object
+## Step 1 – Build the Matisse object (PSI is computed in the same call)
 
-Pass `transcript_counts` and `ioe_files` together. Matisse stores the
-transcript counts in an internal assay and records the splice event
-annotations. It does **not** calculate PSI at this stage – that happens
-in Step 2.
+Pass `transcript_counts` and `events` together. The `events` parameter
+accepts either a character vector of SUPPA2 `.ioe` file paths (parsed
+internally) or a pre-built `data.frame`. Matisse stores the transcript
+counts in an internal assay and computes PSI as part of construction.
 
 ``` r
 library(Matisse)
 
 # transcript_counts: transcripts x cells sparse matrix (e.g. from Bagpiper)
-# ioe_files: SUPPA2 .ioe output files, one per event type
+# events: SUPPA2 .ioe file paths, one per event type
 obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
-  ioe_files         = c(
+  events            = c(
     "events_SE.ioe",   # skipped exons
     "events_RI.ioe",   # retained introns
     "events_SS.ioe"    # alternative splice sites
-  )
+  ),
+  min_coverage      = 5L
 )
 ```
 
-After construction, two QC columns are written to cell metadata:
-
-- `nCount_isoform` – total transcript counts per cell
-- `nFeature_isoform` – number of transcripts with at least one read per
-  cell
-
-------------------------------------------------------------------------
-
-## Step 2 – Calculate PSI
-
-Call
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-explicitly to compute Percent Spliced In (PSI) for each splice event in
-each cell. For each cell and event, Matisse sums transcript counts from
-inclusion isoforms and exclusion isoforms, then computes:
+For each cell and event, Matisse sums transcript counts from inclusion
+isoforms and exclusion isoforms, then computes:
 
 $$PSI_{c,e} = \frac{\sum\text{inclusion transcript counts}}{\sum\text{inclusion counts} + \sum\text{exclusion counts}}$$
 
 Cells with fewer than `min_coverage` total transcripts for a given event
-are reported as `NA`.
+are reported as `NA`. After construction, three QC columns sit in cell
+metadata:
 
-``` r
-obj <- CalculatePSI(obj, min_coverage = 5L)
-```
+- `nCount_isoform` – total transcript counts per cell
+- `nFeature_isoform` – number of transcripts with ≥1 read per cell
+- `nPercent_isoform` – percentage of splice events with a non-NA PSI per
+  cell
 
+To re-compute PSI with different parameters later, call
+`CalculatePSI(obj, min_coverage = ...)`. To skip the PSI step at
+construction (rare), pass `defer_psi = TRUE` and call
 [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-also writes a third QC column:
-
-- `nPercent_isoform` – percentage of splice events with a non-NA PSI
-  value in each cell (a measure of isoform coverage breadth)
+manually.
 
 ------------------------------------------------------------------------
 
-## Step 3 – Quality control
+## Step 2 – Quality control
 
 ### Visualise QC metrics
 
@@ -120,7 +110,7 @@ obj <- FilterEvents(obj, min_cells_covered = 20)
 
 ------------------------------------------------------------------------
 
-## Step 4 – Normalise transcript counts
+## Step 3 – Normalise transcript counts
 
 Normalise the transcript-level count matrix before clustering.
 SCTransform applies variance stabilisation and corrects for sequencing
@@ -133,7 +123,7 @@ obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 
 ------------------------------------------------------------------------
 
-## Step 5 – Cluster and embed
+## Step 4 – Cluster and embed
 
 Standard Seurat clustering functions work directly on the Matisse
 object. The PSI data and all other slots are preserved throughout.
@@ -146,7 +136,7 @@ obj <- FindClusters(obj, resolution = 0.5)
 
 ------------------------------------------------------------------------
 
-## Step 6 – Visualise splicing patterns
+## Step 5 – Visualise splicing patterns
 
 ### Overlay PSI on the UMAP
 
@@ -216,8 +206,8 @@ obj$cell_type
 # Full PSI matrix as a sparse matrix (cells x splice events)
 psi <- GetPSI(obj)
 
-# Raw transcript counts (transcripts x cells)
-tx <- GetTranscriptCounts(obj)
+# Raw transcript counts (transcripts x cells) via the native Seurat layer API
+tx <- SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")
 
 # Subset to one cell type -- PSI and gene expression stay in sync
 neurons <- obj[obj$cell_type == "Neuron", ]

@@ -44,7 +44,8 @@ PlotSashimi(
 
 - event_id:
 
-  Character. Event ID as stored in `event_data`, e.g.
+  Character. A single event ID. Run `rownames(GetSeurat(obj)[["psi"]])`
+  to list available IDs; typical SE format is
   `"SE:chr1:1201-2999:3201-4999:+"`.
 
 - cells:
@@ -84,10 +85,16 @@ A `ggplot` object.
 ## Details
 
 In **junction mode** each arc corresponds to an individual junction with
-its own read count. In **event mode** the SE event_id is parsed to
+its own read count. In **transcript mode** the SE event_id is parsed to
 derive junction coordinates; inclusion and exclusion counts come from
 the `"counts"` and `"exclusion"` layers of the PSI assay.
 
-Supported event types in event mode: **SE** (skipped exon) and **RI**
-(retained intron). Junction mode supports all event types since
-coordinates come directly from `junction_data`.
+Supported event types in transcript mode: **SE** (skipped exon) and
+**RI** (retained intron). Junction mode supports all event types since
+coordinates are auto-parsed from junction IDs.
+
+**Note on transcript-mode SE arcs:** transcript-level counting
+aggregates reads to events, not to individual junctions. The total
+inclusion-event count is therefore split evenly across the two SE
+inclusion arcs in the plot. The two arcs may have differed in reality;
+use junction-mode input if you need per-junction read counts.

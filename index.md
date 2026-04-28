@@ -59,7 +59,7 @@ Long-read / isoform Bagpiper FLAMES LIQA PacBio MAS-seq
 
 ATAC / chromatin 10x Multiome Signac ArchR
 
-Event annotations SUPPA2 generateEvents rMATS BuildSimpleEvents()
+Event annotations SUPPA2 generateEvents rMATS
 
 Installation
 
