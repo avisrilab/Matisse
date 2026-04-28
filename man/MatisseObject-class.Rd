@@ -64,8 +64,10 @@ After \code{\link{CalculatePSI}}, PSI values are stored as
 \item \code{show(MatisseObject)}: Display a summary of a \code{MatisseObject}.
 
 \item \code{x[[i}: Access cell metadata or Seurat slots via \code{[[}.
-Checks \code{seurat@meta.data} first; falls back to the embedded
-Seurat object (assays, reductions, etc.).
+Returns metadata columns as bare vectors (matching Matisse convention),
+then falls back to the embedded Seurat object's \code{[[} for assays,
+reductions, etc. The explicit metadata check is load-bearing — Seurat's
+own \code{[[} returns metadata columns wrapped in a 1-column data.frame.
 
 }}
 \section{Slots}{

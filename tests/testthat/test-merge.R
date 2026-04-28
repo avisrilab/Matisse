@@ -108,6 +108,22 @@ test_that("MergeMatisse: returns a valid MatisseObject", {
 
 # ---- Error handling --------------------------------------------------------
 
+test_that("MergeMatisse: errors when input.mode values differ (P10)", {
+  skip_if_not_installed("Seurat")
+  obj_jxn <- make_matisse_object()
+  obj_tx  <- make_matisse_from_transcripts()
+  expect_error(
+    MergeMatisse(obj_jxn, obj_tx, verbose = FALSE),
+    regexp = "different input.mode"
+  )
+})
+
+test_that("MergeMatisse: errors when add_cell_ids is wrong length", {
+  p <- make_pair()
+  expect_error(MergeMatisse(p$obj1, p$obj2, add_cell_ids = "x"))
+  expect_error(MergeMatisse(p$obj1, p$obj2, add_cell_ids = c("a", "b", "c")))
+})
+
 test_that("MergeMatisse: errors if x is not a MatisseObject", {
   p <- make_pair()
   expect_error(MergeMatisse("string", p$obj2), regexp = "MatisseObjects")

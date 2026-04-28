@@ -105,6 +105,32 @@ test_that("CreateMatisseObject: event_data_path is the normalized path when ioe_
                normalizePath(ioe, mustWork = FALSE))
 })
 
+test_that("CreateMatisseObject: warns when both event_data and ioe_files are supplied (P14)", {
+  skip_if_not_installed("Seurat")
+  ev  <- data.frame(
+    event_id             = c("X1", "X2"),
+    gene_id              = c("g1", "g2"),
+    chr                  = c("chr1", "chr1"),
+    strand               = c("+", "+"),
+    event_type           = c("SE", "SE"),
+    inclusion_junctions  = c("a;b", "c;d"),
+    exclusion_junctions  = c("e", "f"),
+    stringsAsFactors     = FALSE
+  )
+  ioe <- make_se_ioe_file()
+  expect_warning(
+    CreateMatisseObject(
+      seurat            = make_seurat(n_cells = 20L),
+      transcript_counts = make_se_transcript_counts(n_cells = 20L),
+      ioe_files         = ioe,
+      event_data        = ev,
+      defer_psi         = TRUE,
+      verbose           = FALSE
+    ),
+    regexp = "event_data.*takes precedence|both.*ioe_files.*event_data"
+  )
+})
+
 test_that("CalculatePSI clears @misc[['event_data']] (now lives in PSI assay meta.features)", {
   obj <- make_matisse_object()
   # Pre-CalculatePSI: event_data is staged in @misc

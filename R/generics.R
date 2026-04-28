@@ -74,7 +74,7 @@ setGeneric("MatisseMeta<-",
 #' @export
 setGeneric("CalculatePSI",
            function(object, events = NULL, min_coverage = 5L,
-                    na_fill = NA_real_, verbose = TRUE, ...)
+                    verbose = TRUE, ...)
              standardGeneric("CalculatePSI"))
 
 #' Filter cells by QC thresholds

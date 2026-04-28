@@ -146,29 +146,40 @@ CreateMatisseObject <- function(
         "`transcript_counts` must be supplied together with `ioe_files` ",
         "for transcript-mode construction."))
     }
-    missing_files <- ioe_files[!file.exists(ioe_files)]
-    if (length(missing_files) > 0) {
-      rlang::abort(paste0("IOE file(s) not found: ",
-                          paste(missing_files, collapse = ", ")))
+    if (!is.null(event_data)) {
+      # Both ioe_files and a pre-built event_data were supplied. The
+      # pre-built one takes precedence (user-provided overrides parsed)
+      # but warn so the user knows the IOE files weren't actually used
+      # to derive the annotation.
+      rlang::warn(paste0(
+        "Both `ioe_files` and `event_data` were supplied. `event_data` ",
+        "takes precedence; the IOE files are ignored for annotation. The ",
+        "IOE paths are still recorded in @misc[['event_data_path']]."))
+    } else {
+      missing_files <- ioe_files[!file.exists(ioe_files)]
+      if (length(missing_files) > 0) {
+        rlang::abort(paste0("IOE file(s) not found: ",
+                            paste(missing_files, collapse = ", ")))
+      }
+      if (verbose) cli::cli_alert_info("Parsing {length(ioe_files)} IOE file(s)...")
+      events <- .parse_ioe_files(ioe_files)
+      if (verbose) {
+        cli::cli_alert_info(paste0(
+          "Found {nrow(events)} events across ",
+          "{length(unique(events$event_type))} event type(s)."))
+      }
+      # Build event_data from parsed IOE
+      event_data <- data.frame(
+        event_id             = events$event_id,
+        gene_id              = events$gene_id,
+        chr                  = events$chr,
+        strand               = events$strand,
+        event_type           = events$event_type,
+        inclusion_junctions  = events$inclusion_transcripts,
+        exclusion_junctions  = events$exclusion_transcripts,
+        stringsAsFactors     = FALSE
+      )
     }
-    if (verbose) cli::cli_alert_info("Parsing {length(ioe_files)} IOE file(s)...")
-    events <- .parse_ioe_files(ioe_files)
-    if (verbose) {
-      cli::cli_alert_info(paste0(
-        "Found {nrow(events)} events across ",
-        "{length(unique(events$event_type))} event type(s)."))
-    }
-    # Build event_data from parsed IOE
-    event_data <- data.frame(
-      event_id             = events$event_id,
-      gene_id              = events$gene_id,
-      chr                  = events$chr,
-      strand               = events$strand,
-      event_type           = events$event_type,
-      inclusion_junctions  = events$inclusion_transcripts,
-      exclusion_junctions  = events$exclusion_transcripts,
-      stringsAsFactors     = FALSE
-    )
   }
 
   # --- validate event_data and build object @misc --------------------------

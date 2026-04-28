@@ -6,32 +6,11 @@
 \alias{CalculatePSI,ANY-method}
 \title{Calculate PSI matrix from junction or transcript counts}
 \usage{
-CalculatePSI(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 
-\S4method{CalculatePSI}{MatisseObject}(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+\S4method{CalculatePSI}{MatisseObject}(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 
-\S4method{CalculatePSI}{ANY}(
-  object,
-  events = NULL,
-  min_coverage = 5L,
-  na_fill = NA_real_,
-  verbose = TRUE,
-  ...
-)
+\S4method{CalculatePSI}{ANY}(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{A \code{\linkS4class{MatisseObject}}, or a sparse matrix
@@ -45,9 +24,6 @@ the event annotation staged at construction time
 
 \item{min_coverage}{Integer. Minimum total reads per cell per event to
 report a PSI value. Default: \code{5}.}
-
-\item{na_fill}{Numeric. Replacement for low-coverage entries. Default:
-\code{NA_real_}.}
 
 \item{verbose}{Logical. Print progress. Default: \code{TRUE}.}
 

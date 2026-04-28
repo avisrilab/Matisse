@@ -25,6 +25,14 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   if (!inherits(x, "MatisseObject") || !inherits(y, "MatisseObject")) {
     rlang::abort("Both `x` and `y` must be MatisseObjects.")
   }
+  if (x@input.mode != y@input.mode) {
+    rlang::abort(paste0(
+      "Cannot merge MatisseObjects with different input.mode values: ",
+      "x is '", x@input.mode, "', y is '", y@input.mode, "'."))
+  }
+  stopifnot(length(add_cell_ids) == 2L,
+            is.character(add_cell_ids),
+            all(nzchar(add_cell_ids)))
 
   # Check event compatibility via the "psi" assay features
   psi_x <- GetPSI(x)
@@ -41,7 +49,8 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
 
   # Merge Seurat objects -- handles all assays (isoform, psi, RNA) and cell
   # metadata automatically. JoinLayers consolidates per-sample layers back into
-  # unified layers (SeuratObject v5 splits them on merge).
+  # unified layers (SeuratObject v5 splits them on merge). The PSI assay's
+  # meta.features (event annotation) is also carried through.
   merged_seurat <- merge(
     x@seurat, y@seurat,
     add.cell.ids = add_cell_ids
@@ -50,11 +59,10 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     merged_seurat <- SeuratObject::JoinLayers(merged_seurat, assay = assay_name)
   }
 
-  # Annotation lives in MatisseObject@misc (not Seurat's Misc), so it carries
-  # through naturally. x's annotation takes precedence over y's on key conflict.
-  merged_misc <- y@misc
-  merged_misc[["event_data"]]   <- x@misc[["event_data"]]
-  merged_misc[["junction_data"]] <- x@misc[["junction_data"]]
+  # @misc holds provenance/staging fields. Use modifyList so x wins per-key
+  # overall (matching the docstring), not just for the two keys we'd
+  # otherwise touch by hand.
+  merged_misc <- utils::modifyList(y@misc, x@misc)
 
   obj <- methods::new(
     "MatisseObject",

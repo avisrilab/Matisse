@@ -46,7 +46,8 @@ setMethod("PlotUMAP", "MatisseObject",
                    pt_size    = 0.5,
                    na_colour  = "grey80",
                    title      = NULL, ...) {
-  vals <- .get_feature_values(object, feature)
+  classified <- .classify_feature(object, feature)
+  vals       <- classified$values
 
   emb       <- SeuratObject::Embeddings(object@seurat, reduction = reduction)
   dim_names <- colnames(emb)[dims]
@@ -59,15 +60,38 @@ setMethod("PlotUMAP", "MatisseObject",
 
   plot_title <- title %||% feature
 
-  ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y,
-                                    colour = .data$val)) +
-    ggplot2::geom_point(size = pt_size, na.rm = TRUE) +
-    ggplot2::scale_colour_gradientn(
+  # Pick a colour scale appropriate for the feature type. PSI is bounded in
+  # [0,1] and benefits from a diverging palette centred on 0.5; counts and
+  # expression are non-negative and use a sequential palette without a fixed
+  # upper limit.
+  scale_layer <- switch(classified$type,
+    psi = ggplot2::scale_colour_gradientn(
       colours  = c("#2166ac", "#f7f7f7", "#d6604d"),
       na.value = na_colour,
       limits   = c(0, 1),
       name     = "PSI"
-    ) +
+    ),
+    counts = ggplot2::scale_colour_gradientn(
+      colours  = c("#fff5eb", "#fd8d3c", "#7f2704"),
+      na.value = na_colour,
+      name     = "counts"
+    ),
+    expression = ggplot2::scale_colour_gradientn(
+      colours  = c("#f7fcb9", "#41ab5d", "#00441b"),
+      na.value = na_colour,
+      name     = "expression"
+    ),
+    ggplot2::scale_colour_gradientn(
+      colours  = c("#f7fcb9", "#41ab5d", "#00441b"),
+      na.value = na_colour,
+      name     = "value"
+    )
+  )
+
+  ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y,
+                                    colour = .data$val)) +
+    ggplot2::geom_point(size = pt_size, na.rm = TRUE) +
+    scale_layer +
     ggplot2::labs(
       title = plot_title,
       x     = dim_names[1],
@@ -286,7 +310,11 @@ setMethod("PlotHeatmap", "MatisseObject",
       axis.text.x  = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
       axis.title.x = ggplot2::element_blank(),
-      axis.text.y  = ggplot2::element_text(size = 6),
+      # Adapt y-axis label size to event count: tiny size makes labels
+      # illegible at high event counts but is fine when there are few rows.
+      axis.text.y  = ggplot2::element_text(
+        size = max(3, min(10, round(180 / max(length(events), 1L))))
+      ),
       axis.title.y = ggplot2::element_blank()
     ) +
     .matisse_theme()
@@ -322,6 +350,12 @@ setMethod("PlotHeatmap", "MatisseObject",
 #' Supported event types in transcript mode: \strong{SE} (skipped exon) and
 #' \strong{RI} (retained intron). Junction mode supports all event types
 #' since coordinates come directly from \code{junction_data}.
+#'
+#' \strong{Note on transcript-mode SE arcs:} transcript-level counting
+#' aggregates reads to events, not to individual junctions. The total
+#' inclusion-event count is therefore split evenly across the two SE
+#' inclusion arcs in the plot. The two arcs may have differed in reality;
+#' use junction-mode input if you need per-junction read counts.
 #'
 #' @param object A \code{MatisseObject} with a PSI assay computed.
 #' @param event_id Character. Event ID as stored in \code{event_data}, e.g.
@@ -366,11 +400,16 @@ setMethod("PlotSashimi", "MatisseObject",
   all_cells <- .get_cells(object)
   sub_cells <- cells %||% all_cells
 
-  # Split cells by group
+  # Split cells by group; drop empty groups so .cov_counts is never asked
+  # to sum over zero rows (which would produce NaN arc heights).
   if (!is.null(group_by)) {
     grp_vec        <- .get_seurat_meta_col(object, group_by)
     names(grp_vec) <- all_cells
     groups         <- split(sub_cells, grp_vec[sub_cells])
+    groups         <- groups[lengths(groups) > 0L]
+    if (length(groups) == 0L) {
+      rlang::abort("No cells in any group of `group_by`.")
+    }
   } else {
     groups <- list(All = sub_cells)
   }
@@ -520,13 +559,20 @@ setMethod("PlotSashimi", "MatisseObject",
   }
 }
 
-# Build arc path points (n_pts per arc) and return long data.frame
-.cov_arc_paths <- function(arc_data, arc_scale) {
-  scale_fn <- switch(arc_scale,
+# Map an arc_scale label to the corresponding R function used to scale
+# arc heights by read count. Single source of truth so .cov_arc_paths and
+# .cov_draw stay aligned if a new scale option is ever added.
+.arc_scale_fn <- function(arc_scale) {
+  switch(arc_scale,
     sqrt   = sqrt,
     linear = identity,
     log    = log1p
   )
+}
+
+# Build arc path points (n_pts per arc) and return long data.frame
+.cov_arc_paths <- function(arc_data, arc_scale) {
+  scale_fn <- .arc_scale_fn(arc_scale)
   n_pts <- 60L
   t_seq <- seq(0, pi, length.out = n_pts)
   do.call(rbind, lapply(seq_len(nrow(arc_data)), function(i) {
@@ -562,7 +608,7 @@ setMethod("PlotSashimi", "MatisseObject",
 }
 
 .cov_draw <- function(arc_data, jxn_coords, arc_scale, colours, title, facet) {
-  scale_fn <- switch(arc_scale, sqrt = sqrt, linear = identity, log = log1p)
+  scale_fn <- .arc_scale_fn(arc_scale)
 
   arc_paths <- .cov_arc_paths(arc_data, arc_scale)
   gene      <- .cov_gene_model(jxn_coords)
@@ -623,13 +669,68 @@ setMethod("PlotSashimi", "MatisseObject",
   }
 }
 
+# Classify a feature by source — used by PlotUMAP to pick the right colour
+# scale. Returns list(values, type) where type is one of
+# "psi" / "counts" / "expression" / "metadata".
+.classify_feature <- function(object, feature) {
+  cells <- .get_cells(object)
+
+  # 1. PSI event
+  psi_cx <- GetPSI(object)
+  if (!is.null(psi_cx) && feature %in% colnames(psi_cx)) {
+    return(list(values = as.numeric(psi_cx[cells, feature]), type = "psi"))
+  }
+
+  # 2. Junction counts (junction mode)
+  iso <- if (object@input.mode == "junction")
+    .get_assay_safe(object@seurat, "isoform") else NULL
+  jxn <- if (!is.null(iso))
+    Matrix::t(.get_assay_layer(iso, "counts")) else NULL
+  if (!is.null(jxn) && feature %in% colnames(jxn)) {
+    return(list(values = as.numeric(jxn[cells, feature]), type = "counts"))
+  }
+
+  # 3. Gene expression from default assay
+  if (!is.null(object@seurat)) {
+    expr <- tryCatch(
+      SeuratObject::GetAssayData(object@seurat, layer = "data"),
+      error = function(e) NULL
+    )
+    if (!is.null(expr) && feature %in% rownames(expr)) {
+      return(list(values = as.numeric(expr[feature, cells]),
+                  type   = "expression"))
+    }
+  }
+
+  # 4. Seurat cell metadata
+  if (!is.null(object@seurat) &&
+      feature %in% colnames(object@seurat@meta.data)) {
+    return(list(values = as.numeric(object@seurat@meta.data[cells, feature]),
+                type   = "metadata"))
+  }
+
+  # Not found — fall through to .get_feature_values for the abort message.
+  list(values = .get_feature_values(object, feature), type = "metadata")
+}
+
 # Retrieve values for a feature: checks PSI first, then junction counts,
-# then gene expression from the default assay.
+# then gene expression from the default assay. Used by PlotViolin and
+# friends; PlotUMAP uses .classify_feature so it can pick a colour scale
+# matched to the feature type.
 .get_feature_values <- function(object, feature) {
   cells <- .get_cells(object)
 
-  # 1. PSI (most common in both modes after CalculatePSI)
+  # PSI null-check moved earlier so a known PSI event on an object without a
+  # PSI assay reports the diagnostic message before the generic "not found".
   psi_cx <- GetPSI(object)
+  if (is.null(psi_cx) &&
+      (!is.null(object@seurat) &&
+       !"psi" %in% SeuratObject::Assays(object@seurat))) {
+    # No PSI assay at all — keep the original abort lower down for unknown
+    # features but flag this state in the message later.
+  }
+
+  # 1. PSI (most common in both modes after CalculatePSI)
   if (!is.null(psi_cx) && feature %in% colnames(psi_cx)) {
     return(as.numeric(psi_cx[cells, feature]))
   }
@@ -677,5 +778,3 @@ setMethod("PlotSashimi", "MatisseObject",
   }
   meta[[col]]
 }
-
-`%||%` <- function(x, y) if (!is.null(x)) x else y

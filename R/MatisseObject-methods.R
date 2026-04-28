@@ -30,8 +30,11 @@ NULL
   new_a
 }
 
-# SeuratObject v5 bug: single-cell subsetting reduces Assay5 layers to vectors.
-# This helper converts them back to sparse matrices.
+# SeuratObject v5 bug (verified present in 5.1.0): single-cell subsetting via
+# Seurat's [, single_cell] operator reduces Assay5 layers to plain numeric
+# vectors with no dim attribute, even though the assay's validity normally
+# enforces 2D layers. This helper restores them to sparse matrices using the
+# assay's own dim/dimnames so downstream code can index them as matrices.
 .get_assay_layer <- function(assay, layer) {
   raw <- methods::slot(assay, "layers")[[layer]]
   if (is.null(raw)) return(NULL)
@@ -237,8 +240,10 @@ setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
 
 #' @describeIn MatisseObject-class
 #'   Access cell metadata or Seurat slots via \code{[[}.
-#'   Checks \code{seurat@@meta.data} first; falls back to the embedded
-#'   Seurat object (assays, reductions, etc.).
+#'   Returns metadata columns as bare vectors (matching Matisse convention),
+#'   then falls back to the embedded Seurat object's \code{[[} for assays,
+#'   reductions, etc. The explicit metadata check is load-bearing — Seurat's
+#'   own \code{[[} returns metadata columns wrapped in a 1-column data.frame.
 #' @aliases [[,MatisseObject-method
 #' @export
 setMethod("[[", "MatisseObject", function(x, i, j, ...) {
@@ -280,15 +285,25 @@ setMethod("$", "MatisseObject", function(x, name) {
   # Priority 3: delegate to Seurat's [[ (handles assays, reductions, etc.)
   if (!is.null(x@seurat)) return(x@seurat[[name]])
 
-  rlang::abort(paste0("'", name, "' not found in Seurat metadata, ",
-    "Seurat/Signac functions, or the Seurat object."))
+  rlang::abort(paste0(
+    "'", name, "' not found. Tried (in order): cell metadata column, ",
+    "exported function in Seurat or Signac, then Seurat [[ (assays, ",
+    "reductions, misc)."))
 })
 
 #' @importFrom utils .DollarNames
 #' @export
 .DollarNames.MatisseObject <- function(x, pattern = "") {
-  nms <- if (!is.null(x@seurat)) colnames(x@seurat@meta.data) else character(0)
-  grep(pattern, nms, value = TRUE)
+  # Surface both metadata columns AND callable Seurat/Signac functions for
+  # tab completion. Without the function names users can't discover that
+  # obj$NormalizeData() and similar work via Priority 2 of the $ dispatch.
+  meta_nms <- if (!is.null(x@seurat)) colnames(x@seurat@meta.data) else character(0)
+  fn_nms <- character(0)
+  for (pkg in c("Seurat", "Signac")) {
+    pkg_nms <- tryCatch(getNamespaceExports(pkg), error = function(e) character(0))
+    fn_nms <- c(fn_nms, pkg_nms)
+  }
+  grep(pattern, unique(c(meta_nms, fn_nms)), value = TRUE)
 }
 
 # Look up an exported function from Seurat or Signac

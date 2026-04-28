@@ -40,8 +40,6 @@ NULL
 #'   \code{\link{CreateMatisseObject}}).
 #' @param min_coverage Integer. Minimum total reads per cell per event to
 #'   report a PSI value. Default: \code{5}.
-#' @param na_fill Numeric. Replacement for low-coverage entries. Default:
-#'   \code{NA_real_}.
 #' @param verbose Logical. Print progress. Default: \code{TRUE}.
 #'
 #' @return
@@ -56,7 +54,7 @@ NULL
 #' @export
 setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
-                   na_fill = NA_real_, verbose = TRUE, ...) {
+                   verbose = TRUE, ...) {
 
   iso_assay <- .get_assay_safe(object@seurat, "isoform")
 
@@ -99,7 +97,6 @@ setMethod("CalculatePSI", "MatisseObject",
       jxn_counts   = jxn_counts,
       events       = events,
       min_coverage = min_coverage,
-      na_fill      = na_fill,
       verbose      = verbose
     )
   } else {
@@ -145,12 +142,13 @@ setMethod("CalculatePSI", "MatisseObject",
   object@seurat[["psi"]][[]] <- ev
   object@misc[["event_data"]] <- NULL
 
-  # Write nPercent_isoform to meta.data
-  psi_cx  <- GetPSI(object)         # cells x events (uses updated Misc)
+  # Write nPercent_isoform to meta.data using the sparse-aware coverage
+  # counter — avoids the dense (cells x events) materialisation that
+  # .psi_to_dense_na would otherwise force.
+  psi_cx  <- GetPSI(object)         # cells x events (sparse)
   n_total <- ncol(psi_cx)
   if (n_total > 0L) {
-    psi_dense      <- .psi_to_dense_na(psi_cx)
-    n_cov_per_cell <- as.integer(rowSums(!is.na(psi_dense)))
+    n_cov_per_cell <- .n_covered_per_cell(psi_cx)
     meta_df <- data.frame(
       nPercent_isoform = round(100 * n_cov_per_cell / n_total, 2),
       row.names        = rownames(psi_cx)
@@ -174,7 +172,7 @@ setMethod("CalculatePSI", "MatisseObject",
 #' @rdname CalculatePSI
 setMethod("CalculatePSI", "ANY",
           function(object, events, min_coverage = 5L,
-                   na_fill = NA_real_, verbose = TRUE, ...) {
+                   verbose = TRUE, ...) {
   if (!inherits(object, "Matrix") && !is.matrix(object)) {
     rlang::abort("`object` must be a MatisseObject or a matrix.")
   }
@@ -186,7 +184,6 @@ setMethod("CalculatePSI", "ANY",
     jxn_counts   = object,
     events       = events,
     min_coverage = min_coverage,
-    na_fill      = na_fill,
     verbose      = verbose
   )
   .psi_to_dense_na(result$psi)
@@ -197,7 +194,7 @@ setMethod("CalculatePSI", "ANY",
 # ---------------------------------------------------------------------------
 
 .calculate_psi_matrix <- function(jxn_counts, events,
-                                   min_coverage, na_fill, verbose) {
+                                   min_coverage, verbose) {
   .check_required_columns(
     events,
     c("event_id", "inclusion_junctions", "exclusion_junctions"),
