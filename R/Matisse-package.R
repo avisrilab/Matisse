@@ -64,6 +64,8 @@
 #' @importFrom Matrix sparseMatrix nnzero rowSums colSums t Matrix
 #' @importFrom rlang abort warn inform .data %||%
 #' @importFrom cli cli_alert_info cli_alert_success cli_alert_warning
+#' @importFrom cowplot theme_cowplot
+#' @importFrom Seurat CenterTitle
 #' @importFrom utils packageVersion
 #' @importFrom stats median sd var hclust dist
 ## usethis namespace: end

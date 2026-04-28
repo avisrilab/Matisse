@@ -2,12 +2,16 @@
 #' @include generics.R
 NULL
 
-# Shared ggplot2 theme for Matisse plots
+# Shared ggplot2 theme for Matisse plots.
+# Match Seurat's DimPlot / FeaturePlot look: cowplot::theme_cowplot() is the
+# base Seurat uses internally (via SingleDimPlot), and Seurat::CenterTitle()
+# centers the plot title the way DimPlot does. This keeps Matisse plots feeling
+# native alongside Seurat plots in the same notebook.
 .matisse_theme <- function() {
-  ggplot2::theme_classic(base_size = 12) +
+  cowplot::theme_cowplot() +
+    Seurat::CenterTitle() +
     ggplot2::theme(
-      plot.title    = ggplot2::element_text(hjust = 0.5, face = "bold"),
-      plot.subtitle = ggplot2::element_text(hjust = 0.5, colour = "grey40"),
+      plot.subtitle   = ggplot2::element_text(hjust = 0.5, colour = "grey40"),
       legend.position = "right"
     )
 }

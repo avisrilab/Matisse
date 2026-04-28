@@ -25,6 +25,7 @@ Imports:
     Seurat (>= 5.0.0),
     Signac (>= 1.14.0),
     ggplot2 (>= 3.4.0),
+    cowplot (>= 1.1.0),
     rlang (>= 1.1.0),
     cli (>= 3.6.0)
 Suggests:
