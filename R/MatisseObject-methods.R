@@ -2,6 +2,34 @@
 #' @include generics.R
 NULL
 
+# Manually subset an Assay5 by features. SeuratObject v5's own subset.Assay5
+# fails validity ("Layers must be two-dimensional objects") for small feature
+# sets and silently reduces layers to vectors in some other paths. This
+# helper rebuilds the assay layer-by-layer using .get_assay_layer so the
+# v5 vector-reduction bugs are normalised away, then restores meta.features.
+.subset_assay_features <- function(assay, features) {
+  layer_names <- SeuratObject::Layers(assay)
+  if (!"counts" %in% layer_names) {
+    rlang::abort("Cannot subset Assay5 features without a 'counts' layer.")
+  }
+  cnts <- .get_assay_layer(assay, "counts")[features, , drop = FALSE]
+  new_a <- SeuratObject::CreateAssay5Object(counts = cnts)
+  for (lyr in setdiff(layer_names, "counts")) {
+    layer_data <- .get_assay_layer(assay, lyr)
+    if (!is.null(layer_data) && length(layer_data) > 0L) {
+      new_a <- SeuratObject::SetAssayData(
+        new_a, layer = lyr,
+        new.data = layer_data[features, , drop = FALSE]
+      )
+    }
+  }
+  mf <- assay[[]]
+  if (!is.null(mf) && ncol(mf) > 0L) {
+    new_a[[]] <- mf[features, , drop = FALSE]
+  }
+  new_a
+}
+
 # SeuratObject v5 bug: single-cell subsetting reduces Assay5 layers to vectors.
 # This helper converts them back to sparse matrices.
 .get_assay_layer <- function(assay, layer) {
@@ -134,26 +162,27 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
     event_ids <- character(0)
   }
 
-  # Subset Seurat by cells (handles ALL assays: isoform, psi,
-  # gene expression, plus cell metadata and reductions automatically)
+  # Subset Seurat by cells (handles ALL assays: isoform, psi, gene expression,
+  # plus cell metadata and reductions automatically). When event subsetting is
+  # requested, also subset the PSI assay's features via .subset_assay_features
+  # which normalises around v5's vector-reduction quirks.
+  if (!missing(j) && length(event_ids) < 2L) {
+    rlang::abort(paste0(
+      "Cannot subset a MatisseObject to fewer than 2 events: SeuratObject's ",
+      "Assay5 requires at least 2 features. For single-event values, use ",
+      "GetPSI(obj)[, event_id] directly."))
+  }
   new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
-
-  # When subsetting events (j), update the event annotation in @misc directly.
-  new_misc <- x@misc
-  if (!missing(j)) {
-    ev <- new_misc[["event_data"]]
-    if (!is.null(ev) && nrow(ev) > 0 && length(event_ids) > 0) {
-      new_misc[["event_data"]] <- ev[match(event_ids, ev$event_id), , drop = FALSE]
-    } else if (!is.null(ev)) {
-      new_misc[["event_data"]] <- ev[integer(0), , drop = FALSE]
-    }
+  if (!missing(j) && !is.null(new_seurat) && !is.null(psi_assay) &&
+      length(event_ids) > 0) {
+    new_seurat[["psi"]] <- .subset_assay_features(new_seurat[["psi"]], event_ids)
   }
 
   methods::new("MatisseObject",
     seurat     = new_seurat,
     input.mode = x@input.mode,
     version    = x@version,
-    misc       = new_misc
+    misc       = x@misc
   )
 })
 
@@ -169,15 +198,7 @@ setMethod("GetPSI", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
   # Seurat: events x cells -> return cells x events (Matisse convention)
-  psi_ec  <- .get_assay_layer(psi_assay, "data")
-  psi_ce  <- Matrix::t(psi_ec)
-  # Filter to events active in event_data (assay may hold a superset)
-  ev <- .get_event_data_internal(object)
-  if (!is.null(ev) && nrow(ev) > 0) {
-    active <- intersect(ev$event_id, colnames(psi_ce))
-    psi_ce <- psi_ce[, active, drop = FALSE]
-  }
-  psi_ce
+  Matrix::t(.get_assay_layer(psi_assay, "data"))
 })
 
 #' @rdname SetPSI
@@ -208,14 +229,7 @@ setMethod("GetJunctionCounts", "MatisseObject", function(object, ...) {
 setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(NULL)
-  inc_ec <- .get_assay_layer(psi_assay, "counts")
-  inc_ce <- Matrix::t(inc_ec)
-  ev <- .get_event_data_internal(object)
-  if (!is.null(ev) && nrow(ev) > 0) {
-    active <- intersect(ev$event_id, colnames(inc_ce))
-    inc_ce <- inc_ce[, active, drop = FALSE]
-  }
-  inc_ce
+  Matrix::t(.get_assay_layer(psi_assay, "counts"))
 })
 
 #' @rdname GetExclusionCounts
@@ -224,13 +238,7 @@ setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
   if (is.null(psi_assay)) return(NULL)
   exc_ec <- .get_assay_layer(psi_assay, "exclusion")
   if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
-  exc_ce <- Matrix::t(exc_ec)
-  ev <- .get_event_data_internal(object)
-  if (!is.null(ev) && nrow(ev) > 0) {
-    active <- intersect(ev$event_id, colnames(exc_ce))
-    exc_ce <- exc_ce[, active, drop = FALSE]
-  }
-  exc_ce
+  Matrix::t(exc_ec)
 })
 
 #' @rdname GetTranscriptCounts
@@ -244,7 +252,22 @@ setMethod("GetTranscriptCounts", "MatisseObject", function(object, ...) {
 
 #' @rdname GetEventData
 setMethod("GetEventData", "MatisseObject", function(object, ...) {
-  .get_event_data_internal(object)
+  # Post-CalculatePSI: event annotation lives in the PSI assay's
+  # feature-metadata table. Pre-CalculatePSI: it's staged in @misc by the
+  # constructor. Honour both states so callers see a stable interface.
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
+  if (!is.null(psi_assay)) {
+    mf <- psi_assay[[]]
+    if (!is.null(mf) && ncol(mf) > 0L) {
+      # Seurat's meta.features lacks an explicit event_id column; the
+      # rownames carry it. Surface event_id as a column for consistency
+      # with the old return shape.
+      mf$event_id <- rownames(mf)
+      cols <- c("event_id", setdiff(colnames(mf), "event_id"))
+      return(mf[, cols, drop = FALSE])
+    }
+  }
+  object@misc[["event_data"]]
 })
 
 #' @rdname GetJunctionData

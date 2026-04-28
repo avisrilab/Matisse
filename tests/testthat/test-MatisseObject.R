@@ -52,6 +52,36 @@ test_that("CreateMatisseObject: event_data is stored correctly", {
   expect_true("event_id" %in% colnames(ed))
 })
 
+test_that("CreateMatisseObject: event_data_path is NA when event_data is a data.frame", {
+  obj <- make_matisse_object()
+  expect_identical(obj@misc[["event_data_path"]], NA_character_)
+})
+
+test_that("CreateMatisseObject: event_data_path is the normalized path when ioe_files used", {
+  skip_if_not_installed("Seurat")
+  ioe <- make_se_ioe_file()
+  obj <- CreateMatisseObject(
+    seurat            = make_seurat(n_cells = 20L),
+    transcript_counts = make_transcript_counts(n_cells = 20L),
+    ioe_files         = ioe,
+    verbose           = FALSE
+  )
+  expect_equal(obj@misc[["event_data_path"]],
+               normalizePath(ioe, mustWork = FALSE))
+})
+
+test_that("CalculatePSI clears @misc[['event_data']] (now lives in PSI assay meta.features)", {
+  obj <- make_matisse_object()
+  # Pre-CalculatePSI: event_data is staged in @misc
+  expect_true("event_data" %in% names(obj@misc))
+  expect_gt(nrow(obj@misc[["event_data"]]), 0L)
+  obj <- CalculatePSI(obj, verbose = FALSE)
+  # Post-CalculatePSI: @misc[["event_data"]] is cleared, lives in assay
+  expect_null(obj@misc[["event_data"]])
+  mf <- obj@seurat[["psi"]][[]]
+  expect_true("gene_id" %in% colnames(mf))
+})
+
 test_that("CreateMatisseObject: junction_data is stored correctly", {
   obj <- make_matisse_object()
   jd  <- GetJunctionData(obj)
@@ -168,20 +198,24 @@ test_that("subsetting [: reduces cell count", {
   expect_equal(.n_cells(sub), 5L)
 })
 
-test_that("subsetting [: reduces event count in 'psi' assay", {
+test_that("subsetting [: rejects single-event subsets (Assay5 minimum-features constraint)", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  sub <- obj[, "SE-gene1-e2"]
-  expect_equal(.n_events(sub), 1L)
+  expect_error(
+    obj[, "SE-gene1-e2"],
+    regexp = "fewer than 2 events"
+  )
 })
 
-test_that("subsetting [: PSI still accessible after event subset", {
+test_that("subsetting [: PSI still accessible after multi-event subset", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  sub <- obj[, "SE-gene1-e2"]
+  # The fixture has exactly 2 events; subset to both via [, ] (a no-op subset
+  # at the API level but exercises the assay-rebuild path).
+  sub <- obj[, c("SE-gene1-e2", "SE-gene1-e3")]
   psi <- GetPSI(sub)
-  expect_equal(ncol(psi), 1L)
-  expect_equal(colnames(psi), "SE-gene1-e2")
+  expect_equal(ncol(psi), 2L)
+  expect_setequal(colnames(psi), c("SE-gene1-e2", "SE-gene1-e3"))
 })
 
 test_that("subsetting [: junction counts also subsetted", {

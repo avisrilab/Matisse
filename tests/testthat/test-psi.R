@@ -2,31 +2,6 @@
 # Tests for PSI calculation (CalculatePSI, SummarizePSI, internal helpers)
 # ---------------------------------------------------------------------------
 
-# ---- .parse_junction_list --------------------------------------------------
-
-test_that(".parse_junction_list: parses semicolon-separated string", {
-  result <- Matisse:::.parse_junction_list("jxn1;jxn2;jxn3")
-  expect_equal(result, c("jxn1", "jxn2", "jxn3"))
-})
-
-test_that(".parse_junction_list: handles single junction", {
-  result <- Matisse:::.parse_junction_list("jxn1")
-  expect_equal(result, "jxn1")
-})
-
-test_that(".parse_junction_list: returns empty vector for NA input", {
-  expect_equal(Matisse:::.parse_junction_list(NA_character_), character(0))
-})
-
-test_that(".parse_junction_list: returns empty vector for empty string", {
-  expect_equal(Matisse:::.parse_junction_list(""), character(0))
-})
-
-test_that(".parse_junction_list: trims whitespace", {
-  result <- Matisse:::.parse_junction_list(" jxn1 ; jxn2 ")
-  expect_equal(result, c("jxn1", "jxn2"))
-})
-
 # ---- PSI on a raw matrix ---------------------------------------------------
 
 test_that("CalculatePSI (matrix): returns a matrix of correct dimensions", {

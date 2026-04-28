@@ -70,7 +70,10 @@ setValidity("MatisseObject", function(object) {
 
   cells <- .get_cells(object)
 
-  # If the "psi" assay exists in Seurat, its columns must match cell barcodes
+  # If the "psi" assay exists in Seurat, its columns must match cell barcodes.
+  # Per-event annotation lives in the assay's meta.features (Seurat enforces
+  # alignment with rownames intrinsically), so no separate event_id check
+  # is needed here.
   if (!is.null(object@seurat) && inherits(object@seurat, "Seurat")) {
     psi_assay <- .get_assay_safe(object@seurat, "psi")
     if (!is.null(psi_assay)) {
@@ -78,18 +81,6 @@ setValidity("MatisseObject", function(object) {
       if (!is.null(cells) && !identical(psi_cells, cells)) {
         errors <- c(errors,
           "Cell barcodes of the 'psi' assay must match those in the Seurat object.")
-      }
-      # All event annotation event_ids must exist as features in the PSI assay
-      ev <- .get_event_data_internal(object)
-      if (!is.null(ev) && nrow(ev) > 0) {
-        psi_features <- rownames(psi_assay)
-        missing_ids  <- setdiff(ev$event_id, psi_features)
-        if (length(missing_ids) > 0) {
-          errors <- c(errors,
-            paste0("Some event IDs in event annotation are missing from the ",
-                   "'psi' assay: ",
-                   paste(head(missing_ids, 3), collapse = ", ")))
-        }
       }
     }
   }
@@ -119,22 +110,10 @@ setValidity("MatisseObject", function(object) {
   if (is.null(cells)) 0L else length(cells)
 }
 
-# Internal helper: read event annotation from the object's own @misc slot.
-# Returns a data.frame (or NULL if not present).
-.get_event_data_internal <- function(object) {
-  object@misc[["event_data"]]
-}
-
 .n_events <- function(object) {
   if (is.null(object@seurat)) return(0L)
   psi_assay <- .get_assay_safe(object@seurat, "psi")
   if (is.null(psi_assay)) return(0L)
-  # event_data acts as a filter on the PSI assay (assay may hold a superset).
-  # If event_data is present (even empty), honour it; otherwise count PSI rows.
-  ev <- .get_event_data_internal(object)
-  if (!is.null(ev)) {
-    return(length(intersect(ev$event_id, rownames(psi_assay))))
-  }
   nrow(psi_assay)
 }
 

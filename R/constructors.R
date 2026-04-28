@@ -175,6 +175,19 @@ CreateMatisseObject <- function(
     obj_misc[["junction_data"]] <- as.data.frame(junction_data)
   }
 
+  # --- record the source path of event annotation for provenance -----------
+  # If event_data came from a file (ioe_files), normalize and store the path.
+  # If it came in as a data.frame directly, store NA_character_.
+  obj_misc[["event_data_path"]] <- if (has_ioe) {
+    if (length(ioe_files) == 1L) {
+      normalizePath(ioe_files, mustWork = FALSE)
+    } else {
+      vapply(ioe_files, normalizePath, character(1), mustWork = FALSE)
+    }
+  } else {
+    NA_character_
+  }
+
   version_str <- tryCatch(
     as.character(utils::packageVersion("Matisse")),
     error = function(e) "development"

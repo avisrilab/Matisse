@@ -110,20 +110,19 @@ setMethod("CalculatePSI", "MatisseObject",
   )
   object@seurat[["psi"]] <- psi_result$assay
 
-  # Sync event_data$event_id with the feature names actually stored by Seurat
-  # (Seurat may sanitize names, e.g. underscore -> dash). Always write back.
+  # Migrate event annotation into the PSI assay's feature metadata. After
+  # CalculatePSI returns, event_data lives in seurat[["psi"]][[]] and is
+  # the single source of truth — kept in sync with rownames automatically by
+  # Seurat under any subset/merge. The transient @misc[["event_data"]]
+  # staging area populated by CreateMatisseObject is cleared.
   stored_names <- psi_result$feature_names
-  ev <- GetEventData(object)
-  if (!is.null(ev) && nrow(ev) > 0) {
-    idx <- match(events$event_id, ev$event_id)
-    idx <- idx[!is.na(idx)]
-    if (length(idx) > 0) ev$event_id[idx] <- stored_names
-  } else {
-    # events were passed explicitly (not stored in @misc yet); store them now
-    ev <- as.data.frame(events, stringsAsFactors = FALSE)
-    ev$event_id <- stored_names
-  }
-  object@misc[["event_data"]] <- ev
+  ev <- as.data.frame(events, stringsAsFactors = FALSE)
+  ev$event_id  <- stored_names
+  rownames(ev) <- stored_names
+  # Seurat's [[<-.Assay5 requires rownames matching the assay's feature names;
+  # sanitization above guarantees this.
+  object@seurat[["psi"]][[]] <- ev
+  object@misc[["event_data"]] <- NULL
 
   # Write nPercent_isoform to meta.data
   psi_cx  <- GetPSI(object)         # cells x events (uses updated Misc)

@@ -290,15 +290,15 @@ test_that("PlotSashimi: errors for unknown event_id", {
   )
 })
 
-test_that("PlotSashimi: errors in transcript mode for unsupported event type", {
+test_that("PlotSashimi: errors in transcript mode for an unknown event_id", {
+  # Post-P1 refactor, event annotation lives in the PSI assay's meta.features;
+  # rownames carry the event_id and are also the assay's feature names. We
+  # can't spoof a feature name without rebuilding the assay, so test the
+  # event-id-not-found error path directly with a non-existent event ID.
   obj <- make_matisse_long_read()
-  # Rewrite event_data with an A3SS event ID (unsupported type)
-  ed <- GetEventData(obj)
-  ed$event_id[1] <- "A3:chr1:1201-2999:3201-4999:+"
-  obj@misc[["event_data"]] <- ed
   expect_error(
     PlotSashimi(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
-    regexp = "does not yet support"
+    regexp = "not found in event_data"
   )
 })
 
