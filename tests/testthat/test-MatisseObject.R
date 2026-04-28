@@ -45,9 +45,11 @@ test_that("CreateMatisseObject: cell count matches Seurat object", {
   expect_equal(.n_cells(obj), 10L)
 })
 
-test_that("CreateMatisseObject: event_data is stored correctly", {
+test_that("CreateMatisseObject: event_data is staged in @misc until CalculatePSI runs", {
+  # Pre-CalculatePSI, event annotation is staged under @misc (no PSI assay
+  # exists yet to host meta.features). Post-P1 it migrates to assay.
   obj <- make_matisse_object()
-  ed  <- GetEventData(obj)
+  ed  <- obj@misc[["event_data"]]
   expect_equal(nrow(ed), 2L)
   expect_true("event_id" %in% colnames(ed))
 })
@@ -84,7 +86,7 @@ test_that("CalculatePSI clears @misc[['event_data']] (now lives in PSI assay met
 
 test_that("CreateMatisseObject: junction_data is stored correctly", {
   obj <- make_matisse_object()
-  jd  <- GetJunctionData(obj)
+  jd  <- obj@misc[["junction_data"]]
   expect_equal(nrow(jd), 6L)
   expect_true(all(c("junction_id", "chr", "start", "end") %in% colnames(jd)))
 })
@@ -95,15 +97,12 @@ test_that("CreateMatisseObject: junction counts stored as Assay5('isoform')", {
   expect_true(inherits(GetSeurat(obj)[["isoform"]], "Assay5"))
 })
 
-test_that("CreateMatisseObject: GetJunctionCounts row names match cells", {
+test_that("CreateMatisseObject: junction counts (cells x junctions) align with cells", {
+  # P2 dropped GetJunctionCounts; access junction reads via the native
+  # Seurat layer accessor on the "isoform" assay.
   obj <- make_matisse_object()
-  jc  <- GetJunctionCounts(obj)
+  jc  <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts"))
   expect_equal(rownames(jc), colnames(GetSeurat(obj)))
-})
-
-test_that("CreateMatisseObject: GetJunctionCounts returns cells x junctions", {
-  obj <- make_matisse_object()
-  jc  <- GetJunctionCounts(obj)
   expect_equal(nrow(jc), 10L)
   expect_equal(ncol(jc), 6L)
 })
@@ -134,7 +133,8 @@ test_that("CreateMatisseObject: accepts transcript_counts and creates 'isoform' 
   tx_mat <- make_transcript_counts()
   obj    <- CreateMatisseObject(seu, transcript_counts = tx_mat, verbose = FALSE)
   expect_false(is.null(GetSeurat(obj)[["isoform"]]))
-  tx <- GetTranscriptCounts(obj)
+  # Transcript counts are stored as Assay5("isoform"), transcripts x cells.
+  tx <- SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")
   expect_equal(ncol(tx), 10L)
 })
 
@@ -221,7 +221,7 @@ test_that("subsetting [: PSI still accessible after multi-event subset", {
 test_that("subsetting [: junction counts also subsetted", {
   obj <- make_matisse_object()
   sub <- obj[paste0("Cell", 1:5), ]
-  jc  <- GetJunctionCounts(sub)
+  jc  <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(sub)[["isoform"]], "counts"))
   expect_equal(nrow(jc), 5L)
   expect_equal(ncol(jc), 6L)
 })
@@ -257,22 +257,21 @@ test_that("GetPSI: row names are cell barcodes, column names are event IDs", {
   obj <- CalculatePSI(obj, verbose = FALSE)
   psi <- GetPSI(obj)
   expect_equal(rownames(psi), colnames(GetSeurat(obj)))
-  expect_equal(colnames(psi), GetEventData(obj)$event_id)
+  # Event IDs are the rownames of the PSI assay's meta.features (post-P1).
+  expect_equal(colnames(psi), rownames(GetSeurat(obj)[["psi"]][[]]))
 })
 
-test_that("GetInclusionCounts: returns cells x events matrix after CalculatePSI", {
+test_that("PSI inclusion counts (cells x events) accessible via the 'psi' assay 'counts' layer", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  inc <- GetInclusionCounts(obj)
-  expect_false(is.null(inc))
+  inc <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts"))
   expect_equal(dim(inc), dim(GetPSI(obj)))
 })
 
-test_that("GetExclusionCounts: returns cells x events matrix after CalculatePSI", {
+test_that("PSI exclusion counts accessible via the 'psi' assay 'exclusion' layer", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  exc <- GetExclusionCounts(obj)
-  expect_false(is.null(exc))
+  exc <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "exclusion"))
   expect_equal(dim(exc), dim(GetPSI(obj)))
 })
 
@@ -318,11 +317,13 @@ test_that("MatisseMeta<-: aligns by barcode rownames, not by position", {
                ignore_attr = TRUE)
 })
 
-test_that("AddIsoformMetadata: adds new columns to seurat meta.data", {
+test_that("AddMetaData(matisse_obj, df) dispatches via S3 and updates cell metadata", {
+  # P2 dropped AddIsoformMetadata; the S3 method AddMetaData.MatisseObject
+  # in dispatch.R handles this natively.
   obj    <- make_matisse_object()
   cells  <- colnames(GetSeurat(obj))
   new_df <- data.frame(my_new_col = as.numeric(1:10), row.names = cells)
-  obj    <- AddIsoformMetadata(obj, new_df)
+  obj    <- SeuratObject::AddMetaData(obj, metadata = new_df)
   expect_equal(nrow(MatisseMeta(obj)), 10L)
   expect_true("my_new_col" %in% colnames(MatisseMeta(obj)))
 })
@@ -370,9 +371,13 @@ test_that("SetPSI: updates the data layer in the 'psi' assay", {
   expect_equal(as.matrix(updated), as.matrix(new_psi), tolerance = 1e-6)
 })
 
-test_that("GetJunctionCounts: returns NULL for transcript-mode objects", {
+test_that("transcript-mode object stores transcripts (not junctions) in 'isoform' assay", {
+  # P2 dropped the mode-aware GetJunctionCounts NULL-return wrapper. The
+  # equivalent assertion: in transcript mode, the "isoform" assay holds
+  # transcripts as features, not junctions.
   obj <- make_matisse_from_transcripts()
-  expect_null(GetJunctionCounts(obj))
+  expect_equal(obj@input.mode, "transcript")
+  expect_true("isoform" %in% SeuratObject::Assays(GetSeurat(obj)))
 })
 
 test_that("validity: passes for a valid object", {

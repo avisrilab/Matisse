@@ -29,19 +29,23 @@ test_that("MergeMatisse: PSI event (column) count is preserved", {
   expect_equal(ncol(GetPSI(merged)), .n_events(p$obj1))
 })
 
+.jxn_counts <- function(obj) {
+  Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts"))
+}
+
 test_that("MergeMatisse: junction_counts row count equals sum of both objects", {
   p      <- make_pair()
   merged <- MergeMatisse(p$obj1, p$obj2, verbose = FALSE)
   expect_equal(
-    nrow(GetJunctionCounts(merged)),
-    nrow(GetJunctionCounts(p$obj1)) + nrow(GetJunctionCounts(p$obj2))
+    nrow(.jxn_counts(merged)),
+    nrow(.jxn_counts(p$obj1)) + nrow(.jxn_counts(p$obj2))
   )
 })
 
 test_that("MergeMatisse: junction_counts column count (junctions) is preserved", {
   p      <- make_pair()
   merged <- MergeMatisse(p$obj1, p$obj2, verbose = FALSE)
-  expect_equal(ncol(GetJunctionCounts(merged)), ncol(GetJunctionCounts(p$obj1)))
+  expect_equal(ncol(.jxn_counts(merged)), ncol(.jxn_counts(p$obj1)))
 })
 
 # ---- Cell naming -----------------------------------------------------------
@@ -73,16 +77,19 @@ test_that("MergeMatisse: PSI values remain in [0, 1] or NA", {
   expect_true(all(finite >= 0 & finite <= 1))
 })
 
-test_that("MergeMatisse: event_data is carried forward from x", {
+test_that("MergeMatisse: event annotation is carried forward from x", {
+  # Post-P1, event annotation lives in the PSI assay's meta.features.
   p      <- make_pair()
   merged <- MergeMatisse(p$obj1, p$obj2, verbose = FALSE)
-  expect_equal(GetEventData(merged), GetEventData(p$obj1))
+  expect_equal(GetSeurat(merged)[["psi"]][[]],
+               GetSeurat(p$obj1)[["psi"]][[]])
 })
 
 test_that("MergeMatisse: junction_data is carried forward from x", {
   p      <- make_pair()
   merged <- MergeMatisse(p$obj1, p$obj2, verbose = FALSE)
-  expect_equal(GetJunctionData(merged), GetJunctionData(p$obj1))
+  expect_equal(merged@misc[["junction_data"]],
+               p$obj1@misc[["junction_data"]])
 })
 
 test_that("MergeMatisse: returns a valid MatisseObject", {

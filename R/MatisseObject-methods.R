@@ -215,66 +215,6 @@ setMethod("SetPSI", "MatisseObject", function(object, value) {
   object
 })
 
-#' @rdname GetJunctionCounts
-setMethod("GetJunctionCounts", "MatisseObject", function(object, ...) {
-  if (object@input.mode != "junction") return(NULL)
-  iso_assay <- .get_assay_safe(object@seurat, "isoform")
-  if (is.null(iso_assay)) return(NULL)
-  # Assay5 is junctions x cells; return cells x junctions (Matisse convention)
-  jxn_ec <- .get_assay_layer(iso_assay, "counts")
-  Matrix::t(jxn_ec)
-})
-
-#' @rdname GetInclusionCounts
-setMethod("GetInclusionCounts", "MatisseObject", function(object, ...) {
-  psi_assay <- .get_assay_safe(object@seurat, "psi")
-  if (is.null(psi_assay)) return(NULL)
-  Matrix::t(.get_assay_layer(psi_assay, "counts"))
-})
-
-#' @rdname GetExclusionCounts
-setMethod("GetExclusionCounts", "MatisseObject", function(object, ...) {
-  psi_assay <- .get_assay_safe(object@seurat, "psi")
-  if (is.null(psi_assay)) return(NULL)
-  exc_ec <- .get_assay_layer(psi_assay, "exclusion")
-  if (is.null(exc_ec) || length(exc_ec) == 0) return(NULL)
-  Matrix::t(exc_ec)
-})
-
-#' @rdname GetTranscriptCounts
-setMethod("GetTranscriptCounts", "MatisseObject", function(object, ...) {
-  if (object@input.mode != "transcript") return(NULL)
-  iso_assay <- .get_assay_safe(object@seurat, "isoform")
-  if (is.null(iso_assay)) return(NULL)
-  # transcripts x cells (Seurat features x cells convention); return as-is
-  .get_assay_layer(iso_assay, "counts")
-})
-
-#' @rdname GetEventData
-setMethod("GetEventData", "MatisseObject", function(object, ...) {
-  # Post-CalculatePSI: event annotation lives in the PSI assay's
-  # feature-metadata table. Pre-CalculatePSI: it's staged in @misc by the
-  # constructor. Honour both states so callers see a stable interface.
-  psi_assay <- .get_assay_safe(object@seurat, "psi")
-  if (!is.null(psi_assay)) {
-    mf <- psi_assay[[]]
-    if (!is.null(mf) && ncol(mf) > 0L) {
-      # Seurat's meta.features lacks an explicit event_id column; the
-      # rownames carry it. Surface event_id as a column for consistency
-      # with the old return shape.
-      mf$event_id <- rownames(mf)
-      cols <- c("event_id", setdiff(colnames(mf), "event_id"))
-      return(mf[, cols, drop = FALSE])
-    }
-  }
-  object@misc[["event_data"]]
-})
-
-#' @rdname GetJunctionData
-setMethod("GetJunctionData", "MatisseObject", function(object, ...) {
-  object@misc[["junction_data"]]
-})
-
 #' @rdname MatisseMeta
 setMethod("MatisseMeta", "MatisseObject", function(object, ...) {
   if (is.null(object@seurat)) return(data.frame())
@@ -288,15 +228,6 @@ setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
   # rather than by positional index (which the previous loop did, silently
   # writing wrong values when value's rownames disagreed with meta.data's).
   object@seurat <- SeuratObject::AddMetaData(object@seurat, metadata = value)
-  object
-})
-
-#' @describeIn AddIsoformMetadata Add or update columns in the cell metadata.
-setMethod("AddIsoformMetadata", "MatisseObject",
-          function(object, metadata, ...) {
-  # Delegate to Seurat's AddMetaData -- it handles data.frames and named vectors
-  result <- SeuratObject::AddMetaData(object@seurat, metadata = metadata)
-  if (inherits(result, "Seurat")) object@seurat <- result
   object
 })
 

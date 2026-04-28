@@ -39,7 +39,9 @@ CalculatePSI(
 
 \item{events}{A \code{data.frame} with columns \code{event_id},
 \code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
-\code{GetEventData(object)} (populated at construction).}
+the event annotation staged at construction time
+(\code{object@misc[["event_data"]]}, populated by
+\code{\link{CreateMatisseObject}}).}
 
 \item{min_coverage}{Integer. Minimum total reads per cell per event to
 report a PSI value. Default: \code{5}.}

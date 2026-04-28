@@ -215,10 +215,10 @@ test_that("CreateMatisseObject (transcript mode): nCount_isoform written at cons
   expect_true("nFeature_isoform" %in% colnames(MatisseMeta(obj)))
 })
 
-test_that("CreateMatisseObject (transcript mode): GetTranscriptCounts returns transcripts x cells", {
+test_that("CreateMatisseObject (transcript mode): isoform assay holds transcripts x cells", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
-  tx  <- GetTranscriptCounts(obj)
+  tx  <- SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")
   expect_equal(ncol(tx), 10L)   # cells
   expect_equal(nrow(tx), 8L)    # transcripts
 })
@@ -255,20 +255,20 @@ test_that("CalculatePSI (transcript mode): nPercent_isoform written to metadata"
   expect_true(all(vals >= 0 & vals <= 100))
 })
 
-test_that("CreateMatisseObject (transcript mode): event_data is populated", {
+test_that("CalculatePSI (transcript mode): event annotation populated in PSI assay meta.features", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
-  ed  <- GetEventData(obj)
-  expect_equal(nrow(ed), 2L)
-  expect_true(all(c("event_id", "gene_id", "chr", "strand",
+  mf  <- GetSeurat(obj)[["psi"]][[]]
+  expect_equal(nrow(mf), 2L)
+  expect_true(all(c("gene_id", "chr", "strand",
                     "event_type", "inclusion_junctions",
-                    "exclusion_junctions") %in% colnames(ed)))
+                    "exclusion_junctions") %in% colnames(mf)))
 })
 
-test_that("CreateMatisseObject (transcript mode): GetJunctionCounts returns NULL", {
+test_that("transcript-mode object has no junction-typed features in 'isoform' assay", {
   skip_if_not_installed("Seurat")
   obj <- make_matisse_from_transcripts()
-  expect_null(GetJunctionCounts(obj))
+  expect_equal(obj@input.mode, "transcript")
 })
 
 test_that("CalculatePSI (transcript mode): inclusion + exclusion sums to total for covered entries", {
@@ -281,8 +281,8 @@ test_that("CalculatePSI (transcript mode): inclusion + exclusion sums to total f
     ioe_files = f, verbose = FALSE)
   obj    <- CalculatePSI(obj, min_coverage = 0L, verbose = FALSE)
 
-  inc     <- as.matrix(GetInclusionCounts(obj))
-  exc     <- as.matrix(GetExclusionCounts(obj))
+  inc     <- as.matrix(Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts")))
+  exc     <- as.matrix(Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "exclusion")))
   psi_mat <- as.matrix(GetPSI(obj))
 
   covered <- !is.na(psi_mat) & (inc + exc) > 0

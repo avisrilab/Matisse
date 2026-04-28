@@ -114,10 +114,8 @@ test_that("CalculatePSI (MatisseObject): GetPSI returns cells x events with corr
 test_that("CalculatePSI (MatisseObject): inclusion and exclusion counts accessible", {
   obj <- make_matisse_object()
   obj <- CalculatePSI(obj, verbose = FALSE)
-  inc <- GetInclusionCounts(obj)
-  exc <- GetExclusionCounts(obj)
-  expect_false(is.null(inc))
-  expect_false(is.null(exc))
+  inc <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "counts"))
+  exc <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["psi"]], "exclusion"))
   expect_equal(dim(inc), c(10L, 2L))
   expect_equal(dim(exc), c(10L, 2L))
 })

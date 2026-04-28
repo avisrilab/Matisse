@@ -65,11 +65,11 @@ structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).
 }
 \details{
 In \strong{junction mode} each arc corresponds to an individual junction
-with its own read count. In \strong{event mode} the SE event_id is parsed
-to derive junction coordinates; inclusion and exclusion counts come from the
-\code{"counts"} and \code{"exclusion"} layers of the PSI assay.
+with its own read count. In \strong{transcript mode} the SE event_id is
+parsed to derive junction coordinates; inclusion and exclusion counts come
+from the \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 
-Supported event types in event mode: \strong{SE} (skipped exon) and
+Supported event types in transcript mode: \strong{SE} (skipped exon) and
 \strong{RI} (retained intron). Junction mode supports all event types
 since coordinates come directly from \code{junction_data}.
 }

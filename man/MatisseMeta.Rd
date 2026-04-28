@@ -31,6 +31,7 @@ For the getter: a \code{data.frame}. For the setter: the updated
 Returns the full \code{meta.data} of the embedded Seurat object, which
 includes all per-cell QC metrics and annotations added by Matisse (e.g.
 \code{nCount_isoform}, \code{nFeature_isoform}, \code{nPercent_isoform})
-alongside standard Seurat columns. Use \code{AddIsoformMetadata()} to add
-new columns.
+alongside standard Seurat columns. To add new columns, use Seurat's
+\code{\link[SeuratObject]{AddMetaData}} (an S3 method dispatches on
+\code{MatisseObject}).
 }

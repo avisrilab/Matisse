@@ -26,5 +26,5 @@ and returns the updated \code{MatisseObject}. New columns are immediately
 accessible via \code{\link{MatisseMeta}} and the \code{$} operator.
 }
 \seealso{
-\code{\link{MatisseMeta}}, \code{\link{AddIsoformMetadata}}
+\code{\link{MatisseMeta}}
 }

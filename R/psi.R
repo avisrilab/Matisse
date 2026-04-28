@@ -35,7 +35,9 @@ NULL
 #'   (cells x junctions) when computing PSI outside the object.
 #' @param events A \code{data.frame} with columns \code{event_id},
 #'   \code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
-#'   \code{GetEventData(object)} (populated at construction).
+#'   the event annotation staged at construction time
+#'   (\code{object@misc[["event_data"]]}, populated by
+#'   \code{\link{CreateMatisseObject}}).
 #' @param min_coverage Integer. Minimum total reads per cell per event to
 #'   report a PSI value. Default: \code{5}.
 #' @param na_fill Numeric. Replacement for low-coverage entries. Default:
@@ -56,17 +58,36 @@ setMethod("CalculatePSI", "MatisseObject",
           function(object, events = NULL, min_coverage = 5L,
                    na_fill = NA_real_, verbose = TRUE, ...) {
 
+  iso_assay <- .get_assay_safe(object@seurat, "isoform")
+
   if (object@input.mode == "junction") {
     # --- Junction mode: aggregate junction reads to splice events ------------
-    jxn_counts <- GetJunctionCounts(object)
-    if (is.null(jxn_counts)) {
+    if (is.null(iso_assay)) {
       rlang::abort(paste0(
         "No junction assay found. ",
         "Provide junction_counts via CreateMatisseObject()."))
     }
+    # Assay5 stores junctions x cells; Matisse internal convention is
+    # cells x junctions, so transpose.
+    jxn_counts <- Matrix::t(.get_assay_layer(iso_assay, "counts"))
   }
 
-  if (is.null(events)) events <- GetEventData(object)
+  if (is.null(events)) {
+    # First read from the @misc staging area (populated at construction).
+    # If empty, fall back to the PSI assay's meta.features (CalculatePSI was
+    # called previously and migrated event_data into the assay).
+    events <- object@misc[["event_data"]]
+    if (is.null(events) || nrow(events) == 0) {
+      psi_assay <- .get_assay_safe(object@seurat, "psi")
+      if (!is.null(psi_assay)) {
+        mf <- psi_assay[[]]
+        if (!is.null(mf) && nrow(mf) > 0L) {
+          mf$event_id <- rownames(mf)
+          events <- mf
+        }
+      }
+    }
+  }
   if (is.null(events) || nrow(events) == 0) {
     rlang::abort(paste0(
       "No splice events defined. Provide event_data via CreateMatisseObject() ",
@@ -83,12 +104,12 @@ setMethod("CalculatePSI", "MatisseObject",
     )
   } else {
     # --- Transcript mode: aggregate transcript counts to splice events -------
-    tx_counts <- GetTranscriptCounts(object)
-    if (is.null(tx_counts)) {
+    if (is.null(iso_assay)) {
       rlang::abort(paste0(
         "No 'isoform' assay found. ",
         "Provide transcript_counts via CreateMatisseObject()."))
     }
+    tx_counts <- .get_assay_layer(iso_assay, "counts")
     if (verbose) {
       cli::cli_alert_info(paste0(
         "Calculating PSI for {nrow(events)} events across ",

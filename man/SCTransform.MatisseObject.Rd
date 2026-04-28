@@ -9,8 +9,8 @@
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{assay}{Character. Assay to normalise. Default: \code{"transcript"}
-in event mode; the active default assay in junction mode.}
+\item{assay}{Character. Assay to normalise. Default: \code{"isoform"}
+in transcript mode; the active default assay in junction mode.}
 
 \item{vars_to_regress}{Character vector. Covariates to regress out
 (e.g. \code{"percent.mt"}). Default: \code{NULL}.}
@@ -24,7 +24,7 @@ The updated \code{MatisseObject} with a new \code{"SCT"} assay.
 }
 \description{
 Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults.
-In \strong{event mode} (long-read), normalises the \code{"transcript"}
+In \strong{transcript mode} (long-read), normalises the \code{"isoform"}
 assay by default, so that transcript-level abundances are variance-stabilised
 before dimensionality reduction. In \strong{junction mode} (short-read),
 normalises the active default assay (typically \code{"RNA"}).

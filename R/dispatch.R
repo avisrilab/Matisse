@@ -315,7 +315,7 @@ FindMarkers.MatisseObject <- function(object, ...) {
 #'   \code{\link[SeuratObject]{AddMetaData}}.
 #' @return The updated \code{MatisseObject} with new metadata columns.
 #'
-#' @seealso \code{\link{MatisseMeta}}, \code{\link{AddIsoformMetadata}}
+#' @seealso \code{\link{MatisseMeta}}
 #' @rdname AddMetaData.MatisseObject
 #' @importFrom SeuratObject AddMetaData
 #' @method AddMetaData MatisseObject

@@ -35,79 +35,14 @@ setGeneric("GetPSI", function(object, ...) standardGeneric("GetPSI"))
 #' @export
 setGeneric("SetPSI", function(object, value) standardGeneric("SetPSI"))
 
-#' Get raw junction count matrix (junction mode only)
-#'
-#' Retrieves the per-junction read counts from the \code{"isoform"}
-#' \code{Assay5} in junction mode.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells x junctions) of read counts, or \code{NULL}
-#'   if the object is in transcript mode.
-#' @export
-setGeneric("GetJunctionCounts",
-           function(object, ...) standardGeneric("GetJunctionCounts"))
-
-#' Get inclusion read count matrix
-#'
-#' Retrieves inclusion counts from the \code{"counts"} layer of the
-#' \code{"psi"} \code{Assay5}.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells x events) of inclusion read counts.
-#' @export
-setGeneric("GetInclusionCounts",
-           function(object, ...) standardGeneric("GetInclusionCounts"))
-
-#' Get exclusion read count matrix
-#'
-#' Retrieves exclusion counts from the \code{"exclusion"} layer of the
-#' \code{"psi"} \code{Assay5}.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A sparse matrix (cells x events) of exclusion read counts.
-#' @export
-setGeneric("GetExclusionCounts",
-           function(object, ...) standardGeneric("GetExclusionCounts"))
-
-#' Get transcript count matrix (transcript mode only)
-#'
-#' Retrieves raw transcript counts from the \code{"isoform"} \code{Assay5}
-#' in transcript mode.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A sparse matrix (transcripts x cells) of raw counts, or \code{NULL}
-#'   if the object is in junction mode.
-#' @export
-setGeneric("GetTranscriptCounts",
-           function(object, ...) standardGeneric("GetTranscriptCounts"))
-
-#' Get splice event annotation table
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A \code{data.frame} of splice event metadata.
-#' @export
-setGeneric("GetEventData",
-           function(object, ...) standardGeneric("GetEventData"))
-
-#' Get junction annotation table
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments (unused).
-#' @return A \code{data.frame} of junction metadata.
-#' @export
-setGeneric("GetJunctionData",
-           function(object, ...) standardGeneric("GetJunctionData"))
-
 #' Get or set cell-level metadata
 #'
 #' Returns the full \code{meta.data} of the embedded Seurat object, which
 #' includes all per-cell QC metrics and annotations added by Matisse (e.g.
 #' \code{nCount_isoform}, \code{nFeature_isoform}, \code{nPercent_isoform})
-#' alongside standard Seurat columns. Use \code{AddIsoformMetadata()} to add
-#' new columns.
+#' alongside standard Seurat columns. To add new columns, use Seurat's
+#' \code{\link[SeuratObject]{AddMetaData}} (an S3 method dispatches on
+#' \code{MatisseObject}).
 #'
 #' @param object A \code{MatisseObject}.
 #' @param value A \code{data.frame} whose columns are added to cell metadata
@@ -123,21 +58,6 @@ setGeneric("MatisseMeta",
 #' @export
 setGeneric("MatisseMeta<-",
            function(object, value) standardGeneric("MatisseMeta<-"))
-
-#' Add columns to the cell metadata
-#'
-#' Adds new columns to the embedded Seurat object's \code{meta.data}. This is
-#' the standard way to attach per-cell isoform QC or other annotations to a
-#' \code{MatisseObject}.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param metadata A named \code{data.frame} or named numeric/character vector.
-#'   Rownames (or names) must match cell barcodes.
-#' @param ... Additional arguments (unused).
-#' @return The updated \code{MatisseObject}.
-#' @export
-setGeneric("AddIsoformMetadata",
-           function(object, metadata, ...) standardGeneric("AddIsoformMetadata"))
 
 # ---------------------------------------------------------------------------
 # Analysis generics

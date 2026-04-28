@@ -349,7 +349,16 @@ setMethod("PlotSashimi", "MatisseObject",
                    title     = NULL, ...) {
   arc_scale <- match.arg(arc_scale)
 
-  ed <- GetEventData(object)
+  # Read event annotation from the PSI assay's meta.features (post-P1).
+  # Pre-CalculatePSI, fall back to the @misc staging area.
+  psi_assay <- .get_assay_safe(object@seurat, "psi")
+  ed <- if (!is.null(psi_assay)) {
+    mf <- psi_assay[[]]
+    if (!is.null(mf) && ncol(mf) > 0L) {
+      mf$event_id <- rownames(mf)
+      mf
+    } else NULL
+  } else object@misc[["event_data"]]
   if (is.null(ed) || !event_id %in% ed$event_id) {
     rlang::abort(paste0("'", event_id, "' not found in event_data."))
   }
@@ -386,7 +395,7 @@ setMethod("PlotSashimi", "MatisseObject",
     inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
     exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
     ids <- c(inc, exc)
-    jd  <- GetJunctionData(object)
+    jd  <- object@misc[["junction_data"]]
     idx <- match(ids, jd$junction_id)
     if (anyNA(idx)) {
       missing <- ids[is.na(idx)]
@@ -471,7 +480,9 @@ setMethod("PlotSashimi", "MatisseObject",
 # Return data.frame: junction_id | count
 .cov_counts <- function(object, ev, cells) {
   if (object@input.mode == "junction") {
-    jxn <- GetJunctionCounts(object)
+    iso <- .get_assay_safe(object@seurat, "isoform")
+    jxn <- if (!is.null(iso))
+      Matrix::t(.get_assay_layer(iso, "counts")) else NULL
     inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
     exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
     ids <- intersect(c(inc, exc), colnames(jxn))
@@ -479,9 +490,14 @@ setMethod("PlotSashimi", "MatisseObject",
     data.frame(junction_id = ids, count = tot, stringsAsFactors = FALSE)
   } else {
     .require_psi(object)
-    eid     <- ev$event_id
-    inc_cx  <- GetInclusionCounts(object)
-    exc_cx  <- GetExclusionCounts(object)
+    eid       <- ev$event_id
+    psi_assay <- .get_assay_safe(object@seurat, "psi")
+    inc_cx    <- if (!is.null(psi_assay))
+      Matrix::t(.get_assay_layer(psi_assay, "counts")) else NULL
+    exc_layer <- if (!is.null(psi_assay))
+      .get_assay_layer(psi_assay, "exclusion") else NULL
+    exc_cx    <- if (!is.null(exc_layer) && length(exc_layer) > 0)
+      Matrix::t(exc_layer) else NULL
     inc_tot <- if (!is.null(inc_cx) && eid %in% colnames(inc_cx))
       sum(inc_cx[cells, eid]) else 0
     exc_tot <- if (!is.null(exc_cx) && eid %in% colnames(exc_cx))
@@ -618,8 +634,11 @@ setMethod("PlotSashimi", "MatisseObject",
     return(as.numeric(psi_cx[cells, feature]))
   }
 
-  # 2. Junction counts (junction mode)
-  jxn <- GetJunctionCounts(object)
+  # 2. Junction counts (junction mode) — read straight from the isoform assay
+  iso <- if (object@input.mode == "junction")
+    .get_assay_safe(object@seurat, "isoform") else NULL
+  jxn <- if (!is.null(iso))
+    Matrix::t(.get_assay_layer(iso, "counts")) else NULL
   if (!is.null(jxn) && feature %in% colnames(jxn)) {
     return(as.numeric(jxn[cells, feature]))
   }
