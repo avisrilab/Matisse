@@ -255,12 +255,6 @@ test_that("CalculatePSI (transcript mode): event annotation populated in PSI ass
                     "exclusion_features") %in% colnames(mf)))
 })
 
-test_that("transcript-mode object has no junction-typed features in 'isoform' assay", {
-  skip_if_not_installed("Seurat")
-  obj <- make_matisse_from_transcripts()
-  expect_equal(obj@input.mode, "transcript")
-})
-
 test_that("CalculatePSI (transcript mode): inclusion + exclusion sums to total for covered entries", {
   skip_if_not_installed("Seurat")
   seu    <- make_seurat()

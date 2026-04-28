@@ -238,7 +238,7 @@ test_that("PlotSashimi: returns a ggplot for junction-mode object", {
   expect_s3_class(p, "gg")
 })
 
-test_that("PlotSashimi: returns a ggplot for event-mode object", {
+test_that("PlotSashimi: returns a ggplot for transcript-mode object", {
   obj <- make_matisse_long_read()
   p   <- PlotSashimi(obj, event_id = "SE:chr1:1201-2999:3201-4999:+")
   expect_s3_class(p, "gg")
@@ -286,19 +286,18 @@ test_that("PlotSashimi: errors for unknown event_id", {
   obj <- make_matisse_short_read()
   expect_error(
     PlotSashimi(obj, event_id = "SE:chr99:0-1:2-3:+"),
-    regexp = "not found in event_data"
+    regexp = "not found in event annotation"
   )
 })
 
 test_that("PlotSashimi: errors in transcript mode for an unknown event_id", {
-  # Post-P1 refactor, event annotation lives in the PSI assay's meta.features;
-  # rownames carry the event_id and are also the assay's feature names. We
-  # can't spoof a feature name without rebuilding the assay, so test the
-  # event-id-not-found error path directly with a non-existent event ID.
+  # Event annotation lives in the PSI assay's meta.features; rownames carry
+  # the event_id (also the assay feature name). Test the event-id-not-found
+  # error path directly.
   obj <- make_matisse_long_read()
   expect_error(
     PlotSashimi(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
-    regexp = "not found in event_data"
+    regexp = "not found in event annotation"
   )
 })
 

@@ -129,9 +129,9 @@ SCTransform.MatisseObject <- function(object,
     rlang::abort(paste0(
       "No '", assay, "' assay found. ",
       if (object@input.mode == "transcript")
-        "Run CreateMatisseObject(transcript_counts=..., ioe_files=...) first."
+        "Run CreateMatisseObject(transcript_counts=..., events=...) first."
       else
-        "Run CreateMatisseObject(junction_counts=...) first, or pass `assay` explicitly."
+        "Run CreateMatisseObject(junction_counts=..., events=...) first, or pass `assay` explicitly."
     ))
   }
 

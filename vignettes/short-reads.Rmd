@@ -31,7 +31,7 @@ quantifier (Bagpiper, FLAMES, LIQA), see the
 |-------|-------------|
 | **Seurat object** | Already processed: normalisation, UMAP, cluster labels. |
 | **Junction count matrix** | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`. |
-| **Event annotation table** | A data frame with one row per splicing event, specifying which junctions support inclusion versus exclusion. Loaded from a SUPPA2 / rMATS annotation. Matisse does not ship a heuristic event caller — bring your own. |
+| **Event annotation** | A `data.frame` with one row per splicing event, or a path to a SUPPA2 `.ioe` file. Required columns when supplied as a `data.frame`: `event_id`, `gene_id`, `chr`, `strand`, `event_type`, `inclusion_features`, `exclusion_features` (the last two hold semicolon-separated junction IDs). Matisse does not ship a heuristic event caller — bring your own. |
 
 ---
 
@@ -179,8 +179,8 @@ If you have multiple samples and want to analyse them together, merge
 the individual Matisse objects before running QC:
 
 ```{r merge, eval=FALSE}
-# Process each sample independently up to CreateMatisseObject + CalculatePSI,
-# then merge
+# Build each sample's MatisseObject (PSI is computed at construction), then
+# merge. Both objects must share the same `input.mode` and event set.
 combined <- MergeMatisse(
   obj_sample1, obj_sample2,
   add_cell_ids = c("S1", "S2")

@@ -23,5 +23,6 @@ A merged \code{MatisseObject}.
 Concatenates two \code{MatisseObject}s that share the same set of splice
 events. The embedded Seurat objects are merged via \code{merge()} (which
 dispatches to Seurat's merge method, combining all assays including
-\code{"psi"} and \code{"transcript"}).
+\code{"isoform"} and \code{"psi"}). Both objects must have the same
+\code{input.mode}.
 }

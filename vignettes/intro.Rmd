@@ -53,16 +53,18 @@ normalisation, visualisation -- are identical for both data types.
 ```{r long-read-quick, eval=FALSE}
 library(Matisse)
 
+# transcript_counts: transcripts x cells (e.g. from Bagpiper, FLAMES, LIQA)
+# events: SUPPA2 .ioe file path(s); CreateMatisseObject parses internally.
+# PSI is computed automatically at construction.
 obj <- CreateMatisseObject(
   seurat            = seu,
-  transcript_counts = tx_counts,    # transcripts x cells from Bagpiper/FLAMES
-  events         = "events_SE.ioe",
+  transcript_counts = tx_counts,
+  events            = "events_SE.ioe",
   min_coverage      = 5L
 )
-# PSI is computed at construction; summarise before clustering
+
+# Summarise PSI per event, then normalise + reduce + cluster on transcripts
 psi_summary <- SummarizePSI(obj)
-obj <- ComputeIsoformQC(obj)
-# Normalise transcript counts, then reduce and cluster
 obj <- SCTransform(obj)
 obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 obj <- RunUMAP(obj, dims = 1:50)
@@ -80,10 +82,14 @@ PlotUMAP(obj, feature = "SE:chr18:3433647-3436055:+")
 ```{r short-read-quick, eval=FALSE}
 library(Matisse)
 
+# junction_counts: cells x junctions matrix from STARsolo (--soloFeatures SJ).
+# Junction IDs encode coordinates (e.g. "chr1-12345-67890-+"), auto-parsed
+# for sashimi plots.
+# events: data.frame OR path(s) to a SUPPA2-style .ioe file.
 obj <- CreateMatisseObject(
-  seurat          = seu,          # your existing Seurat object
-  junction_counts = jxn_counts,   # cells x junctions from STARsolo
-  events      = event_df,     # splice event annotation
+  seurat          = seu,
+  junction_counts = jxn_counts,
+  events          = event_df,
   min_coverage    = 5L
 )
 PlotUMAP(obj, feature = "PTBP1:SE:chr18:3433647-3436055")

@@ -19,13 +19,14 @@ NULL
 #' UMAP plot coloured by any feature
 #'
 #' Overlays the value of a feature on the UMAP embedding stored in the
-#' embedded Seurat object. Pass a PSI event ID to colour by splicing ratio,
-#' a junction ID to colour by junction read counts, or a gene name to colour
-#' by gene expression.
+#' embedded Seurat object. The colour scale adapts to the feature type:
+#' diverging RdBu \[0,1\] for PSI events; sequential viridis for junction
+#' counts and gene expression.
 #'
 #' @param object A \code{MatisseObject} with a UMAP reduction.
-#' @param feature Character. Feature to plot. Can be a PSI event ID (e.g.
-#'   \code{"SE:chr1:100-200:300-400:+"}), a junction ID, or a gene name.
+#' @param feature Character. Feature to plot. May be a PSI event ID (e.g.
+#'   \code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a
+#'   gene name, or a cell-metadata column.
 #' @param reduction Character. Name of the dimensionality reduction to use.
 #'   Default: \code{"umap"}.
 #' @param dims Integer vector of length 2 selecting which dimensions to plot.
@@ -358,8 +359,9 @@ setMethod("PlotHeatmap", "MatisseObject",
 #' use junction-mode input if you need per-junction read counts.
 #'
 #' @param object A \code{MatisseObject} with a PSI assay computed.
-#' @param event_id Character. Event ID as stored in \code{event_data}, e.g.
-#'   \code{"SE:chr1:1201-2999:3201-4999:+"}.
+#' @param event_id Character. A single event ID. Run
+#'   \code{rownames(GetSeurat(obj)[["psi"]])} to list available IDs;
+#'   typical SE format is \code{"SE:chr1:1201-2999:3201-4999:+"}.
 #' @param cells Character vector of cell barcodes to aggregate over.
 #'   Default: all cells.
 #' @param group_by Character. Column in Seurat meta.data to facet by.
@@ -394,7 +396,7 @@ setMethod("PlotSashimi", "MatisseObject",
     } else NULL
   } else object@misc[["event_data"]]
   if (is.null(ed) || !event_id %in% ed$event_id) {
-    rlang::abort(paste0("'", event_id, "' not found in event_data."))
+    rlang::abort(paste0("'", event_id, "' not found in event annotation."))
   }
   ev        <- ed[ed$event_id == event_id, , drop = FALSE]
   all_cells <- .get_cells(object)
@@ -734,17 +736,8 @@ setMethod("PlotSashimi", "MatisseObject",
 # friends; PlotUMAP uses .classify_feature so it can pick a colour scale
 # matched to the feature type.
 .get_feature_values <- function(object, feature) {
-  cells <- .get_cells(object)
-
-  # PSI null-check moved earlier so a known PSI event on an object without a
-  # PSI assay reports the diagnostic message before the generic "not found".
+  cells  <- .get_cells(object)
   psi_cx <- GetPSI(object)
-  if (is.null(psi_cx) &&
-      (!is.null(object@seurat) &&
-       !"psi" %in% SeuratObject::Assays(object@seurat))) {
-    # No PSI assay at all — keep the original abort lower down for unknown
-    # features but flag this state in the message later.
-  }
 
   # 1. PSI (most common in both modes after CalculatePSI)
   if (!is.null(psi_cx) && feature %in% colnames(psi_cx)) {

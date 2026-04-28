@@ -48,6 +48,10 @@ raw data with native Seurat verbs:
 \item{Per-event annotation}{
 \code{GetSeurat(obj)[["psi"]][[]]} (data.frame keyed by event_id rownames)
 }
+\item{Per-junction coordinates (junction mode)}{
+\code{GetSeurat(obj)[["isoform"]][[]]} -- chr/start/end/strand auto-parsed
+from junction IDs at construction.
+}
 \item{Per-cell metadata}{
 \code{MatisseMeta(obj)} or \code{GetSeurat(obj)@meta.data}
 }

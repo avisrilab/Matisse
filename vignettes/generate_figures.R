@@ -102,11 +102,16 @@ events <- list(
 n_events <- length(events)
 n_jxns   <- n_events * 3L  # inc_up, inc_dn, exc per event
 
-jxn_ids <- as.vector(rbind(
-  paste0(vapply(events, `[[`, character(1), "gene"), "_inc_up"),
-  paste0(vapply(events, `[[`, character(1), "gene"), "_inc_dn"),
-  paste0(vapply(events, `[[`, character(1), "gene"), "_exc")
-))
+# Junction IDs encode coordinates so .parse_junction_names can derive
+# chr/start/end/strand directly (no separate junction_data needed).
+.coord_id <- function(chr, start, end, strand) {
+  paste(chr, start, end, strand, sep = "-")
+}
+jxn_ids <- unlist(lapply(events, function(ev) {
+  c(.coord_id(ev$chr, ev$jxn_up_s, ev$jxn_up_e, ev$strand),  # inc_up
+    .coord_id(ev$chr, ev$jxn_dn_s, ev$jxn_dn_e, ev$strand),  # inc_dn
+    .coord_id(ev$chr, ev$jxn_up_s, ev$jxn_dn_e, ev$strand))  # exc (skip)
+}), use.names = FALSE)
 jxn_mat <- matrix(0L, nrow = n_cells, ncol = n_jxns,
                   dimnames = list(cells, jxn_ids))
 
@@ -128,38 +133,23 @@ for (e in seq_along(events)) {
 jxn_sparse <- Matrix::Matrix(jxn_mat, sparse = TRUE)
 
 # ---------------------------------------------------------------------------
-# 3. Build event and junction annotation tables
+# 3. Build the event annotation table.  Inclusion/exclusion columns hold
+# coord-encoded junction IDs (semicolon-separated) — these match the column
+# names of jxn_mat so CalculatePSI can sum the right reads per event.
 # ---------------------------------------------------------------------------
 event_df <- data.frame(
-  event_id            = names(events),
-  gene_id             = vapply(events, `[[`, character(1), "gene"),
-  chr                 = vapply(events, `[[`, character(1), "chr"),
-  strand              = vapply(events, `[[`, character(1), "strand"),
-  event_type          = rep("SE", n_events),
-  inclusion_features = paste0(
-    vapply(events, `[[`, character(1), "gene"), "_inc_up", ";",
-    vapply(events, `[[`, character(1), "gene"), "_inc_dn"),
-  exclusion_features = paste0(
-    vapply(events, `[[`, character(1), "gene"), "_exc"),
-  stringsAsFactors    = FALSE
-)
-
-junction_df <- data.frame(
-  junction_id = jxn_ids,
-  chr         = rep(vapply(events, `[[`, character(1), "chr"),  each = 3L),
-  start       = as.integer(c(rbind(
-    vapply(events, `[[`, integer(1), "jxn_up_s"),
-    vapply(events, `[[`, integer(1), "jxn_dn_s"),
-    vapply(events, `[[`, integer(1), "jxn_up_s")   # exc shares upstream donor
-  ))),
-  end         = as.integer(c(rbind(
-    vapply(events, `[[`, integer(1), "jxn_up_e"),
-    vapply(events, `[[`, integer(1), "jxn_dn_e"),
-    vapply(events, `[[`, integer(1), "jxn_dn_e")   # exc shares downstream acceptor
-  ))),
-  strand      = rep(vapply(events, `[[`, character(1), "strand"), each = 3L),
-  gene_id     = rep(vapply(events, `[[`, character(1), "gene"),   each = 3L),
-  stringsAsFactors = FALSE
+  event_id           = names(events),
+  gene_id            = vapply(events, `[[`, character(1), "gene"),
+  chr                = vapply(events, `[[`, character(1), "chr"),
+  strand             = vapply(events, `[[`, character(1), "strand"),
+  event_type         = rep("SE", n_events),
+  inclusion_features = vapply(events, function(ev) paste(
+    .coord_id(ev$chr, ev$jxn_up_s, ev$jxn_up_e, ev$strand),
+    .coord_id(ev$chr, ev$jxn_dn_s, ev$jxn_dn_e, ev$strand),
+    sep = ";"), character(1)),
+  exclusion_features = vapply(events, function(ev)
+    .coord_id(ev$chr, ev$jxn_up_s, ev$jxn_dn_e, ev$strand), character(1)),
+  stringsAsFactors   = FALSE
 )
 
 # ---------------------------------------------------------------------------
@@ -179,10 +169,8 @@ obj <- FilterEvents(obj, min_cells_covered = 10, verbose = FALSE)
 # ---------------------------------------------------------------------------
 dir.create("vignettes/figures", showWarnings = FALSE, recursive = TRUE)
 
-# Figure 1 -- QC metrics by cell type
-p1 <- PlotViolin(obj,
-                 feature  = c("mean_psi", "pct_events_covered"),
-                 group_by = "cell_type")
+# Figure 1 -- isoform QC metrics by cell type (auto-selected when feature=NULL)
+p1 <- PlotViolin(obj, group_by = "cell_type")
 ggsave("vignettes/figures/qc_metrics.png",   p1,
        width = 8, height = 5, dpi = 150, bg = "white")
 message("Saved qc_metrics.png")

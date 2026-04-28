@@ -30,8 +30,9 @@ PlotUMAP(
 \arguments{
 \item{object}{A \code{MatisseObject} with a UMAP reduction.}
 
-\item{feature}{Character. Feature to plot. Can be a PSI event ID (e.g.
-\code{"SE:chr1:100-200:300-400:+"}), a junction ID, or a gene name.}
+\item{feature}{Character. Feature to plot. May be a PSI event ID (e.g.
+\code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a
+gene name, or a cell-metadata column.}
 
 \item{reduction}{Character. Name of the dimensionality reduction to use.
 Default: \code{"umap"}.}
@@ -54,13 +55,14 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
-Overlays the value of a feature (PSI event, junction count, or gene
-expression) on the UMAP embedding stored in the embedded Seurat object.
-Pass an event ID for PSI, a junction ID for junction counts, or a gene
-name for expression.
+Overlays the value of a feature on the UMAP embedding stored in the
+embedded Seurat object. Pass a PSI event ID, a junction ID, a gene
+name, or a cell-metadata column. The colour scale adapts automatically:
+diverging RdBu [0,1] for PSI; sequential viridis for counts and
+expression.
 
 Overlays the value of a feature on the UMAP embedding stored in the
-embedded Seurat object. Pass a PSI event ID to colour by splicing ratio,
-a junction ID to colour by junction read counts, or a gene name to colour
-by gene expression.
+embedded Seurat object. The colour scale adapts to the feature type:
+diverging RdBu [0,1] for PSI events; sequential viridis for junction
+counts and gene expression.
 }

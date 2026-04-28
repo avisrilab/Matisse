@@ -30,8 +30,9 @@ PlotSashimi(
 \arguments{
 \item{object}{A \code{MatisseObject} with a PSI assay computed.}
 
-\item{event_id}{Character. Event ID as stored in \code{event_data}, e.g.
-\code{"SE:chr1:1201-2999:3201-4999:+"}.}
+\item{event_id}{Character. A single event ID. Run
+\code{rownames(GetSeurat(obj)[["psi"]])} to list available IDs;
+typical SE format is \code{"SE:chr1:1201-2999:3201-4999:+"}.}
 
 \item{cells}{Character vector of cell barcodes to aggregate over.
 Default: all cells.}

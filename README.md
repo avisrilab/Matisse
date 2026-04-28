@@ -68,30 +68,29 @@ library(Seurat)
 # 1. Your existing Seurat object -- clusters, UMAP, everything intact
 seu <- readRDS("my_seurat.rds")
 
-# 2. Junction count matrix from STARsolo (cells x junctions)
+# 2. Junction count matrix from STARsolo (cells x junctions). Junction IDs
+#    encode coordinates (e.g. "chr1-12345-67890-+"), auto-parsed for sashimi.
 jxn_counts <- readRDS("junction_counts.rds")
 
-# 3. Splice event table (from SUPPA2 generateEvents or rMATS)
+# 3. Splice event table (from SUPPA2 generateEvents, rMATS, or hand-curated)
 event_data <- read.csv("events.csv")
 
-# 4. Build the Matisse object
+# 4. Build the Matisse object — PSI is computed at construction
 obj <- CreateMatisseObject(
   seurat          = seu,
   junction_counts = jxn_counts,
-  events      = event_data
+  events          = event_data,
+  min_coverage    = 5L
 )
 
-# 5. Calculate PSI for every cell and every event
-obj <- CalculatePSI(obj, min_coverage = 5)
-
-# 6. Quality control
+# 5. Quality control
 PlotViolin(obj)                             # inspect nCount/nFeature/nPercent
 obj <- FilterCells(obj,
                    min_features_isoform = 5,
                    min_pct_isoform      = 10)
 obj <- FilterEvents(obj, min_cells_covered = 20)
 
-# 7. Visualise -- overlay splicing on your UMAP
+# 6. Visualise -- overlay splicing on your UMAP
 PlotUMAP(obj,   feature  = "SE_PTBP1_e9")
 PlotViolin(obj, feature  = "SE_PTBP1_e9", group_by = "seurat_clusters")
 PlotHeatmap(obj)
@@ -100,17 +99,17 @@ PlotHeatmap(obj)
 ### Long-read / isoform-resolved (Bagpiper / FLAMES / LIQA)
 
 ```r
-# 1. Transcript count matrix (transcripts x cells) + SUPPA2 .ioe annotation
+# Transcript count matrix (transcripts x cells) + SUPPA2 .ioe annotation.
+# `events` accepts a character vector of file paths (parsed internally) or
+# a pre-built data.frame. PSI is computed at construction in both modes.
 obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
-  events         = c("events_SE.ioe", "events_RI.ioe")
+  events            = c("events_SE.ioe", "events_RI.ioe"),
+  min_coverage      = 5L
 )
 
-# 2. Calculate PSI (explicit call required in both modes)
-obj <- CalculatePSI(obj, min_coverage = 5)
-
-# 3. QC, filtering, and visualisation are identical from here
+# QC, filtering, and visualisation are identical from here
 ```
 
 ### With Signac (chromatin + splicing)

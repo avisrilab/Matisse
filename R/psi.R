@@ -10,7 +10,10 @@ NULL
 #'
 #' Computes a Percent Spliced In (PSI) matrix for all splice events and stores
 #' it in the \code{"psi"} assay. Works in both junction mode and transcript
-#' mode. Call this after \code{\link{CreateMatisseObject}}.
+#' mode. \code{\link{CreateMatisseObject}} calls this automatically by
+#' default; you only call it directly to recompute with different parameters
+#' (e.g. a different \code{min_coverage}) or after constructing with
+#' \code{defer_psi = TRUE}.
 #'
 #' For each cell \eqn{c} and event \eqn{e}:
 #'
@@ -88,7 +91,7 @@ setMethod("CalculatePSI", "MatisseObject",
   }
   if (is.null(events) || nrow(events) == 0) {
     rlang::abort(paste0(
-      "No splice events defined. Provide event_data via CreateMatisseObject() ",
+      "No splice events defined. Provide events via CreateMatisseObject() ",
       "or the `events` argument."))
   }
 

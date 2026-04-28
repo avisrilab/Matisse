@@ -39,9 +39,16 @@ populated inside the embedded Seurat object.
 }
 }
 \description{
+Typically called automatically by \code{\link{CreateMatisseObject}}; call
+directly only to recompute with different parameters (e.g. a different
+\code{min_coverage}).
+
 Computes a Percent Spliced In (PSI) matrix for all splice events and stores
 it in the \code{"psi"} assay. Works in both junction mode and transcript
-mode. Call this after \code{\link{CreateMatisseObject}}.
+mode. \code{\link{CreateMatisseObject}} calls this automatically by
+default; you only call it directly to recompute with different parameters
+(e.g. a different \code{min_coverage}) or after constructing with
+\code{defer_psi = TRUE}.
 }
 \details{
 For each cell \eqn{c} and event \eqn{e}:

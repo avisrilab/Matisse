@@ -85,11 +85,17 @@ test_that("MergeMatisse: event annotation is carried forward from x", {
                GetSeurat(p$obj1)[["psi"]][[]])
 })
 
-test_that("MergeMatisse: junction_data is carried forward from x", {
+test_that("MergeMatisse: per-junction coordinates carry through (P7)", {
+  # After P7, per-junction coords live in the isoform assay's meta.features
+  # (auto-parsed from junction IDs). They should ride through the Seurat
+  # merge automatically.
   p      <- make_pair()
   merged <- MergeMatisse(p$obj1, p$obj2, verbose = FALSE)
-  expect_equal(merged@misc[["junction_data"]],
-               p$obj1@misc[["junction_data"]])
+  iso_mf <- GetSeurat(merged)[["isoform"]][[]]
+  expect_equal(rownames(iso_mf),
+               rownames(GetSeurat(p$obj1)[["isoform"]][[]]))
+  expect_true(all(c("chr", "start", "end", "strand") %in% colnames(iso_mf)))
+  expect_true(all(!is.na(iso_mf$chr)))
 })
 
 test_that("MergeMatisse: returns a valid MatisseObject", {

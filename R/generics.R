@@ -65,10 +65,15 @@ setGeneric("MatisseMeta<-",
 
 #' Calculate PSI matrix from junction or transcript counts
 #'
+#' Typically called automatically by \code{\link{CreateMatisseObject}}; call
+#' directly only to recompute with different parameters (e.g. a different
+#' \code{min_coverage}).
+#'
 #' @param object A \code{MatisseObject}, or a sparse count matrix
 #'   (cells x junctions) for raw-matrix usage.
-#' @param events A \code{data.frame} defining splice events (see
-#'   \code{\link{CalculatePSI}} for required columns).
+#' @param events A \code{data.frame} defining splice events with columns
+#'   \code{event_id}, \code{inclusion_features}, \code{exclusion_features}
+#'   (see the method documentation for the full list of supported columns).
 #' @param ... Additional arguments passed to the method.
 #' @return A \code{MatisseObject} (when given one) or a PSI matrix.
 #' @export
@@ -129,10 +134,11 @@ setGeneric("FilterEvents",
 
 #' UMAP plot coloured by any feature
 #'
-#' Overlays the value of a feature (PSI event, junction count, or gene
-#' expression) on the UMAP embedding stored in the embedded Seurat object.
-#' Pass an event ID for PSI, a junction ID for junction counts, or a gene
-#' name for expression.
+#' Overlays the value of a feature on the UMAP embedding stored in the
+#' embedded Seurat object. Pass a PSI event ID, a junction ID, a gene
+#' name, or a cell-metadata column. The colour scale adapts automatically:
+#' diverging RdBu \[0,1\] for PSI; sequential viridis for counts and
+#' expression.
 #'
 #' @param object A \code{MatisseObject}.
 #' @param feature Character. Feature to visualise.
@@ -215,7 +221,8 @@ setGeneric("PlotHeatmap",
 #' metadata column.
 #'
 #' @param object A \code{MatisseObject}.
-#' @param event_id Character. Event ID as stored in \code{event_data}.
+#' @param event_id Character. A single event ID; run
+#'   \code{rownames(GetSeurat(obj)[["psi"]])} to list available IDs.
 #' @param ... Additional arguments (see \code{\link{PlotSashimi}}).
 #' @return A \code{ggplot} object.
 #' @export

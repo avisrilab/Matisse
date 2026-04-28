@@ -135,8 +135,10 @@ reference:
     desc: >
       Compute PSI (Percent Spliced In) -- the fraction of transcripts in each
       cell that include a given exon. Values range from 0 (exon always skipped)
-      to 1 (exon always included). Call CalculatePSI() explicitly after
-      CreateMatisseObject() in both junction and transcript modes.
+      to 1 (exon always included). <code>CreateMatisseObject()</code> calls
+      <code>CalculatePSI()</code> automatically; you only call it directly to
+      recompute with different parameters (e.g. <code>min_coverage</code>) or
+      after constructing with <code>defer_psi = TRUE</code>.
     contents:
       - CalculatePSI
       - SummarizePSI
