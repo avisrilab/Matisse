@@ -15,7 +15,7 @@ GetPSI(object, ...)
 \item{...}{Additional arguments (unused).}
 }
 \value{
-A sparse matrix (cells × events) of PSI values in \eqn{[0,1]}.
+A sparse matrix (cells x events) of PSI values in \eqn{[0,1]}.
 \code{NULL} if no \code{"psi"} assay exists yet.
 }
 \description{

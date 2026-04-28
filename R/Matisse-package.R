@@ -8,13 +8,15 @@
 #' Key capabilities:
 #' \itemize{
 #'   \item \strong{MatisseObject} -- an S4 class that wraps a \code{Seurat}
-#'     object and co-stores junction counts, PSI matrices, and splice event
+#'     object and co-stores raw isoform counts, PSI matrices, and splice event
 #'     annotations, keeping gene expression and isoform layers synchronised.
 #'   \item \strong{PSI calculation} -- \code{\link{CalculatePSI}} computes
-#'     per-cell Percent Spliced In values from raw junction read counts and
-#'     a user-supplied or auto-generated event annotation table.
-#'   \item \strong{Isoform QC} -- \code{\link{ComputeIsoformQC}} derives
-#'     per-cell metrics (junction detection rate, event coverage, mean PSI);
+#'     per-cell Percent Spliced In values from raw junction or transcript
+#'     counts. Works in both junction mode (STARsolo) and transcript mode
+#'     (Bagpiper, FLAMES, LIQA).
+#'   \item \strong{Isoform QC} -- per-cell metrics (\code{nCount_isoform},
+#'     \code{nFeature_isoform}, \code{nPercent_isoform}) are written
+#'     automatically at construction and by \code{\link{CalculatePSI}};
 #'     \code{\link{FilterCells}} and \code{\link{FilterEvents}} enforce
 #'     quality thresholds.
 #'   \item \strong{Visualization} -- UMAP overlays, violin plots, PSI

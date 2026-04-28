@@ -15,7 +15,7 @@ GetExclusionCounts(object, ...)
 \item{...}{Additional arguments (unused).}
 }
 \value{
-A sparse matrix (cells × events) of exclusion read counts.
+A sparse matrix (cells x events) of exclusion read counts.
 }
 \description{
 Retrieves exclusion counts from the \code{"exclusion"} layer of the

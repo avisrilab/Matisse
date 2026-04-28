@@ -30,6 +30,7 @@ For the getter: a \code{data.frame}. For the setter: the updated
 \description{
 Returns the full \code{meta.data} of the embedded Seurat object, which
 includes all per-cell QC metrics and annotations added by Matisse (e.g.
-\code{n_junctions_detected}, \code{mean_psi}) alongside standard Seurat
-columns. Use \code{AddIsoformMetadata()} to add new columns.
+\code{nCount_isoform}, \code{nFeature_isoform}, \code{nPercent_isoform})
+alongside standard Seurat columns. Use \code{AddIsoformMetadata()} to add
+new columns.
 }

@@ -3,15 +3,15 @@
 \name{FilterCells}
 \alias{FilterCells}
 \alias{FilterCells,MatisseObject-method}
-\title{Filter cells by isoform QC thresholds}
+\title{Filter cells by QC thresholds}
 \usage{
 FilterCells(
   object,
-  min_junctions = NULL,
-  max_junctions = NULL,
-  min_junction_reads = NULL,
-  max_junction_reads = NULL,
-  min_pct_covered = NULL,
+  min_features_isoform = NULL,
+  max_features_isoform = NULL,
+  min_counts_isoform = NULL,
+  max_counts_isoform = NULL,
+  min_pct_isoform = NULL,
   custom_filters = NULL,
   verbose = TRUE,
   ...
@@ -19,11 +19,11 @@ FilterCells(
 
 \S4method{FilterCells}{MatisseObject}(
   object,
-  min_junctions = NULL,
-  max_junctions = NULL,
-  min_junction_reads = NULL,
-  max_junction_reads = NULL,
-  min_pct_covered = NULL,
+  min_features_isoform = NULL,
+  max_features_isoform = NULL,
+  min_counts_isoform = NULL,
+  max_counts_isoform = NULL,
+  min_pct_isoform = NULL,
   custom_filters = NULL,
   verbose = TRUE,
   ...
@@ -32,20 +32,21 @@ FilterCells(
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{min_junctions}{Integer. Minimum \code{n_junctions_detected}.
-Default: \code{NULL} (no filter).}
+\item{min_features_isoform}{Integer. Minimum \code{nFeature_isoform} (number
+of junctions or transcripts with at least one read). Default: \code{NULL}.}
 
-\item{max_junctions}{Integer. Maximum \code{n_junctions_detected}.
+\item{max_features_isoform}{Integer. Maximum \code{nFeature_isoform}.
 Default: \code{NULL}.}
 
-\item{min_junction_reads}{Integer. Minimum \code{total_junction_reads}.
+\item{min_counts_isoform}{Integer. Minimum \code{nCount_isoform} (total reads
+in the isoform assay). Default: \code{NULL}.}
+
+\item{max_counts_isoform}{Integer. Maximum \code{nCount_isoform}.
 Default: \code{NULL}.}
 
-\item{max_junction_reads}{Integer. Maximum \code{total_junction_reads}.
-Default: \code{NULL}.}
-
-\item{min_pct_covered}{Numeric (0–100). Minimum \code{pct_events_covered}.
-Default: \code{NULL}.}
+\item{min_pct_isoform}{Numeric (0-100). Minimum \code{nPercent_isoform}
+(percentage of splice events with a non-NA PSI value). Requires
+\code{\link{CalculatePSI}} to have been run. Default: \code{NULL}.}
 
 \item{custom_filters}{Named list of two-element numeric vectors
 \code{c(min, max)} applied to arbitrary metadata columns.
@@ -62,9 +63,11 @@ The filtered \code{MatisseObject}.
 }
 \description{
 Removes cells that do not pass the specified thresholds on QC columns in
-\code{MatisseMeta(object)} (the Seurat \code{meta.data}). Run
-\code{\link{ComputeIsoformQC}} first to populate those columns.
+\code{MatisseMeta(object)} (the Seurat \code{meta.data}). The columns
+\code{nCount_isoform} and \code{nFeature_isoform} are written at construction
+by \code{\link{CreateMatisseObject}}; \code{nPercent_isoform} is written by
+\code{\link{CalculatePSI}}.
 }
 \seealso{
-\code{\link{ComputeIsoformQC}}
+\code{\link{FilterEvents}}, \code{\link{CalculatePSI}}
 }

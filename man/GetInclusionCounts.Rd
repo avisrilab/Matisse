@@ -15,7 +15,7 @@ GetInclusionCounts(object, ...)
 \item{...}{Additional arguments (unused).}
 }
 \value{
-A sparse matrix (cells × events) of inclusion read counts.
+A sparse matrix (cells x events) of inclusion read counts.
 }
 \description{
 Retrieves inclusion counts from the \code{"counts"} layer of the

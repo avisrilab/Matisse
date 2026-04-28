@@ -42,3 +42,6 @@ The filtered \code{MatisseObject}.
 \description{
 Removes events that do not pass minimum coverage or variance thresholds.
 }
+\seealso{
+\code{\link{FilterCells}}
+}

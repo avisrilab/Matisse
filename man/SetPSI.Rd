@@ -12,7 +12,7 @@ SetPSI(object, value)
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{value}{A sparse matrix (cells × events) of PSI values.}
+\item{value}{A sparse matrix (cells x events) of PSI values.}
 }
 \value{
 The updated \code{MatisseObject}.

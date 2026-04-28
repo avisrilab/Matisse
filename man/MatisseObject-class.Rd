@@ -39,22 +39,25 @@
 }
 \description{
 The central data structure for Matisse. It wraps a \code{\link[Seurat]{Seurat}}
-object and adds isoform-resolved splicing layers. All per-cell data — junction
-counts, PSI values, transcript counts, and QC metrics — live inside the
+object and adds isoform-resolved splicing layers. All per-cell data -- junction
+counts, PSI values, transcript counts, and QC metrics -- live inside the
 embedded Seurat object as named assays (\code{Assay5}) or cell metadata
 (\code{meta.data}). Nothing is duplicated outside the Seurat object.
 }
 \details{
-Two operating modes are supported, set automatically at construction:
+Two input modes are supported, set automatically at construction:
 \describe{
-\item{\code{"junction"}}{Short-read mode. Raw junction counts are stored
-as \code{Assay5("junction")} (junctions × cells). PSI is computed later
-by \code{\link{CalculatePSI}} and stored as \code{Assay5("psi")}.}
-\item{\code{"event"}}{Long-read mode. Transcript counts (e.g. from
-Bagpiper or FLAMES) are stored as \code{Assay5("transcript")}. PSI is
-computed at construction time from SUPPA2 \code{.ioe} event definitions
-and stored as \code{Assay5("psi")}.}
+\item{\code{"junction"}}{Short-read mode. Raw junction counts (from
+STARsolo) are stored as \code{Assay5("isoform")} (junctions x cells).
+Call \code{\link{CalculatePSI}} to compute PSI values.}
+\item{\code{"transcript"}}{Long-read mode. Transcript isoform counts
+(from Bagpiper, FLAMES, or LIQA) are stored as
+\code{Assay5("isoform")} (transcripts x cells).
+Call \code{\link{CalculatePSI}} to compute PSI values.}
 }
+
+After \code{\link{CalculatePSI}}, PSI values are stored as
+\code{Assay5("psi")} (splice events x cells).
 }
 \section{Functions}{
 \itemize{
@@ -69,20 +72,12 @@ Seurat object (assays, reductions, etc.).
 
 \describe{
 \item{\code{seurat}}{A \code{Seurat} object. Contains all per-cell data: gene
-expression, splice assays (\code{"junction"}, \code{"transcript"},
-\code{"psi"}), cell metadata (QC metrics, cluster labels), and
-dimensionality reductions.}
+expression, splice assays (\code{"isoform"}, \code{"psi"}), cell metadata
+(QC metrics, cluster labels), and dimensionality reductions.}
 
-\item{\code{event_data}}{A \code{data.frame} with one row per splice event. Required
-columns: \code{event_id}, \code{gene_id}, \code{chr}, \code{strand},
-\code{event_type}, \code{inclusion_junctions}, \code{exclusion_junctions}.}
-
-\item{\code{junction_data}}{A \code{data.frame} with one row per junction. Required
-columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
-\code{strand}, \code{gene_id}.}
-
-\item{\code{mode}}{Character. \code{"junction"} for short-read objects;
-\code{"event"} for long-read objects.}
+\item{\code{input.mode}}{Character. \code{"junction"} for short-read (STARsolo
+junction counts) objects; \code{"transcript"} for long-read (Bagpiper /
+FLAMES / LIQA transcript counts) objects.}
 
 \item{\code{version}}{Character string recording the Matisse version used to create
 the object.}

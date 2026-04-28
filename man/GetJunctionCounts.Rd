@@ -3,7 +3,7 @@
 \name{GetJunctionCounts}
 \alias{GetJunctionCounts}
 \alias{GetJunctionCounts,MatisseObject-method}
-\title{Get raw junction count matrix}
+\title{Get raw junction count matrix (junction mode only)}
 \usage{
 GetJunctionCounts(object, ...)
 
@@ -15,10 +15,10 @@ GetJunctionCounts(object, ...)
 \item{...}{Additional arguments (unused).}
 }
 \value{
-A sparse matrix (cells × junctions) of read counts, or \code{NULL}
-if the object is in event mode or no junction assay exists.
+A sparse matrix (cells x junctions) of read counts, or \code{NULL}
+if the object is in transcript mode.
 }
 \description{
-Retrieves the per-junction read counts from the \code{"junction"}
-\code{Assay5} stored inside the embedded Seurat object.
+Retrieves the per-junction read counts from the \code{"isoform"}
+\code{Assay5} in junction mode.
 }

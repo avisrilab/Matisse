@@ -7,7 +7,7 @@
 \usage{
 PlotViolin(
   object,
-  feature,
+  feature = NULL,
   group_by = "seurat_clusters",
   colours = NULL,
   add_points = FALSE,
@@ -18,7 +18,7 @@ PlotViolin(
 
 \S4method{PlotViolin}{MatisseObject}(
   object,
-  feature,
+  feature = NULL,
   group_by = "seurat_clusters",
   colours = NULL,
   add_points = FALSE,
@@ -30,8 +30,9 @@ PlotViolin(
 \arguments{
 \item{object}{A \code{MatisseObject}.}
 
-\item{feature}{Character scalar or vector. Feature(s) to plot. Each entry
-can be a PSI event ID, junction ID, gene name, or metadata column name.}
+\item{feature}{Character scalar or vector of features to plot (PSI event
+IDs, junction IDs, gene names, or metadata column names). \code{NULL}
+(the default) selects the standard QC metrics automatically.}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} to split
 cells by. Default: \code{"seurat_clusters"}.}
@@ -56,9 +57,15 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
+When \code{feature} is \code{NULL} (the default), automatically plots the
+QC metrics \code{nCount_isoform}, \code{nFeature_isoform}, and
+\code{nPercent_isoform} as a faceted panel.
+
 Plots any feature -- PSI event ID, junction ID, gene name, or metadata
-column (e.g. QC metrics from \code{\link{ComputeIsoformQC}}) -- as a
-violin/box split by a cell-level grouping variable.
+column -- as a violin/box split by a cell-level grouping variable.
+When \code{feature = NULL} (the default), automatically plots the standard
+QC metrics \code{nCount_isoform}, \code{nFeature_isoform}, and
+\code{nPercent_isoform} as a faceted panel.
 Pass a character vector to \code{feature} to plot multiple features in
 facets with free y-axis scales.
 }

@@ -4,7 +4,7 @@
 \alias{CalculatePSI}
 \alias{CalculatePSI,MatisseObject-method}
 \alias{CalculatePSI,ANY-method}
-\title{Calculate PSI matrix from junction counts}
+\title{Calculate PSI matrix from junction or transcript counts}
 \usage{
 CalculatePSI(
   object,
@@ -34,13 +34,12 @@ CalculatePSI(
 )
 }
 \arguments{
-\item{object}{A \code{\linkS4class{MatisseObject}} in junction mode, or a
-sparse matrix (cells × junctions).}
+\item{object}{A \code{\linkS4class{MatisseObject}}, or a sparse matrix
+(cells x junctions) when computing PSI outside the object.}
 
-\item{events}{When \code{object} is a matrix: a \code{data.frame} with
-columns \code{event_id}, \code{inclusion_junctions}, and
-\code{exclusion_junctions}. When \code{object} is a
-\code{MatisseObject} this defaults to \code{GetEventData(object)}.}
+\item{events}{A \code{data.frame} with columns \code{event_id},
+\code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
+\code{GetEventData(object)} (populated at construction).}
 
 \item{min_coverage}{Integer. Minimum total reads per cell per event to
 report a PSI value. Default: \code{5}.}
@@ -58,13 +57,13 @@ A \code{MatisseObject} (when given one) or a PSI matrix.
 \itemize{
 \item \code{MatisseObject}: the input object with the \code{"psi"} assay
 populated inside the embedded Seurat object.
-\item matrix: a dense matrix (cells × events) of PSI values.
+\item matrix: a dense matrix (cells x events) of PSI values.
 }
 }
 \description{
-Computes a Percent Spliced In (PSI) matrix for all splice events defined in
-\code{event_data}. Only applies to objects in \strong{junction mode}; in
-event mode PSI is computed at construction time.
+Computes a Percent Spliced In (PSI) matrix for all splice events and stores
+it in the \code{"psi"} assay. Works in both junction mode and transcript
+mode. Call this after \code{\link{CreateMatisseObject}}.
 }
 \details{
 For each cell \eqn{c} and event \eqn{e}:
@@ -73,16 +72,20 @@ For each cell \eqn{c} and event \eqn{e}:
                        {\sum \text{inclusion reads} +
                         \sum \text{exclusion reads}}}
 
-Results are stored inside the embedded Seurat object as a
-\code{Assay5} named \code{"psi"}, with:
+Results are stored inside the embedded Seurat object as
+\code{Assay5("psi")}, with:
 \itemize{
-\item \code{"data"} layer: PSI values in \eqn{[0,1]} (events × cells).
-\item \code{"counts"} layer: inclusion read counts (events × cells).
-\item \code{"exclusion"} layer: exclusion read counts (events × cells).
+\item \code{"data"} layer: PSI values in \eqn{[0,1]} (events x cells).
+\item \code{"counts"} layer: inclusion read counts (events x cells).
+\item \code{"exclusion"} layer: exclusion read counts (events x cells).
 }
 Entries where total coverage falls below \code{min_coverage} are set to
 \code{NA} in the \code{"data"} layer.
+
+\code{nPercent_isoform} is also written to cell metadata: the percentage of
+splice events with a non-\code{NA} PSI value in each cell.
 }
 \seealso{
-\code{\link{ComputeIsoformQC}}, \code{\link{PlotHeatmap}}
+\code{\link{FilterCells}}, \code{\link{FilterEvents}},
+\code{\link{PlotHeatmap}}
 }

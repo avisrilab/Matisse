@@ -18,6 +18,5 @@ A \code{data.frame} with one row per event and columns:
 }
 \description{
 Returns a summary table with per-event PSI statistics across all (or a
-subset of) cells. Call this after \code{\link{CalculatePSI}} or after
-creating an event-mode object with \code{\link{CreateMatisseObject}}.
+subset of) cells. Call this after \code{\link{CalculatePSI}}.
 }

@@ -3,7 +3,7 @@
 \name{GetTranscriptCounts}
 \alias{GetTranscriptCounts}
 \alias{GetTranscriptCounts,MatisseObject-method}
-\title{Get transcript count matrix}
+\title{Get transcript count matrix (transcript mode only)}
 \usage{
 GetTranscriptCounts(object, ...)
 
@@ -15,10 +15,10 @@ GetTranscriptCounts(object, ...)
 \item{...}{Additional arguments (unused).}
 }
 \value{
-A sparse matrix (transcripts × cells) of raw counts, or \code{NULL}
-if no \code{"transcript"} assay exists.
+A sparse matrix (transcripts x cells) of raw counts, or \code{NULL}
+if the object is in junction mode.
 }
 \description{
-Retrieves raw transcript counts from the \code{"transcript"} \code{Assay5}
-stored inside the embedded Seurat object.
+Retrieves raw transcript counts from the \code{"isoform"} \code{Assay5}
+in transcript mode.
 }

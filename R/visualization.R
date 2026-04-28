@@ -635,7 +635,7 @@ setMethod("PlotSashimi", "MatisseObject",
     }
   }
 
-  # 4. Seurat metadata (QC metrics from ComputeIsoformQC, cell_type, etc.)
+  # 4. Seurat metadata (nCount_isoform, nPercent_isoform, cell_type, etc.)
   if (!is.null(object@seurat) &&
       feature %in% colnames(object@seurat@meta.data)) {
     return(as.numeric(object@seurat@meta.data[cells, feature]))

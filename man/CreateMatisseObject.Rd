@@ -11,7 +11,6 @@ CreateMatisseObject(
   ioe_files = NULL,
   event_data = NULL,
   junction_data = NULL,
-  min_coverage = 5L,
   verbose = TRUE
 )
 }
@@ -23,13 +22,14 @@ raw per-junction read counts. Row names must match \code{colnames(seurat)}.
 Triggers junction mode. Default: \code{NULL}.}
 
 \item{transcript_counts}{A matrix or sparse matrix (transcripts x cells) of
-raw transcript-level counts. Stored as \code{Assay5("transcript")} in the
+raw transcript-level counts. Stored as \code{Assay5("isoform")} in the
 Seurat object. Column names must overlap with \code{colnames(seurat)}.
-Default: \code{NULL}.}
+Triggers transcript mode. Default: \code{NULL}.}
 
 \item{ioe_files}{Character vector of paths to SUPPA2 \code{.ioe} files.
-When supplied together with \code{transcript_counts}, triggers event mode
-and PSI is computed at construction. Default: \code{NULL}.}
+When supplied together with \code{transcript_counts}, the parsed event
+annotation is stored in the object and used by \code{\link{CalculatePSI}}.
+Default: \code{NULL}.}
 
 \item{event_data}{A \code{data.frame} defining splice events (junction mode
 only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
@@ -39,9 +39,6 @@ only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
 \item{junction_data}{A \code{data.frame} of junction annotations. Required
 columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
 \code{strand}, \code{gene_id}. Default: \code{NULL}.}
-
-\item{min_coverage}{Integer. Minimum total transcript counts per cell per
-event to report a PSI value (event mode only). Default: \code{5}.}
 
 \item{verbose}{Logical. Print construction progress. Default: \code{TRUE}.}
 }
@@ -56,20 +53,14 @@ mode is detected automatically from the inputs you supply:
 \details{
 \itemize{
 \item \strong{Junction mode} (short-read): pass \code{junction_counts}.
-Junction counts are stored as \code{Assay5("junction")} inside the
+Junction counts are stored as \code{Assay5("isoform")} inside the
 Seurat object. Call \code{\link{CalculatePSI}} afterwards to compute
 PSI values.
-\item \strong{Event mode} (long-read): pass \code{transcript_counts} and
-\code{ioe_files}. Transcript counts are stored as
-\code{Assay5("transcript")} and PSI is computed immediately from the
-supplied SUPPA2 \code{.ioe} event definitions, stored as
-\code{Assay5("psi")}.
+\item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
+and optionally \code{ioe_files}. Transcript counts are stored as
+\code{Assay5("isoform")}. Call \code{\link{CalculatePSI}} (with
+\code{ioe_files}) to compute PSI values.
 }
-
-You can also pass \code{transcript_counts} alone (without \code{ioe_files})
-to store the transcript assay without computing PSI -- for example, when you
-want to run \code{\link[Seurat]{SCTransform}} on transcript-level counts and compute
-PSI separately.
 }
 \examples{
 \dontrun{
@@ -82,11 +73,13 @@ seu <- CreateSeuratObject(counts)
 # Junction mode
 jxn <- make_junction_counts()
 obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn)
+obj <- CalculatePSI(obj)
 
-# Event mode
+# Transcript mode
 tx  <- make_transcript_counts()
 obj <- CreateMatisseObject(seurat = seu, transcript_counts = tx,
                            ioe_files = "path/to/events.ioe")
+obj <- CalculatePSI(obj)
 }
 
 }
