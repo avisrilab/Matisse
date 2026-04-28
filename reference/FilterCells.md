@@ -1,20 +1,22 @@
-# Filter cells by isoform QC thresholds
+# Filter cells by QC thresholds
 
 Removes cells that do not pass the specified thresholds on QC columns in
-`MatisseMeta(object)` (the Seurat `meta.data`). Run
-[`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md)
-first to populate those columns.
+`MatisseMeta(object)` (the Seurat `meta.data`). The columns
+`nCount_isoform` and `nFeature_isoform` are written at construction by
+[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md);
+`nPercent_isoform` is written by
+[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md).
 
 ## Usage
 
 ``` r
 FilterCells(
   object,
-  min_junctions = NULL,
-  max_junctions = NULL,
-  min_junction_reads = NULL,
-  max_junction_reads = NULL,
-  min_pct_covered = NULL,
+  min_features_isoform = NULL,
+  max_features_isoform = NULL,
+  min_counts_isoform = NULL,
+  max_counts_isoform = NULL,
+  min_pct_isoform = NULL,
   custom_filters = NULL,
   verbose = TRUE,
   ...
@@ -23,11 +25,11 @@ FilterCells(
 # S4 method for class 'MatisseObject'
 FilterCells(
   object,
-  min_junctions = NULL,
-  max_junctions = NULL,
-  min_junction_reads = NULL,
-  max_junction_reads = NULL,
-  min_pct_covered = NULL,
+  min_features_isoform = NULL,
+  max_features_isoform = NULL,
+  min_counts_isoform = NULL,
+  max_counts_isoform = NULL,
+  min_pct_isoform = NULL,
   custom_filters = NULL,
   verbose = TRUE,
   ...
@@ -40,25 +42,30 @@ FilterCells(
 
   A `MatisseObject`.
 
-- min_junctions:
+- min_features_isoform:
 
-  Integer. Minimum `n_junctions_detected`. Default: `NULL` (no filter).
+  Integer. Minimum `nFeature_isoform` (number of junctions or
+  transcripts with at least one read). Default: `NULL`.
 
-- max_junctions:
+- max_features_isoform:
 
-  Integer. Maximum `n_junctions_detected`. Default: `NULL`.
+  Integer. Maximum `nFeature_isoform`. Default: `NULL`.
 
-- min_junction_reads:
+- min_counts_isoform:
 
-  Integer. Minimum `total_junction_reads`. Default: `NULL`.
+  Integer. Minimum `nCount_isoform` (total reads in the isoform assay).
+  Default: `NULL`.
 
-- max_junction_reads:
+- max_counts_isoform:
 
-  Integer. Maximum `total_junction_reads`. Default: `NULL`.
+  Integer. Maximum `nCount_isoform`. Default: `NULL`.
 
-- min_pct_covered:
+- min_pct_isoform:
 
-  Numeric (0–100). Minimum `pct_events_covered`. Default: `NULL`.
+  Numeric (0-100). Minimum `nPercent_isoform` (percentage of splice
+  events with a non-NA PSI value). Requires
+  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  to have been run. Default: `NULL`.
 
 - custom_filters:
 
@@ -82,4 +89,5 @@ The filtered `MatisseObject`.
 
 ## See also
 
-[`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md)
+[`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md),
+[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)

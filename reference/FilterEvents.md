@@ -52,3 +52,7 @@ FilterEvents(
 The filtered `MatisseObject`.
 
 The filtered `MatisseObject`.
+
+## See also
+
+[`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)

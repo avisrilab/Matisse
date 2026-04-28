@@ -80,7 +80,7 @@ Ready to explore your data?
 Start here. This function combines your Seurat object with splicing data
 into a single Matisse object ready for analysis. Pass `junction_counts`
 for short-read (junction) mode, or `transcript_counts` + `ioe_files` for
-long-read (event) mode.
+long-read (transcript) mode.
 
 - [`show(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
   [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
@@ -103,13 +103,13 @@ or putting updated tables back in.
 - [`SetPSI()`](https://avisrilab.github.io/Matisse/reference/SetPSI.md)
   : Set the PSI matrix
 - [`GetJunctionCounts()`](https://avisrilab.github.io/Matisse/reference/GetJunctionCounts.md)
-  : Get raw junction count matrix
+  : Get raw junction count matrix (junction mode only)
 - [`GetInclusionCounts()`](https://avisrilab.github.io/Matisse/reference/GetInclusionCounts.md)
   : Get inclusion read count matrix
 - [`GetExclusionCounts()`](https://avisrilab.github.io/Matisse/reference/GetExclusionCounts.md)
   : Get exclusion read count matrix
 - [`GetTranscriptCounts()`](https://avisrilab.github.io/Matisse/reference/GetTranscriptCounts.md)
-  : Get transcript count matrix
+  : Get transcript count matrix (transcript mode only)
 - [`GetEventData()`](https://avisrilab.github.io/Matisse/reference/GetEventData.md)
   : Get splice event annotation table
 - [`GetJunctionData()`](https://avisrilab.github.io/Matisse/reference/GetJunctionData.md)
@@ -123,9 +123,9 @@ or putting updated tables back in.
 ## Normalisation
 
 Normalise count data before clustering. `SCTransform` applies variance
-stabilisation and scales for sequencing depth — in event mode it targets
-the `transcript` assay automatically; in junction mode it targets the
-gene-expression assay. `NormalizeData`, `ScaleData`, and
+stabilisation and scales for sequencing depth – in transcript mode it
+targets the `isoform` assay automatically; in junction mode it targets
+the gene-expression assay. `NormalizeData`, `ScaleData`, and
 `FindVariableFeatures` are log-normalisation alternatives.
 
 - [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
@@ -189,25 +189,25 @@ Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
 
 ## Calculate splicing ratios (PSI)
 
-Compute PSI (Percent Spliced In) — the fraction of transcripts in each
+Compute PSI (Percent Spliced In) – the fraction of transcripts in each
 cell that include a given exon. Values range from 0 (exon always
-skipped) to 1 (exon always included). In event mode this is done at
-construction; in junction mode call CalculatePSI() explicitly.
+skipped) to 1 (exon always included). Call CalculatePSI() explicitly
+after CreateMatisseObject() in both junction and transcript modes.
 
 - [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-  : Calculate PSI matrix from junction counts
+  : Calculate PSI matrix from junction or transcript counts
 - [`SummarizePSI()`](https://avisrilab.github.io/Matisse/reference/SummarizePSI.md)
   : Summarize PSI distribution across cells for each event
 
 ## Quality control and filtering
 
 Identify and remove cells or splicing events that don’t have enough data
-for reliable analysis.
+for reliable analysis. QC columns written automatically:
+`nCount_isoform` and `nFeature_isoform` at construction;
+`nPercent_isoform` after CalculatePSI().
 
-- [`ComputeIsoformQC()`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md)
-  : Compute per-cell isoform QC metrics
 - [`FilterCells()`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
-  : Filter cells by isoform QC thresholds
+  : Filter cells by QC thresholds
 - [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
   : Filter splice events by coverage or variance
 
@@ -223,13 +223,9 @@ interest. Pass the feature name via the `feature` argument.
 - [`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
   : Violin plot of feature values split by cell group
 - [`PlotHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)
-  : Heatmap of feature values across cells and events
-- [`PlotCoverage()`](https://avisrilab.github.io/Matisse/reference/PlotCoverage.md)
-  : Junction coverage bar plot for a gene
+  : Heatmap of PSI values (events x cells, DoHeatmap style)
 - [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
   : Sashimi-style coverage plot for a splice event
-- [`PlotQCMetrics()`](https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.md)
-  : Violin/ridge plot of isoform QC metrics
 
 ## Utilities
 

@@ -149,7 +149,7 @@ normalisation, visualisation – are identical for both data types.</p>
 <span><span class="op">)</span></span>
 <span><span class="co"># PSI is computed at construction; summarise before clustering</span></span>
 <span><span class="va">psi_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/SummarizePSI.html">SummarizePSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ComputeIsoformQC</span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="co"># Normalise transcript counts, then reduce and cluster</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">obj</span>, assay <span class="op">=</span> <span class="st">"SCT"</span>, npcs <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
@@ -172,7 +172,7 @@ normalisation, visualisation – are identical for both data types.</p>
 <span>  event_data      <span class="op">=</span> <span class="va">event_df</span>      <span class="co"># splice event annotation</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ComputeIsoformQC</span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span><span class="va">obj</span>, feature <span class="op">=</span> <span class="st">"PTBP1:SE:chr18:3433647-3436055"</span><span class="op">)</span></span></code></pre></div>
 <p>-&gt; <strong>Full walkthrough:</strong> <a href="short-reads.html">Short-read workflow</a></p>
 <hr>

@@ -20,7 +20,7 @@ SetPSI(object, value)
 
 - value:
 
-  A sparse matrix (cells × events) of PSI values.
+  A sparse matrix (cells x events) of PSI values.
 
 ## Value
 

@@ -1,8 +1,9 @@
-# Calculate PSI matrix from junction counts
+# Calculate PSI matrix from junction or transcript counts
 
-Computes a Percent Spliced In (PSI) matrix for all splice events defined
-in `event_data`. Only applies to objects in **junction mode**; in event
-mode PSI is computed at construction time.
+Computes a Percent Spliced In (PSI) matrix for all splice events and
+stores it in the `"psi"` assay. Works in both junction mode and
+transcript mode. Call this after
+[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md).
 
 ## Usage
 
@@ -42,14 +43,15 @@ CalculatePSI(
 - object:
 
   A
-  [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  in junction mode, or a sparse matrix (cells × junctions).
+  [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md),
+  or a sparse matrix (cells x junctions) when computing PSI outside the
+  object.
 
 - events:
 
-  When `object` is a matrix: a `data.frame` with columns `event_id`,
-  `inclusion_junctions`, and `exclusion_junctions`. When `object` is a
-  `MatisseObject` this defaults to `GetEventData(object)`.
+  A `data.frame` with columns `event_id`, `inclusion_junctions`, and
+  `exclusion_junctions`. Defaults to `GetEventData(object)` (populated
+  at construction).
 
 - min_coverage:
 
@@ -75,7 +77,7 @@ A `MatisseObject` (when given one) or a PSI matrix.
 - `MatisseObject`: the input object with the `"psi"` assay populated
   inside the embedded Seurat object.
 
-- matrix: a dense matrix (cells × events) of PSI values.
+- matrix: a dense matrix (cells x events) of PSI values.
 
 ## Details
 
@@ -84,19 +86,23 @@ For each cell \\c\\ and event \\e\\:
 \$\$PSI\_{c,e} = \frac{\sum \text{inclusion reads}} {\sum
 \text{inclusion reads} + \sum \text{exclusion reads}}\$\$
 
-Results are stored inside the embedded Seurat object as a `Assay5` named
-`"psi"`, with:
+Results are stored inside the embedded Seurat object as `Assay5("psi")`,
+with:
 
-- `"data"` layer: PSI values in \\\[0,1\]\\ (events × cells).
+- `"data"` layer: PSI values in \\\[0,1\]\\ (events x cells).
 
-- `"counts"` layer: inclusion read counts (events × cells).
+- `"counts"` layer: inclusion read counts (events x cells).
 
-- `"exclusion"` layer: exclusion read counts (events × cells).
+- `"exclusion"` layer: exclusion read counts (events x cells).
 
 Entries where total coverage falls below `min_coverage` are set to `NA`
 in the `"data"` layer.
 
+`nPercent_isoform` is also written to cell metadata: the percentage of
+splice events with a non-`NA` PSI value in each cell.
+
 ## See also
 
-[`ComputeIsoformQC`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md),
+[`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md),
+[`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md),
 [`PlotHeatmap`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)

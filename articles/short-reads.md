@@ -20,7 +20,7 @@ instead.
 | Input                      | Description                                                                                                                                                                                                                                                            |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Seurat object**          | Already processed: normalisation, UMAP, cluster labels.                                                                                                                                                                                                                |
-| **Junction count matrix**  | *Cells x junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs in the format `chr:start:end`. Produced by STARsolo with `--soloFeatures SJ`.                                                                             |
+| **Junction count matrix**  | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`.                                                                                                           |
 | **Event annotation table** | A data frame with one row per splicing event, specifying which junctions support inclusion versus exclusion. Can be built with [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md) or loaded from a SUPPA2 / rMATS annotation. |
 
 ------------------------------------------------------------------------
@@ -48,11 +48,17 @@ gene treated as exclusion evidence:
 event_df <- BuildSimpleEvents(junction_df)
 ```
 
+After construction, two QC columns are written to cell metadata:
+
+- `nCount_isoform` – total junction read counts per cell
+- `nFeature_isoform` – number of junctions with at least one read per
+  cell
+
 ------------------------------------------------------------------------
 
 ## Step 2 – Calculate PSI
 
-For each cell and each event, Matisse sums the reads from
+For each cell and each splice event, Matisse sums the reads from
 inclusion-supporting junctions and exclusion-supporting junctions, then
 computes:
 
@@ -62,34 +68,45 @@ Cells with fewer than `min_coverage` total reads for an event are left
 as `NA`.
 
 ``` r
-obj <- CalculatePSI(obj, min_coverage = 5)
+obj <- CalculatePSI(obj, min_coverage = 5L)
 ```
+
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+also writes a third QC column:
+
+- `nPercent_isoform` – percentage of splice events with a non-NA PSI
+  value in each cell (a measure of junction coverage breadth)
 
 ------------------------------------------------------------------------
 
 ## Step 3 – Quality control
 
+### Visualise QC metrics
+
+Call
+[`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+with no `feature` argument to automatically plot all three isoform QC
+metrics (`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) as a
+faceted panel.
+
 ``` r
-obj <- ComputeIsoformQC(obj)
-PlotQCMetrics(obj, group_by = "cell_type")
+PlotViolin(obj)
 ```
 
-Remove cells that are too sparse or events that are covered in too few
-cells:
+### Remove low-quality cells
 
 ``` r
 obj <- FilterCells(
   obj,
-  min_junctions      = 5,
-  min_junction_reads = 20,
-  min_pct_covered    = 10
+  min_features_isoform = 5,    # at least 5 junctions detected
+  min_pct_isoform      = 10    # PSI covered for >= 10% of splice events
 )
+```
 
-obj <- FilterEvents(
-  obj,
-  min_cells_covered = 20,
-  min_psi_variance  = 0.01
-)
+### Remove uninformative splice events
+
+``` r
+obj <- FilterEvents(obj, min_cells_covered = 20)
 ```
 
 ------------------------------------------------------------------------
@@ -122,12 +139,6 @@ PlotViolin(
 PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
 ```
 
-### Inspect per-junction counts for a gene
-
-``` r
-PlotCoverage(obj, gene = "PTBP1")
-```
-
 ### Sashimi plot for a specific event
 
 [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
@@ -140,7 +151,7 @@ PlotSashimi(
   event_id  = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by  = "cell_type",
   arc_scale = "sqrt",
-  title     = "PTBP1 exon 9 — junction coverage by cell type"
+  title     = "PTBP1 exon 9 -- junction coverage by cell type"
 )
 ```
 
@@ -156,7 +167,7 @@ seu <- GetSeurat(obj)
 obj$seurat_clusters
 obj$cell_type
 
-# PSI matrix: cells x events
+# PSI matrix: cells x splice events
 psi <- GetPSI(obj)
 
 # Raw junction counts: cells x junctions

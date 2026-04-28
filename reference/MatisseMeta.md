@@ -2,8 +2,8 @@
 
 Returns the full `meta.data` of the embedded Seurat object, which
 includes all per-cell QC metrics and annotations added by Matisse (e.g.
-`n_junctions_detected`, `mean_psi`) alongside standard Seurat columns.
-Use
+`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) alongside
+standard Seurat columns. Use
 [`AddIsoformMetadata()`](https://avisrilab.github.io/Matisse/reference/AddIsoformMetadata.md)
 to add new columns.
 

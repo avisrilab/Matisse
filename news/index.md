@@ -16,16 +16,14 @@
   definitions. Supports both `MatisseObject` and bare matrix input.
 - [`SummarizePSI()`](https://avisrilab.github.io/Matisse/reference/SummarizePSI.md):
   per-event summary statistics (mean, median, sd, coverage).
-- [`ComputeIsoformQC()`](https://avisrilab.github.io/Matisse/reference/ComputeIsoformQC.md):
-  per-cell QC metrics including junction detection rate, total junction
-  reads, event coverage, and mean PSI.
+- `ComputeIsoformQC()`: per-cell QC metrics including junction detection
+  rate, total junction reads, event coverage, and mean PSI.
 - [`FilterCells()`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
   and
   [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md):
   threshold-based filtering with informative removal summaries.
 - Visualization: `PlotPSIUMAP()`, `PlotPSIViolin()`, `PlotPSIHeatmap()`,
-  `PlotJunctionCoverage()`,
-  [`PlotQCMetrics()`](https://avisrilab.github.io/Matisse/reference/PlotQCMetrics.md).
+  `PlotJunctionCoverage()`, `PlotQCMetrics()`.
 - [`BuildSimpleEvents()`](https://avisrilab.github.io/Matisse/reference/BuildSimpleEvents.md):
   convenience helper for generating one-vs-rest event tables from a
   junction annotation.

@@ -1,8 +1,9 @@
-# Heatmap of feature values across cells and events
+# Heatmap of PSI values (events x cells, DoHeatmap style)
 
-Heatmap of feature values across cells and events
-
-Heatmap of PSI values (cells x events)
+Draws a DoHeatmap-style tile plot with splice events on the y-axis and
+cells on the x-axis. Events are clustered by PSI profile. When
+`group_by` is supplied, cells are ordered by group and labelled with
+facet strips.
 
 ## Usage
 
@@ -15,6 +16,7 @@ PlotHeatmap(
   max_cells = 500L,
   max_events = 200L,
   na_colour = "grey90",
+  title = NULL,
   ...
 )
 
@@ -27,6 +29,7 @@ PlotHeatmap(
   max_cells = 500L,
   max_events = 200L,
   na_colour = "grey90",
+  title = NULL,
   ...
 )
 ```
@@ -49,7 +52,7 @@ PlotHeatmap(
 
 - group_by:
 
-  Character. Column in `Seurat::meta.data` used to annotate and order
+  Character. Column in `Seurat::meta.data` used to order and label
   cells. Default: `NULL`.
 
 - max_cells:
@@ -65,6 +68,10 @@ PlotHeatmap(
 - na_colour:
 
   Character. Colour for `NA` entries. Default: `"grey90"`.
+
+- title:
+
+  Character. Plot title. Default: `"PSI Heatmap"`.
 
 - ...:
 

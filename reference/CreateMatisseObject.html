@@ -59,7 +59,6 @@ mode is detected automatically from the inputs you supply:</p>
 <span>  ioe_files <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  event_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  junction_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  min_coverage <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -80,15 +79,16 @@ Triggers junction mode. Default: <code>NULL</code>.</p></dd>
 
 <dt id="arg-transcript-counts">transcript_counts<a class="anchor" aria-label="anchor" href="#arg-transcript-counts"></a></dt>
 <dd><p>A matrix or sparse matrix (transcripts x cells) of
-raw transcript-level counts. Stored as <code>Assay5("transcript")</code> in the
+raw transcript-level counts. Stored as <code>Assay5("isoform")</code> in the
 Seurat object. Column names must overlap with <code>colnames(seurat)</code>.
-Default: <code>NULL</code>.</p></dd>
+Triggers transcript mode. Default: <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-ioe-files">ioe_files<a class="anchor" aria-label="anchor" href="#arg-ioe-files"></a></dt>
 <dd><p>Character vector of paths to SUPPA2 <code>.ioe</code> files.
-When supplied together with <code>transcript_counts</code>, triggers event mode
-and PSI is computed at construction. Default: <code>NULL</code>.</p></dd>
+When supplied together with <code>transcript_counts</code>, the parsed event
+annotation is stored in the object and used by <code><a href="CalculatePSI.html">CalculatePSI</a></code>.
+Default: <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-event-data">event_data<a class="anchor" aria-label="anchor" href="#arg-event-data"></a></dt>
@@ -104,11 +104,6 @@ columns: <code>junction_id</code>, <code>chr</code>, <code>start</code>, <code>e
 <code>strand</code>, <code>gene_id</code>. Default: <code>NULL</code>.</p></dd>
 
 
-<dt id="arg-min-coverage">min_coverage<a class="anchor" aria-label="anchor" href="#arg-min-coverage"></a></dt>
-<dd><p>Integer. Minimum total transcript counts per cell per
-event to report a PSI value (event mode only). Default: <code>5</code>.</p></dd>
-
-
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical. Print construction progress. Default: <code>TRUE</code>.</p></dd>
 
@@ -121,19 +116,14 @@ event to report a PSI value (event mode only). Default: <code>5</code>.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 
 <ul><li><p><strong>Junction mode</strong> (short-read): pass <code>junction_counts</code>.
-Junction counts are stored as <code>Assay5("junction")</code> inside the
+Junction counts are stored as <code>Assay5("isoform")</code> inside the
 Seurat object. Call <code><a href="CalculatePSI.html">CalculatePSI</a></code> afterwards to compute
 PSI values.</p></li>
-<li><p><strong>Event mode</strong> (long-read): pass <code>transcript_counts</code> and
-<code>ioe_files</code>. Transcript counts are stored as
-<code>Assay5("transcript")</code> and PSI is computed immediately from the
-supplied SUPPA2 <code>.ioe</code> event definitions, stored as
-<code>Assay5("psi")</code>.</p></li>
-</ul><p>You can also pass <code>transcript_counts</code> alone (without <code>ioe_files</code>)
-to store the transcript assay without computing PSI – for example, when you
-want to run <code><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></code> on transcript-level counts and compute
-PSI separately.</p>
-    </div>
+<li><p><strong>Transcript mode</strong> (long-read): pass <code>transcript_counts</code>
+and optionally <code>ioe_files</code>. Transcript counts are stored as
+<code>Assay5("isoform")</code>. Call <code><a href="CalculatePSI.html">CalculatePSI</a></code> (with
+<code>ioe_files</code>) to compute PSI values.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -147,11 +137,13 @@ PSI separately.</p>
 <span class="r-in"><span><span class="co"># Junction mode</span></span></span>
 <span class="r-in"><span><span class="va">jxn</span> <span class="op">&lt;-</span> <span class="fu">make_junction_counts</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">CreateMatisseObject</span><span class="op">(</span>seurat <span class="op">=</span> <span class="va">seu</span>, junction_counts <span class="op">=</span> <span class="va">jxn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Event mode</span></span></span>
+<span class="r-in"><span><span class="co"># Transcript mode</span></span></span>
 <span class="r-in"><span><span class="va">tx</span>  <span class="op">&lt;-</span> <span class="fu">make_transcript_counts</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">CreateMatisseObject</span><span class="op">(</span>seurat <span class="op">=</span> <span class="va">seu</span>, transcript_counts <span class="op">=</span> <span class="va">tx</span>,</span></span>
 <span class="r-in"><span>                           ioe_files <span class="op">=</span> <span class="st">"path/to/events.ioe"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

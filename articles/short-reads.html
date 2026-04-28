@@ -102,10 +102,9 @@ transcript quantifier (Bagpiper, FLAMES, LIQA), see the <a href="long-reads.html
 <tr class="even">
 <td><strong>Junction count matrix</strong></td>
 <td>
-<em>Cells x junctions</em> sparse matrix of read counts. Row names
-are cell barcodes; column names are junction IDs in the format
-<code>chr:start:end</code>. Produced by STARsolo with
-<code>--soloFeatures SJ</code>.</td>
+<em>Cells × junctions</em> sparse matrix of read counts. Row names
+are cell barcodes; column names are junction IDs. Produced by STARsolo
+with <code>--soloFeatures SJ</code>.</td>
 </tr>
 <tr class="odd">
 <td><strong>Event annotation table</strong></td>
@@ -136,12 +135,21 @@ junction table – each junction becomes its own “simple” event with all
 other junctions for the same gene treated as exclusion evidence:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">event_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/BuildSimpleEvents.html">BuildSimpleEvents</a></span><span class="op">(</span><span class="va">junction_df</span><span class="op">)</span></span></code></pre></div>
+<p>After construction, two QC columns are written to cell metadata:</p>
+<ul>
+<li>
+<code>nCount_isoform</code> – total junction read counts per
+cell</li>
+<li>
+<code>nFeature_isoform</code> – number of junctions with at least
+one read per cell</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="step-2-calculate-psi">Step 2 – Calculate PSI<a class="anchor" aria-label="anchor" href="#step-2-calculate-psi"></a>
 </h2>
-<p>For each cell and each event, Matisse sums the reads from
+<p>For each cell and each splice event, Matisse sums the reads from
 inclusion-supporting junctions and exclusion-supporting junctions, then
 computes:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>S</mi><msub><mi>I</mi><mrow><mi>c</mi><mo>,</mo><mi>e</mi></mrow></msub><mo>=</mo><mfrac><mrow><mo>∑</mo><mtext mathvariant="normal">inclusion junction reads</mtext></mrow><mrow><mo>∑</mo><mtext mathvariant="normal">inclusion reads</mtext><mo>+</mo><mo>∑</mo><mtext mathvariant="normal">exclusion reads</mtext></mrow></mfrac></mrow><annotation encoding="application/x-tex">PSI_{c,e} = \frac{\sum \text{inclusion junction reads}}
@@ -149,31 +157,46 @@ computes:</p>
 <p>Cells with fewer than <code>min_coverage</code> total reads for an
 event are left as <code>NA</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CalculatePSI.html">CalculatePSI</a></span><span class="op">(</span><span class="va">obj</span>, min_coverage <span class="op">=</span> <span class="fl">5L</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/CalculatePSI.html">CalculatePSI()</a></code> also writes a third QC column:</p>
+<ul>
+<li>
+<code>nPercent_isoform</code> – percentage of splice events with a
+non-NA PSI value in each cell (a measure of junction coverage
+breadth)</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="step-3-quality-control">Step 3 – Quality control<a class="anchor" aria-label="anchor" href="#step-3-quality-control"></a>
 </h2>
+<div class="section level3">
+<h3 id="visualise-qc-metrics">Visualise QC metrics<a class="anchor" aria-label="anchor" href="#visualise-qc-metrics"></a>
+</h3>
+<p>Call <code><a href="../reference/PlotViolin.html">PlotViolin()</a></code> with no <code>feature</code> argument
+to automatically plot all three isoform QC metrics
+(<code>nCount_isoform</code>, <code>nFeature_isoform</code>,
+<code>nPercent_isoform</code>) as a faceted panel.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComputeIsoformQC.html">ComputeIsoformQC</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/PlotQCMetrics.html">PlotQCMetrics</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span><span class="op">)</span></span></code></pre></div>
-<p>Remove cells that are too sparse or events that are covered in too
-few cells:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="remove-low-quality-cells">Remove low-quality cells<a class="anchor" aria-label="anchor" href="#remove-low-quality-cells"></a>
+</h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCells.html">FilterCells</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
-<span>  min_junctions      <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  min_junction_reads <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  min_pct_covered    <span class="op">=</span> <span class="fl">10</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  min_cells_covered <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  min_psi_variance  <span class="op">=</span> <span class="fl">0.01</span></span>
+<span>  min_features_isoform <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># at least 5 junctions detected</span></span>
+<span>  min_pct_isoform      <span class="op">=</span> <span class="fl">10</span>    <span class="co"># PSI covered for &gt;= 10% of splice events</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="remove-uninformative-splice-events">Remove uninformative splice events<a class="anchor" aria-label="anchor" href="#remove-uninformative-splice-events"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="step-4-visualise-splicing-patterns">Step 4 – Visualise splicing patterns<a class="anchor" aria-label="anchor" href="#step-4-visualise-splicing-patterns"></a>
@@ -181,7 +204,7 @@ few cells:</p>
 <div class="section level3">
 <h3 id="where-does-the-splicing-switch-happen-on-the-umap">Where does the splicing switch happen on the UMAP?<a class="anchor" aria-label="anchor" href="#where-does-the-splicing-switch-happen-on-the-umap"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -191,7 +214,7 @@ few cells:</p>
 <div class="section level3">
 <h3 id="distributions-by-cell-type">Distributions by cell type<a class="anchor" aria-label="anchor" href="#distributions-by-cell-type"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature  <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -201,14 +224,8 @@ few cells:</p>
 <div class="section level3">
 <h3 id="overview-of-all-events">Overview of all events<a class="anchor" aria-label="anchor" href="#overview-of-all-events"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotHeatmap.html">PlotHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="inspect-per-junction-counts-for-a-gene">Inspect per-junction counts for a gene<a class="anchor" aria-label="anchor" href="#inspect-per-junction-counts-for-a-gene"></a>
-</h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotCoverage.html">PlotCoverage</a></span><span class="op">(</span><span class="va">obj</span>, gene <span class="op">=</span> <span class="st">"PTBP1"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotHeatmap.html">PlotHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="sashimi-plot-for-a-specific-event">Sashimi plot for a specific event<a class="anchor" aria-label="anchor" href="#sashimi-plot-for-a-specific-event"></a>
@@ -222,7 +239,7 @@ coloured by inclusion (blue) vs exclusion (red). Use
 <span>  event_id  <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
 <span>  group_by  <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
 <span>  arc_scale <span class="op">=</span> <span class="st">"sqrt"</span>,</span>
-<span>  title     <span class="op">=</span> <span class="st">"PTBP1 exon 9 — junction coverage by cell type"</span></span>
+<span>  title     <span class="op">=</span> <span class="st">"PTBP1 exon 9 -- junction coverage by cell type"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -238,7 +255,7 @@ coloured by inclusion (blue) vs exclusion (red). Use
 <span><span class="va">obj</span><span class="op">$</span><span class="va">seurat_clusters</span></span>
 <span><span class="va">obj</span><span class="op">$</span><span class="va">cell_type</span></span>
 <span></span>
-<span><span class="co"># PSI matrix: cells x events</span></span>
+<span><span class="co"># PSI matrix: cells x splice events</span></span>
 <span><span class="va">psi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetPSI.html">GetPSI</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Raw junction counts: cells x junctions</span></span>

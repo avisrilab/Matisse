@@ -1,7 +1,7 @@
-# Get raw junction count matrix
+# Get raw junction count matrix (junction mode only)
 
-Retrieves the per-junction read counts from the `"junction"` `Assay5`
-stored inside the embedded Seurat object.
+Retrieves the per-junction read counts from the `"isoform"` `Assay5` in
+junction mode.
 
 ## Usage
 
@@ -24,5 +24,5 @@ GetJunctionCounts(object, ...)
 
 ## Value
 
-A sparse matrix (cells × junctions) of read counts, or `NULL` if the
-object is in event mode or no junction assay exists.
+A sparse matrix (cells x junctions) of read counts, or `NULL` if the
+object is in transcript mode.

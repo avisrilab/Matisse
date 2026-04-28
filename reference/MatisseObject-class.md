@@ -2,8 +2,8 @@
 
 The central data structure for Matisse. It wraps a
 [`Seurat`](https://satijalab.org/seurat/reference/Seurat-package.html)
-object and adds isoform-resolved splicing layers. All per-cell data —
-junction counts, PSI values, transcript counts, and QC metrics — live
+object and adds isoform-resolved splicing layers. All per-cell data –
+junction counts, PSI values, transcript counts, and QC metrics – live
 inside the embedded Seurat object as named assays (`Assay5`) or cell
 metadata (`meta.data`). Nothing is duplicated outside the Seurat object.
 
@@ -58,20 +58,25 @@ x$name
 
 ## Details
 
-Two operating modes are supported, set automatically at construction:
+Two input modes are supported, set automatically at construction:
 
 - `"junction"`:
 
-  Short-read mode. Raw junction counts are stored as
-  `Assay5("junction")` (junctions × cells). PSI is computed later by
+  Short-read mode. Raw junction counts (from STARsolo) are stored as
+  `Assay5("isoform")` (junctions x cells). Call
   [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-  and stored as `Assay5("psi")`.
+  to compute PSI values.
 
-- `"event"`:
+- `"transcript"`:
 
-  Long-read mode. Transcript counts (e.g. from Bagpiper or FLAMES) are
-  stored as `Assay5("transcript")`. PSI is computed at construction time
-  from SUPPA2 `.ioe` event definitions and stored as `Assay5("psi")`.
+  Long-read mode. Transcript isoform counts (from Bagpiper, FLAMES, or
+  LIQA) are stored as `Assay5("isoform")` (transcripts x cells). Call
+  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  to compute PSI values.
+
+After
+[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md),
+PSI values are stored as `Assay5("psi")` (splice events x cells).
 
 ## Functions
 
@@ -86,24 +91,14 @@ Two operating modes are supported, set automatically at construction:
 - `seurat`:
 
   A `Seurat` object. Contains all per-cell data: gene expression, splice
-  assays (`"junction"`, `"transcript"`, `"psi"`), cell metadata (QC
-  metrics, cluster labels), and dimensionality reductions.
+  assays (`"isoform"`, `"psi"`), cell metadata (QC metrics, cluster
+  labels), and dimensionality reductions.
 
-- `event_data`:
+- `input.mode`:
 
-  A `data.frame` with one row per splice event. Required columns:
-  `event_id`, `gene_id`, `chr`, `strand`, `event_type`,
-  `inclusion_junctions`, `exclusion_junctions`.
-
-- `junction_data`:
-
-  A `data.frame` with one row per junction. Required columns:
-  `junction_id`, `chr`, `start`, `end`, `strand`, `gene_id`.
-
-- `mode`:
-
-  Character. `"junction"` for short-read objects; `"event"` for
-  long-read objects.
+  Character. `"junction"` for short-read (STARsolo junction counts)
+  objects; `"transcript"` for long-read (Bagpiper / FLAMES / LIQA
+  transcript counts) objects.
 
 - `version`:
 

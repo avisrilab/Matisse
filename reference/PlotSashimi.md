@@ -2,9 +2,8 @@
 
 Draws junction arcs scaled by read count over a schematic gene
 structure. Arcs are coloured by role: inclusion (blue) vs exclusion
-(red). Works in both junction mode (per-junction counts) and event mode
-(aggregated inclusion/exclusion counts). Optionally faceted by a cell
-metadata column.
+(red). Works in both junction mode and transcript mode. Optionally
+faceted by a cell metadata column.
 
 Draws junction arcs scaled by aggregate read count over a schematic gene
 structure. Arcs are coloured by role: inclusion (blue) vs exclusion

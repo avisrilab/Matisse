@@ -1,7 +1,7 @@
-# Get transcript count matrix
+# Get transcript count matrix (transcript mode only)
 
-Retrieves raw transcript counts from the `"transcript"` `Assay5` stored
-inside the embedded Seurat object.
+Retrieves raw transcript counts from the `"isoform"` `Assay5` in
+transcript mode.
 
 ## Usage
 
@@ -24,5 +24,5 @@ GetTranscriptCounts(object, ...)
 
 ## Value
 
-A sparse matrix (transcripts × cells) of raw counts, or `NULL` if no
-`"transcript"` assay exists.
+A sparse matrix (transcripts x cells) of raw counts, or `NULL` if the
+object is in junction mode.

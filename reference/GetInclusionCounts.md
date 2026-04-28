@@ -24,4 +24,4 @@ GetInclusionCounts(object, ...)
 
 ## Value
 
-A sparse matrix (cells × events) of inclusion read counts.
+A sparse matrix (cells x events) of inclusion read counts.

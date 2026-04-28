@@ -18,26 +18,26 @@ instead.
 
 ## What you need
 
-| Input                       | Description                                                                                                                                                                          |
-|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Seurat object**           | Already processed: gene-expression normalisation, UMAP, cluster labels.                                                                                                              |
-| **Transcript count matrix** | *Transcripts x cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation.                                                                          |
-| **SUPPA2 IOE files**        | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to inclusion/exclusion sets for each splicing event. |
+| Input                       | Description                                                                                                                                                          |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Seurat object**           | Already processed: gene-expression normalisation, UMAP, cluster labels.                                                                                              |
+| **Transcript count matrix** | *Transcripts × cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation.                                                          |
+| **SUPPA2 IOE files**        | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to the splicing events they support. |
 
 ------------------------------------------------------------------------
 
 ## Step 1 – Build the Matisse object
 
-Pass `transcript_counts` and `ioe_files` together to trigger event mode.
-PSI is calculated automatically during construction – no separate
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
-call is needed.
+Pass `transcript_counts` and `ioe_files` together. Matisse stores the
+transcript counts in an internal assay and records the splice event
+annotations. It does **not** calculate PSI at this stage – that happens
+in Step 2.
 
 ``` r
 library(Matisse)
 
 # transcript_counts: transcripts x cells sparse matrix (e.g. from Bagpiper)
-# ioe_files: SUPPA2 .ioe output files
+# ioe_files: SUPPA2 .ioe output files, one per event type
 obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
@@ -45,52 +45,86 @@ obj <- CreateMatisseObject(
     "events_SE.ioe",   # skipped exons
     "events_RI.ioe",   # retained introns
     "events_SS.ioe"    # alternative splice sites
-  ),
-  min_coverage = 5L
+  )
 )
 ```
 
-Each cell x event PSI entry is the fraction of transcripts carrying the
-included form of that exon:
+After construction, two QC columns are written to cell metadata:
+
+- `nCount_isoform` – total transcript counts per cell
+- `nFeature_isoform` – number of transcripts with at least one read per
+  cell
+
+------------------------------------------------------------------------
+
+## Step 2 – Calculate PSI
+
+Call
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+explicitly to compute Percent Spliced In (PSI) for each splice event in
+each cell. For each cell and event, Matisse sums transcript counts from
+inclusion isoforms and exclusion isoforms, then computes:
 
 $$PSI_{c,e} = \frac{\sum\text{inclusion transcript counts}}{\sum\text{inclusion counts} + \sum\text{exclusion counts}}$$
 
-Cells with fewer than `min_coverage` total transcript counts for a given
-event are left as `NA`.
+Cells with fewer than `min_coverage` total transcripts for a given event
+are reported as `NA`.
+
+``` r
+obj <- CalculatePSI(obj, min_coverage = 5L)
+```
+
+[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+also writes a third QC column:
+
+- `nPercent_isoform` – percentage of splice events with a non-NA PSI
+  value in each cell (a measure of isoform coverage breadth)
 
 ------------------------------------------------------------------------
 
-## Step 2 – Summarise and quality control
+## Step 3 – Quality control
 
-Summarise the PSI distribution across events, then compute per-cell QC
-metrics before filtering.
+### Visualise QC metrics
+
+Call
+[`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+with no `feature` argument to automatically plot all three isoform QC
+metrics (`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) as a
+faceted panel. This is the fastest way to spot cells with very few
+transcripts or low splicing coverage.
 
 ``` r
-# Per-event summary: mean PSI, median PSI, variance, cell coverage
-psi_summary <- SummarizePSI(obj)
-head(psi_summary)
+PlotViolin(obj)
 ```
 
+### Remove low-quality cells
+
+Remove cells that have too few transcripts or too little splicing
+coverage:
+
 ``` r
-obj <- ComputeIsoformQC(obj)
-PlotQCMetrics(obj, group_by = "cell_type")
+obj <- FilterCells(
+  obj,
+  min_features_isoform = 5,    # at least 5 transcripts detected
+  min_pct_isoform      = 10    # PSI covered for >= 10% of splice events
+)
 ```
 
-Remove low-coverage cells and uninformative events:
+### Remove uninformative splice events
+
+Remove events that are observed in very few cells:
 
 ``` r
-obj <- FilterCells(obj, min_pct_covered = 10)
-obj <- FilterEvents(obj, min_cells_covered = 20, min_psi_variance = 0.01)
+obj <- FilterEvents(obj, min_cells_covered = 20)
 ```
 
 ------------------------------------------------------------------------
 
-## Step 3 – Normalise transcript counts
+## Step 4 – Normalise transcript counts
 
-For long-read data the transcript-level count matrix often has high
-technical variability. \[SCTransform.MatisseObject()\] on a Matisse
-object in event mode automatically targets the `"transcript"` assay. Run
-\[RunPCA.MatisseObject()\] explicitly afterwards.
+Normalise the transcript-level count matrix before clustering.
+SCTransform applies variance stabilisation and corrects for sequencing
+depth.
 
 ``` r
 obj <- SCTransform(obj)
@@ -99,7 +133,7 @@ obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 
 ------------------------------------------------------------------------
 
-## Step 4 – Cluster and embed
+## Step 5 – Cluster and embed
 
 Standard Seurat clustering functions work directly on the Matisse
 object. The PSI data and all other slots are preserved throughout.
@@ -112,12 +146,12 @@ obj <- FindClusters(obj, resolution = 0.5)
 
 ------------------------------------------------------------------------
 
-## Step 5 – Visualise splicing patterns
+## Step 6 – Visualise splicing patterns
 
 ### Overlay PSI on the UMAP
 
-Each dot is a cell coloured by its PSI value for one event: blue = exon
-skipped (low PSI), red = exon included (high PSI).
+Each dot is a cell coloured by its PSI value for one splice event: blue
+= exon skipped (low PSI), red = exon included (high PSI).
 
 ``` r
 PlotUMAP(
@@ -143,20 +177,19 @@ PlotViolin(
 PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 ```
 
-### Inspect junction coverage with a sashimi plot
+### Inspect isoform usage with a sashimi plot
 
 [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
 draws junction arcs scaled by aggregate read count, coloured by role
-(inclusion = blue, exclusion = red). It works in event mode by parsing
-junction coordinates directly from the SE event ID. Facet by cell type
-to compare isoform usage across populations.
+(inclusion = blue, exclusion = red). Facet by cell type to compare
+isoform usage across populations.
 
 ``` r
 PlotSashimi(
   obj,
   event_id = "SE:chr18:3433648-3434699:3434801-3436055:-",
   group_by = "cell_type",
-  title    = "PTBP1 exon 9 — coverage by cell type"
+  title    = "PTBP1 exon 9 -- coverage by cell type"
 )
 ```
 
@@ -180,7 +213,7 @@ seu <- GetSeurat(obj)
 obj$seurat_clusters
 obj$cell_type
 
-# Full PSI matrix as a sparse matrix (cells x events)
+# Full PSI matrix as a sparse matrix (cells x splice events)
 psi <- GetPSI(obj)
 
 # Raw transcript counts (transcripts x cells)

@@ -41,7 +41,7 @@
     <div class="section level2">
       <h2 id="creating-a-matisse-object">Creating a Matisse object<a class="anchor" aria-label="anchor" href="#creating-a-matisse-object"></a></h2>
 
-      <div class="section-desc"><p>Start here. This function combines your Seurat object with splicing data into a single Matisse object ready for analysis. Pass <code>junction_counts</code> for short-read (junction) mode, or <code>transcript_counts</code> + <code>ioe_files</code> for long-read (event) mode.</p></div>
+      <div class="section-desc"><p>Start here. This function combines your Seurat object with splicing data into a single Matisse object ready for analysis. Pass <code>junction_counts</code> for short-read (junction) mode, or <code>transcript_counts</code> + <code>ioe_files</code> for long-read (transcript) mode.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -97,7 +97,7 @@
           <code><a href="GetJunctionCounts.html">GetJunctionCounts()</a></code>
 
         </dt>
-        <dd>Get raw junction count matrix</dd>
+        <dd>Get raw junction count matrix (junction mode only)</dd>
 
         <dt>
 
@@ -118,7 +118,7 @@
           <code><a href="GetTranscriptCounts.html">GetTranscriptCounts()</a></code>
 
         </dt>
-        <dd>Get transcript count matrix</dd>
+        <dd>Get transcript count matrix (transcript mode only)</dd>
 
         <dt>
 
@@ -150,7 +150,7 @@
       </dl></div><div class="section level2">
       <h2 id="normalisation">Normalisation<a class="anchor" aria-label="anchor" href="#normalisation"></a></h2>
 
-      <div class="section-desc"><p>Normalise count data before clustering. <code>SCTransform</code> applies variance stabilisation and scales for sequencing depth — in event mode it targets the <code>transcript</code> assay automatically; in junction mode it targets the gene-expression assay. <code>NormalizeData</code>, <code>ScaleData</code>, and <code>FindVariableFeatures</code> are log-normalisation alternatives.</p></div>
+      <div class="section-desc"><p>Normalise count data before clustering. <code>SCTransform</code> applies variance stabilisation and scales for sequencing depth – in transcript mode it targets the <code>isoform</code> assay automatically; in junction mode it targets the gene-expression assay. <code>NormalizeData</code>, <code>ScaleData</code>, and <code>FindVariableFeatures</code> are log-normalisation alternatives.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -293,7 +293,7 @@
       </dl></div><div class="section level2">
       <h2 id="calculate-splicing-ratios-psi-">Calculate splicing ratios (PSI)<a class="anchor" aria-label="anchor" href="#calculate-splicing-ratios-psi-"></a></h2>
 
-      <div class="section-desc"><p>Compute PSI (Percent Spliced In) — the fraction of transcripts in each cell that include a given exon. Values range from 0 (exon always skipped) to 1 (exon always included). In event mode this is done at construction; in junction mode call CalculatePSI() explicitly.</p></div>
+      <div class="section-desc"><p>Compute PSI (Percent Spliced In) – the fraction of transcripts in each cell that include a given exon. Values range from 0 (exon always skipped) to 1 (exon always included). Call CalculatePSI() explicitly after CreateMatisseObject() in both junction and transcript modes.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -305,7 +305,7 @@
           <code><a href="CalculatePSI.html">CalculatePSI()</a></code>
 
         </dt>
-        <dd>Calculate PSI matrix from junction counts</dd>
+        <dd>Calculate PSI matrix from junction or transcript counts</dd>
 
         <dt>
 
@@ -316,7 +316,7 @@
       </dl></div><div class="section level2">
       <h2 id="quality-control-and-filtering">Quality control and filtering<a class="anchor" aria-label="anchor" href="#quality-control-and-filtering"></a></h2>
 
-      <div class="section-desc"><p>Identify and remove cells or splicing events that don’t have enough data for reliable analysis.</p></div>
+      <div class="section-desc"><p>Identify and remove cells or splicing events that don’t have enough data for reliable analysis. QC columns written automatically: <code>nCount_isoform</code> and <code>nFeature_isoform</code> at construction; <code>nPercent_isoform</code> after CalculatePSI().</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -325,17 +325,10 @@
 
       <dl><dt>
 
-          <code><a href="ComputeIsoformQC.html">ComputeIsoformQC()</a></code>
-
-        </dt>
-        <dd>Compute per-cell isoform QC metrics</dd>
-
-        <dt>
-
           <code><a href="FilterCells.html">FilterCells()</a></code>
 
         </dt>
-        <dd>Filter cells by isoform QC thresholds</dd>
+        <dd>Filter cells by QC thresholds</dd>
 
         <dt>
 
@@ -372,14 +365,7 @@
           <code><a href="PlotHeatmap.html">PlotHeatmap()</a></code>
 
         </dt>
-        <dd>Heatmap of feature values across cells and events</dd>
-
-        <dt>
-
-          <code><a href="PlotCoverage.html">PlotCoverage()</a></code>
-
-        </dt>
-        <dd>Junction coverage bar plot for a gene</dd>
+        <dd>Heatmap of PSI values (events x cells, DoHeatmap style)</dd>
 
         <dt>
 
@@ -387,13 +373,6 @@
 
         </dt>
         <dd>Sashimi-style coverage plot for a splice event</dd>
-
-        <dt>
-
-          <code><a href="PlotQCMetrics.html">PlotQCMetrics()</a></code>
-
-        </dt>
-        <dd>Violin/ridge plot of isoform QC metrics</dd>
       </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
 
