@@ -1,4 +1,4 @@
-# Matisse
+# Matisse: Multi-modal Analysis of Transcript Isoforms in Single-Cell Sequencing Experiments
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml)
@@ -112,28 +112,31 @@ obj <- CreateMatisseObject(
 # QC, filtering, and visualisation are identical from here
 ```
 
-### With Signac (chromatin + splicing)
-
-<!-- TODO: add multiome/Signac integration example once tested end-to-end -->
-
 ---
 
-## Key functions
+## At a glance
 
-| Function | What it does |
-|---|---|
-| `CreateMatisseObject()` | Build the object from Seurat + junction or transcript counts |
-| `CalculatePSI()` | Compute PSI matrix; write `nPercent_isoform` to metadata |
-| `FilterCells()` | Remove low-quality cells by isoform QC thresholds |
-| `FilterEvents()` | Remove low-coverage or low-variance splice events |
-| `GetPSI()` | Extract the PSI matrix (cells x events) |
-| `GetSeurat()` | Pull the embedded Seurat object for native Seurat ops |
-| `PlotUMAP()` | UMAP coloured by any PSI event, junction, or gene |
-| `PlotViolin()` | Violin plot of PSI or QC metrics by cell group |
-| `PlotHeatmap()` | PSI heatmap across events and cells |
-| `PlotSashimi()` | Sashimi arc plot for a single splice event |
-| `SummarizePSI()` | Per-event mean / median / SD / coverage table |
-| `MergeMatisse()` | Merge two MatisseObjects by cells |
+```mermaid
+flowchart TB
+    subgraph INPUTS["Inputs"]
+        S[Seurat object<br/>cells × genes]
+        J["Junction counts<br/>cells × junctions<br/><i>STARsolo SJ</i>"]
+        T["Transcript counts<br/>transcripts × cells<br/><i>Bagpiper / FLAMES / LIQA</i>"]
+        E["events<br/>data.frame OR SUPPA2 .ioe"]
+    end
+
+    S --> C[CreateMatisseObject]
+    J -. junction mode .-> C
+    T -. transcript mode .-> C
+    E --> C
+
+    C ==> P["Assay5('psi')<br/>events × cells<br/>+ inclusion / exclusion counts"]
+
+    P --> QC["Quality control<br/>FilterCells / FilterEvents"]
+    P --> VIS["Visualisation<br/>PlotUMAP / PlotViolin<br/>PlotHeatmap / PlotSashimi"]
+    P --> SUM["Summary stats<br/>SummarizePSI"]
+    P --> SEURAT["Native Seurat ops<br/>NormalizeData, SCTransform,<br/>RunPCA, FindClusters, …"]
+```
 
 ---
 
