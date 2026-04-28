@@ -1,5 +1,27 @@
 # Matisse 0.1.0
 
+## Phase 6 (April 2026): unify event input, drop junction_data
+
+* **`CreateMatisseObject()` now takes a single `events` parameter** that
+  accepts either a SUPPA2 `.ioe` path (or vector of paths) or a pre-built
+  `data.frame`. The previous `ioe_files` and `event_data` parameters are
+  removed — Matisse auto-dispatches on input class. The IOE-precedence
+  warning that gated the two-parameter form (P14) is gone, since the
+  conflict isn't possible anymore.
+* **`junction_data` parameter dropped (P7).** Per-junction genomic
+  coordinates are auto-parsed from junction IDs at construction and
+  written to `seurat[["isoform"]][[]]` (the isoform assay's
+  feature-metadata table). Supported ID formats:
+  `chr-start-end-strand`, `chr:start-end:strand`, `chr_start_end_strand`.
+  Names that don't match get NA coords with a warning — counts still
+  work, only sashimi plots degrade.
+* **Renamed event-annotation columns:** `inclusion_junctions` /
+  `exclusion_junctions` → `inclusion_features` / `exclusion_features`
+  (mode-agnostic — they hold junction IDs in junction mode, transcript
+  IDs in transcript mode).
+* `PlotSashimi` now reads junction coords from
+  `seurat[["isoform"]][[]]` instead of `obj@misc[["junction_data"]]`.
+
 ## Code-review pass (April 2026): API surface tightened, several bug fixes
 
 This release applies a multi-phase code-review pass that simplifies the

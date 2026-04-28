@@ -85,6 +85,66 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
+# Junction-name coordinate parser
+# ---------------------------------------------------------------------------
+
+# Try to parse genomic coordinates out of junction IDs. Tools encode them
+# differently — STARsolo's "chr1-12345-67890-+", SUPPA-style
+# "chr1:12345-67890:+", underscore-separated "chr1_12345_67890_+", etc.
+# Returns a data.frame keyed by `junction_id` with columns chr/start/end/strand.
+# Names that don't match any pattern get NA coordinates and produce a warning;
+# everything downstream still works for raw counts, only sashimi degrades.
+.parse_junction_names <- function(junction_ids) {
+  n <- length(junction_ids)
+  out <- data.frame(
+    junction_id = junction_ids,
+    chr         = NA_character_,
+    start       = NA_integer_,
+    end         = NA_integer_,
+    strand      = NA_character_,
+    stringsAsFactors = FALSE
+  )
+  if (n == 0L) return(out)
+
+  patterns <- c(
+    # chr1-12345-67890-+   (STARsolo SJ default)
+    "^([^-]+)-(\\d+)-(\\d+)-([-+*.])$",
+    # chr1:12345-67890:+   (SUPPA / common bedlike)
+    "^([^:]+):(\\d+)-(\\d+):([-+*.])$",
+    # chr1_12345_67890_+   (underscore-separated)
+    "^([^_]+)_(\\d+)_(\\d+)_([-+*.])$"
+  )
+
+  unmatched <- rep(TRUE, n)
+  for (pat in patterns) {
+    if (!any(unmatched)) break
+    candidates <- junction_ids[unmatched]
+    matches    <- regmatches(candidates, regexec(pat, candidates))
+    hit_local  <- vapply(matches, length, integer(1)) == 5L
+    if (!any(hit_local)) next
+    abs_idx    <- which(unmatched)[hit_local]
+    parts      <- matches[hit_local]
+    out$chr[abs_idx]    <- vapply(parts, function(x) x[2L], character(1))
+    out$start[abs_idx]  <- as.integer(vapply(parts, function(x) x[3L], character(1)))
+    out$end[abs_idx]    <- as.integer(vapply(parts, function(x) x[4L], character(1)))
+    out$strand[abs_idx] <- vapply(parts, function(x) x[5L], character(1))
+    unmatched[abs_idx]  <- FALSE
+  }
+
+  if (any(unmatched)) {
+    n_bad <- sum(unmatched)
+    examples <- paste(utils::head(junction_ids[unmatched], 3L), collapse = ", ")
+    rlang::warn(paste0(
+      "Could not parse coordinates from ", n_bad, " junction ID(s); ",
+      "they will have NA coords (e.g. ", examples, "). ",
+      "Junction-mode PlotSashimi may degrade for these events. ",
+      "Supported formats: chr-start-end-strand, chr:start-end:strand, ",
+      "chr_start_end_strand."))
+  }
+  out
+}
+
+# ---------------------------------------------------------------------------
 # Shared PSI computation helpers
 # ---------------------------------------------------------------------------
 

@@ -53,10 +53,11 @@ reference:
   - title: "Creating a Matisse object"
     desc: >
       Start here. This function combines your Seurat object with splicing
-      data into a single Matisse object ready for analysis. Pass
-      <code>junction_counts</code> for short-read (junction) mode, or
-      <code>transcript_counts</code> + <code>ioe_files</code> for long-read
-      (transcript) mode.
+      data into a single Matisse object (and computes PSI) in one call.
+      Pass <code>junction_counts</code> for short-read (junction) mode, or
+      <code>transcript_counts</code> for long-read (transcript) mode, plus
+      splice events via <code>events</code> (data.frame or path to a SUPPA2
+      <code>.ioe</code> file).
     contents:
       - MatisseObject-class
       - CreateMatisseObject

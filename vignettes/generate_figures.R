@@ -136,10 +136,10 @@ event_df <- data.frame(
   chr                 = vapply(events, `[[`, character(1), "chr"),
   strand              = vapply(events, `[[`, character(1), "strand"),
   event_type          = rep("SE", n_events),
-  inclusion_junctions = paste0(
+  inclusion_features = paste0(
     vapply(events, `[[`, character(1), "gene"), "_inc_up", ";",
     vapply(events, `[[`, character(1), "gene"), "_inc_dn"),
-  exclusion_junctions = paste0(
+  exclusion_features = paste0(
     vapply(events, `[[`, character(1), "gene"), "_exc"),
   stringsAsFactors    = FALSE
 )
@@ -168,14 +168,11 @@ junction_df <- data.frame(
 obj <- CreateMatisseObject(
   seurat          = seu,
   junction_counts = jxn_sparse,
-  event_data      = event_df,
-  junction_data   = junction_df,
+  events          = event_df,
+  min_coverage    = 5,
   verbose         = FALSE
 )
-obj <- CalculatePSI(obj,       min_coverage = 5,  verbose = FALSE)
-obj <- ComputeIsoformQC(obj,                      verbose = FALSE)
-obj <- FilterCells(obj,        min_junctions = 2, verbose = FALSE)
-obj <- FilterEvents(obj,       min_cells_covered = 10, verbose = FALSE)
+obj <- FilterEvents(obj, min_cells_covered = 10, verbose = FALSE)
 
 # ---------------------------------------------------------------------------
 # 5. Save figures
@@ -284,7 +281,7 @@ writeLines(c(
 lr_obj <- CreateMatisseObject(
   seurat            = lr_seu,
   transcript_counts = Matrix::Matrix(lr_tx_mat, sparse = TRUE),
-  ioe_files         = lr_ioe,
+  events         = lr_ioe,
   min_coverage      = 1L,
   verbose           = FALSE
 )

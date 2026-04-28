@@ -34,7 +34,7 @@ NULL
 #' @param object A \code{\linkS4class{MatisseObject}}, or a sparse matrix
 #'   (cells x junctions) when computing PSI outside the object.
 #' @param events A \code{data.frame} with columns \code{event_id},
-#'   \code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
+#'   \code{inclusion_features}, and \code{exclusion_features}. Defaults to
 #'   the event annotation staged at construction time
 #'   (\code{object@misc[["event_data"]]}, populated by
 #'   \code{\link{CreateMatisseObject}}).
@@ -197,7 +197,7 @@ setMethod("CalculatePSI", "ANY",
                                    min_coverage, verbose) {
   .check_required_columns(
     events,
-    c("event_id", "inclusion_junctions", "exclusion_junctions"),
+    c("event_id", "inclusion_features", "exclusion_features"),
     "events"
   )
 
@@ -211,9 +211,9 @@ setMethod("CalculatePSI", "ANY",
       "Calculating PSI for {n_events} events across {n_cells} cells...")
   }
 
-  inc_lists <- lapply(strsplit(events$inclusion_junctions, ";", fixed = TRUE),
+  inc_lists <- lapply(strsplit(events$inclusion_features, ";", fixed = TRUE),
                       trimws)
-  exc_lists <- lapply(strsplit(events$exclusion_junctions, ";", fixed = TRUE),
+  exc_lists <- lapply(strsplit(events$exclusion_features, ";", fixed = TRUE),
                       trimws)
 
   A_inc <- .build_indicator_matrix(inc_lists, jxn_names)

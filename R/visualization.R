@@ -349,7 +349,7 @@ setMethod("PlotHeatmap", "MatisseObject",
 #'
 #' Supported event types in transcript mode: \strong{SE} (skipped exon) and
 #' \strong{RI} (retained intron). Junction mode supports all event types
-#' since coordinates come directly from \code{junction_data}.
+#' since coordinates are auto-parsed from junction IDs.
 #'
 #' \strong{Note on transcript-mode SE arcs:} transcript-level counting
 #' aggregates reads to events, not to individual junctions. The total
@@ -431,16 +431,32 @@ setMethod("PlotSashimi", "MatisseObject",
 # Return data.frame: junction_id | start | end | role
 .cov_jxn_coords <- function(object, ev) {
   if (object@input.mode == "junction") {
-    inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
-    exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
+    inc <- strsplit(ev$inclusion_features, ";", fixed = TRUE)[[1]]
+    exc <- strsplit(ev$exclusion_features, ";", fixed = TRUE)[[1]]
     ids <- c(inc, exc)
-    jd  <- object@misc[["junction_data"]]
-    idx <- match(ids, jd$junction_id)
+    # Per-junction coordinates live in the isoform assay's meta.features,
+    # auto-derived from junction IDs at construction.
+    iso <- .get_assay_safe(object@seurat, "isoform")
+    if (is.null(iso)) {
+      rlang::abort(
+        "No 'isoform' assay found; cannot draw junction coordinates.")
+    }
+    jd  <- iso[[]]
+    idx <- match(ids, rownames(jd))
     if (anyNA(idx)) {
       missing <- ids[is.na(idx)]
       rlang::abort(paste0(
-        "Junctions not found in junction_data: ",
+        "Junctions referenced by event '", ev$event_id,
+        "' not found in junction count matrix: ",
         paste(missing, collapse = ", ")))
+    }
+    bad_coords <- is.na(jd$chr[idx])
+    if (any(bad_coords)) {
+      rlang::abort(paste0(
+        "Could not parse coordinates from these junction IDs (needed for ",
+        "sashimi plot): ", paste(ids[bad_coords], collapse = ", "),
+        ". Supported formats: chr-start-end-strand, chr:start-end:strand, ",
+        "chr_start_end_strand."))
     }
     data.frame(
       junction_id = ids,
@@ -522,8 +538,8 @@ setMethod("PlotSashimi", "MatisseObject",
     iso <- .get_assay_safe(object@seurat, "isoform")
     jxn <- if (!is.null(iso))
       Matrix::t(.get_assay_layer(iso, "counts")) else NULL
-    inc <- strsplit(ev$inclusion_junctions, ";", fixed = TRUE)[[1]]
-    exc <- strsplit(ev$exclusion_junctions, ";", fixed = TRUE)[[1]]
+    inc <- strsplit(ev$inclusion_features, ";", fixed = TRUE)[[1]]
+    exc <- strsplit(ev$exclusion_features, ";", fixed = TRUE)[[1]]
     ids <- intersect(c(inc, exc), colnames(jxn))
     tot <- as.numeric(Matrix::colSums(jxn[cells, ids, drop = FALSE]))
     data.frame(junction_id = ids, count = tot, stringsAsFactors = FALSE)

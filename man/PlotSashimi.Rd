@@ -71,7 +71,7 @@ from the \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 
 Supported event types in transcript mode: \strong{SE} (skipped exon) and
 \strong{RI} (retained intron). Junction mode supports all event types
-since coordinates come directly from \code{junction_data}.
+since coordinates are auto-parsed from junction IDs.
 
 \strong{Note on transcript-mode SE arcs:} transcript-level counting
 aggregates reads to events, not to individual junctions. The total

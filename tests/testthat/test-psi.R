@@ -36,7 +36,7 @@ test_that("CalculatePSI (matrix): PSI = 1 when only inclusion reads present", {
   mat <- Matrix::sparseMatrix(
     i = c(1L, 1L), j = c(1L, 2L), x = c(5, 5),
     dims = c(1L, 6L),
-    dimnames = list("Cell1", paste0("jxn", 1:6))
+    dimnames = list("Cell1", .junction_ids_fixture)
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 1L, verbose = FALSE)
@@ -47,7 +47,7 @@ test_that("CalculatePSI (matrix): PSI = 0 when only exclusion reads present", {
   mat <- Matrix::sparseMatrix(
     i = 1L, j = 5L, x = 10,
     dims = c(1L, 6L),
-    dimnames = list("Cell1", paste0("jxn", 1:6))
+    dimnames = list("Cell1", .junction_ids_fixture)
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 1L, verbose = FALSE)
@@ -58,7 +58,7 @@ test_that("CalculatePSI (matrix): PSI = 0.5 with equal inclusion/exclusion", {
   mat <- Matrix::sparseMatrix(
     i = c(1L, 1L), j = c(1L, 5L), x = c(5, 5),
     dims = c(1L, 6L),
-    dimnames = list("Cell1", paste0("jxn", 1:6))
+    dimnames = list("Cell1", .junction_ids_fixture)
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 1L, verbose = FALSE)
@@ -69,7 +69,7 @@ test_that("CalculatePSI (matrix): min_coverage threshold is respected", {
   mat <- Matrix::sparseMatrix(
     i = c(1L, 1L, 2L, 2L), j = c(1L, 5L, 1L, 5L), x = c(2, 1, 5, 5),
     dims = c(2L, 6L),
-    dimnames = list(c("Cell1", "Cell2"), paste0("jxn", 1:6))
+    dimnames = list(c("Cell1", "Cell2"), .junction_ids_fixture)
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 5L, verbose = FALSE)
@@ -81,7 +81,7 @@ test_that("CalculatePSI (matrix): handles missing junctions gracefully", {
   partial_mat <- Matrix::sparseMatrix(
     i = c(1L, 1L), j = c(1L, 2L), x = c(5, 5),
     dims = c(1L, 4L),
-    dimnames = list("Cell1", paste0("jxn", 1:4))
+    dimnames = list("Cell1", .junction_ids_fixture[1:4])
   )
   result <- CalculatePSI(partial_mat, make_event_data()[1, ],
                           min_coverage = 1L, verbose = FALSE)

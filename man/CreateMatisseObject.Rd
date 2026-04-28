@@ -8,9 +8,7 @@ CreateMatisseObject(
   seurat,
   junction_counts = NULL,
   transcript_counts = NULL,
-  ioe_files = NULL,
-  event_data = NULL,
-  junction_data = NULL,
+  events = NULL,
   min_coverage = 5L,
   defer_psi = FALSE,
   verbose = TRUE
@@ -21,6 +19,9 @@ CreateMatisseObject(
 
 \item{junction_counts}{A sparse matrix (dgCMatrix, cells x junctions) of
 raw per-junction read counts. Row names must match \code{colnames(seurat)}.
+Junction IDs (column names) ideally encode genomic coordinates
+(\code{chr-start-end-strand}, \code{chr:start-end:strand}, or
+\code{chr_start_end_strand}); Matisse parses these for sashimi plots.
 Triggers junction mode. Default: \code{NULL}.}
 
 \item{transcript_counts}{A matrix or sparse matrix (transcripts x cells) of
@@ -28,20 +29,17 @@ raw transcript-level counts. Stored as \code{Assay5("isoform")} in the
 Seurat object. Column names must overlap with \code{colnames(seurat)}.
 Triggers transcript mode. Default: \code{NULL}.}
 
-\item{ioe_files}{Character vector of paths to SUPPA2 \code{.ioe} files.
-Required in transcript mode. The parsed event annotation is staged in
-the object and migrated into \code{seurat[["psi"]][[]]} by
-\code{\link{CalculatePSI}}. Default: \code{NULL}.}
-
-\item{event_data}{A \code{data.frame} defining splice events (junction mode).
-Required columns: \code{event_id}, \code{gene_id}, \code{chr},
-\code{strand}, \code{event_type}, \code{inclusion_junctions},
-\code{exclusion_junctions}. Default: \code{NULL}.}
-
-\item{junction_data}{A \code{data.frame} of junction annotations. Required
-columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
-\code{strand}, \code{gene_id}. Used by \code{\link{PlotSashimi}} in
-junction mode. Default: \code{NULL}.}
+\item{events}{Splice-event annotation. Either:
+\itemize{
+\item a character vector of paths to SUPPA2 \code{.ioe} file(s)
+(parsed internally), or
+\item a pre-built \code{data.frame} with columns \code{event_id},
+\code{gene_id}, \code{chr}, \code{strand}, \code{event_type},
+\code{inclusion_features}, \code{exclusion_features}. The
+\code{*_features} columns hold the IDs that support each role —
+junction IDs in junction mode, transcript IDs in transcript mode.
+}
+Required.}
 
 \item{min_coverage}{Integer. Minimum total reads per cell per event for the
 PSI calculation step. Default: \code{5L}. Forwarded to
@@ -65,11 +63,11 @@ mode is detected automatically from the inputs you supply:
 \details{
 \itemize{
 \item \strong{Junction mode} (short-read): pass \code{junction_counts}
-plus an event annotation (\code{event_data}, required). Junction
-counts are stored as \code{Assay5("isoform")} inside the Seurat
-object; PSI values land in \code{Assay5("psi")}.
+plus splice events via \code{events}. Junction counts are stored as
+\code{Assay5("isoform")} inside the Seurat object; PSI values land in
+\code{Assay5("psi")}.
 \item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
-plus \code{ioe_files} (SUPPA2-style event annotation, required).
+plus splice events via \code{events} (typically a SUPPA2 IOE file).
 Transcript counts are stored as \code{Assay5("isoform")}; PSI values
 land in \code{Assay5("psi")}.
 }
@@ -86,16 +84,15 @@ counts <- matrix(rpois(200, 5), nrow = 20,
                                  paste0("Cell", 1:10)))
 seu <- CreateSeuratObject(counts)
 
-# Junction mode
+# Junction mode (short-read): events as a data.frame
 jxn <- make_junction_counts()
-obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn)
-obj <- CalculatePSI(obj)
+obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn,
+                           events = my_event_df)
 
-# Transcript mode
+# Transcript mode (long-read): events as SUPPA2 IOE file paths
 tx  <- make_transcript_counts()
 obj <- CreateMatisseObject(seurat = seu, transcript_counts = tx,
-                           ioe_files = "path/to/events.ioe")
-obj <- CalculatePSI(obj)
+                           events = "path/to/events.ioe")
 }
 
 }

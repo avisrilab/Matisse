@@ -69,7 +69,7 @@ test_that("CreateMatisseObject: folds PSI calc into construction by default (P5)
   obj <- CreateMatisseObject(
     seurat          = seu,
     junction_counts = jxn_mat,
-    event_data      = ev_data,
+    events      = ev_data,
     min_coverage    = 1L,
     verbose         = FALSE
   )
@@ -85,7 +85,7 @@ test_that("CreateMatisseObject: defer_psi=TRUE skips the PSI step", {
   obj <- CreateMatisseObject(
     seurat          = seu,
     junction_counts = jxn_mat,
-    event_data      = ev_data,
+    events      = ev_data,
     defer_psi       = TRUE,
     verbose         = FALSE
   )
@@ -98,37 +98,11 @@ test_that("CreateMatisseObject: event_data_path is the normalized path when ioe_
   obj <- CreateMatisseObject(
     seurat            = make_seurat(n_cells = 20L),
     transcript_counts = make_transcript_counts(n_cells = 20L),
-    ioe_files         = ioe,
+    events         = ioe,
     verbose           = FALSE
   )
   expect_equal(obj@misc[["event_data_path"]],
                normalizePath(ioe, mustWork = FALSE))
-})
-
-test_that("CreateMatisseObject: warns when both event_data and ioe_files are supplied (P14)", {
-  skip_if_not_installed("Seurat")
-  ev  <- data.frame(
-    event_id             = c("X1", "X2"),
-    gene_id              = c("g1", "g2"),
-    chr                  = c("chr1", "chr1"),
-    strand               = c("+", "+"),
-    event_type           = c("SE", "SE"),
-    inclusion_junctions  = c("a;b", "c;d"),
-    exclusion_junctions  = c("e", "f"),
-    stringsAsFactors     = FALSE
-  )
-  ioe <- make_se_ioe_file()
-  expect_warning(
-    CreateMatisseObject(
-      seurat            = make_seurat(n_cells = 20L),
-      transcript_counts = make_se_transcript_counts(n_cells = 20L),
-      ioe_files         = ioe,
-      event_data        = ev,
-      defer_psi         = TRUE,
-      verbose           = FALSE
-    ),
-    regexp = "event_data.*takes precedence|both.*ioe_files.*event_data"
-  )
 })
 
 test_that("CalculatePSI clears @misc[['event_data']] (now lives in PSI assay meta.features)", {
@@ -143,11 +117,16 @@ test_that("CalculatePSI clears @misc[['event_data']] (now lives in PSI assay met
   expect_true("gene_id" %in% colnames(mf))
 })
 
-test_that("CreateMatisseObject: junction_data is stored correctly", {
+test_that("CreateMatisseObject: per-junction coords land in 'isoform' meta.features (P7)", {
+  # Coords are auto-parsed from junction IDs (chr-start-end-strand) at
+  # construction; junction_data is no longer a separate constructor argument.
   obj <- make_matisse_object()
-  jd  <- obj@misc[["junction_data"]]
-  expect_equal(nrow(jd), 6L)
-  expect_true(all(c("junction_id", "chr", "start", "end") %in% colnames(jd)))
+  iso <- GetSeurat(obj)[["isoform"]]
+  mf  <- iso[[]]
+  expect_equal(nrow(mf), 6L)
+  expect_true(all(c("chr", "start", "end", "strand") %in% colnames(mf)))
+  expect_true(all(!is.na(mf$chr)))
+  expect_true(all(!is.na(mf$start)))
 })
 
 test_that("CreateMatisseObject: junction counts stored as Assay5('isoform')", {
@@ -181,7 +160,7 @@ test_that("CreateMatisseObject: rejects event_data missing required columns", {
   seu <- make_seurat()
   bad_events <- data.frame(event_id = "e1", gene_id = "g1")
   expect_error(
-    CreateMatisseObject(seu, event_data = bad_events),
+    CreateMatisseObject(seu, events = bad_events),
     regexp = "missing required columns"
   )
 })

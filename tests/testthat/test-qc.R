@@ -51,7 +51,7 @@ test_that("transcript mode: nCount_isoform and nFeature_isoform written at const
   obj <- CreateMatisseObject(
     seurat            = seu,
     transcript_counts = tx_mat,
-    ioe_files         = make_ioe_file(),
+    events         = make_ioe_file(),
     verbose           = FALSE
   )
   meta_cols <- colnames(MatisseMeta(obj))

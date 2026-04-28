@@ -11,11 +11,11 @@ NULL
 #'
 #' \itemize{
 #'   \item \strong{Junction mode} (short-read): pass \code{junction_counts}
-#'     plus an event annotation (\code{event_data}, required). Junction
-#'     counts are stored as \code{Assay5("isoform")} inside the Seurat
-#'     object; PSI values land in \code{Assay5("psi")}.
+#'     plus splice events via \code{events}. Junction counts are stored as
+#'     \code{Assay5("isoform")} inside the Seurat object; PSI values land in
+#'     \code{Assay5("psi")}.
 #'   \item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
-#'     plus \code{ioe_files} (SUPPA2-style event annotation, required).
+#'     plus splice events via \code{events} (typically a SUPPA2 IOE file).
 #'     Transcript counts are stored as \code{Assay5("isoform")}; PSI values
 #'     land in \code{Assay5("psi")}.
 #' }
@@ -27,23 +27,25 @@ NULL
 #' @param seurat A \code{Seurat} object. Required.
 #' @param junction_counts A sparse matrix (dgCMatrix, cells x junctions) of
 #'   raw per-junction read counts. Row names must match \code{colnames(seurat)}.
+#'   Junction IDs (column names) ideally encode genomic coordinates
+#'   (\code{chr-start-end-strand}, \code{chr:start-end:strand}, or
+#'   \code{chr_start_end_strand}); Matisse parses these for sashimi plots.
 #'   Triggers junction mode. Default: \code{NULL}.
 #' @param transcript_counts A matrix or sparse matrix (transcripts x cells) of
 #'   raw transcript-level counts. Stored as \code{Assay5("isoform")} in the
 #'   Seurat object. Column names must overlap with \code{colnames(seurat)}.
 #'   Triggers transcript mode. Default: \code{NULL}.
-#' @param ioe_files Character vector of paths to SUPPA2 \code{.ioe} files.
-#'   Required in transcript mode. The parsed event annotation is staged in
-#'   the object and migrated into \code{seurat[["psi"]][[]]} by
-#'   \code{\link{CalculatePSI}}. Default: \code{NULL}.
-#' @param event_data A \code{data.frame} defining splice events (junction mode).
-#'   Required columns: \code{event_id}, \code{gene_id}, \code{chr},
-#'   \code{strand}, \code{event_type}, \code{inclusion_junctions},
-#'   \code{exclusion_junctions}. Default: \code{NULL}.
-#' @param junction_data A \code{data.frame} of junction annotations. Required
-#'   columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
-#'   \code{strand}, \code{gene_id}. Used by \code{\link{PlotSashimi}} in
-#'   junction mode. Default: \code{NULL}.
+#' @param events Splice-event annotation. Either:
+#'   \itemize{
+#'     \item a character vector of paths to SUPPA2 \code{.ioe} file(s)
+#'       (parsed internally), or
+#'     \item a pre-built \code{data.frame} with columns \code{event_id},
+#'       \code{gene_id}, \code{chr}, \code{strand}, \code{event_type},
+#'       \code{inclusion_features}, \code{exclusion_features}. The
+#'       \code{*_features} columns hold the IDs that support each role —
+#'       junction IDs in junction mode, transcript IDs in transcript mode.
+#'   }
+#'   Required.
 #' @param min_coverage Integer. Minimum total reads per cell per event for the
 #'   PSI calculation step. Default: \code{5L}. Forwarded to
 #'   \code{\link{CalculatePSI}} when \code{defer_psi = FALSE}.
@@ -62,16 +64,15 @@ NULL
 #'                                  paste0("Cell", 1:10)))
 #' seu <- CreateSeuratObject(counts)
 #'
-#' # Junction mode
+#' # Junction mode (short-read): events as a data.frame
 #' jxn <- make_junction_counts()
-#' obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn)
-#' obj <- CalculatePSI(obj)
+#' obj <- CreateMatisseObject(seurat = seu, junction_counts = jxn,
+#'                            events = my_event_df)
 #'
-#' # Transcript mode
+#' # Transcript mode (long-read): events as SUPPA2 IOE file paths
 #' tx  <- make_transcript_counts()
 #' obj <- CreateMatisseObject(seurat = seu, transcript_counts = tx,
-#'                            ioe_files = "path/to/events.ioe")
-#' obj <- CalculatePSI(obj)
+#'                            events = "path/to/events.ioe")
 #' }
 #'
 #' @export
@@ -79,9 +80,7 @@ CreateMatisseObject <- function(
     seurat,
     junction_counts   = NULL,
     transcript_counts = NULL,
-    ioe_files         = NULL,
-    event_data        = NULL,
-    junction_data     = NULL,
+    events            = NULL,
     min_coverage      = 5L,
     defer_psi         = FALSE,
     verbose           = TRUE
@@ -94,7 +93,6 @@ CreateMatisseObject <- function(
   # Detect mode ------------------------------------------------------------
   has_junctions   <- !is.null(junction_counts)
   has_transcripts <- !is.null(transcript_counts)
-  has_ioe         <- !is.null(ioe_files) && length(ioe_files) > 0
 
   if (has_junctions && has_transcripts) {
     rlang::abort(paste0(
@@ -103,6 +101,45 @@ CreateMatisseObject <- function(
   }
 
   input_mode <- if (has_transcripts) "transcript" else "junction"
+
+  # --- resolve the events argument: paths -> parsed data.frame ------------
+  events_path <- NA_character_
+  event_data  <- NULL
+  if (!is.null(events)) {
+    if (is.character(events)) {
+      missing_files <- events[!file.exists(events)]
+      if (length(missing_files) > 0L) {
+        rlang::abort(paste0("Event file(s) not found: ",
+                            paste(missing_files, collapse = ", ")))
+      }
+      if (verbose) cli::cli_alert_info("Parsing {length(events)} event file(s)...")
+      ioe         <- .parse_ioe_files(events)
+      event_data  <- data.frame(
+        event_id           = ioe$event_id,
+        gene_id            = ioe$gene_id,
+        chr                = ioe$chr,
+        strand             = ioe$strand,
+        event_type         = ioe$event_type,
+        inclusion_features = ioe$inclusion_features,
+        exclusion_features = ioe$exclusion_features,
+        stringsAsFactors   = FALSE
+      )
+      events_path <- if (length(events) == 1L) {
+        normalizePath(events, mustWork = FALSE)
+      } else {
+        vapply(events, normalizePath, character(1), mustWork = FALSE)
+      }
+    } else if (is.data.frame(events)) {
+      required <- c("event_id", "gene_id", "chr", "strand", "event_type",
+                    "inclusion_features", "exclusion_features")
+      .check_required_columns(events, required, "events")
+      event_data <- as.data.frame(events)
+    } else {
+      rlang::abort(paste0(
+        "`events` must be a character vector of file paths or a data.frame; ",
+        "got '", class(events)[1L], "'."))
+    }
+  }
 
   if (verbose) {
     cli::cli_alert_info(paste0(
@@ -115,6 +152,10 @@ CreateMatisseObject <- function(
     junction_counts <- .validate_cell_matrix(junction_counts, cells,
                                              "junction_counts")
     seurat <- .add_isoform_assay_junction(seurat, junction_counts, verbose)
+    # Auto-derive per-junction genomic coordinates from junction IDs and
+    # write them to the isoform assay's meta.features. PlotSashimi reads
+    # these in junction mode.
+    seurat <- .write_junction_meta_features(seurat, verbose = verbose)
   }
 
   # --- transcript mode: subset seurat to cells present in tx counts --------
@@ -139,79 +180,12 @@ CreateMatisseObject <- function(
     seurat <- .write_isoform_qc(seurat)
   }
 
-  # --- parse IOE files if provided; build and store event annotation -------
-  if (has_ioe) {
-    if (!has_transcripts) {
-      rlang::abort(paste0(
-        "`transcript_counts` must be supplied together with `ioe_files` ",
-        "for transcript-mode construction."))
-    }
-    if (!is.null(event_data)) {
-      # Both ioe_files and a pre-built event_data were supplied. The
-      # pre-built one takes precedence (user-provided overrides parsed)
-      # but warn so the user knows the IOE files weren't actually used
-      # to derive the annotation.
-      rlang::warn(paste0(
-        "Both `ioe_files` and `event_data` were supplied. `event_data` ",
-        "takes precedence; the IOE files are ignored for annotation. The ",
-        "IOE paths are still recorded in @misc[['event_data_path']]."))
-    } else {
-      missing_files <- ioe_files[!file.exists(ioe_files)]
-      if (length(missing_files) > 0) {
-        rlang::abort(paste0("IOE file(s) not found: ",
-                            paste(missing_files, collapse = ", ")))
-      }
-      if (verbose) cli::cli_alert_info("Parsing {length(ioe_files)} IOE file(s)...")
-      events <- .parse_ioe_files(ioe_files)
-      if (verbose) {
-        cli::cli_alert_info(paste0(
-          "Found {nrow(events)} events across ",
-          "{length(unique(events$event_type))} event type(s)."))
-      }
-      # Build event_data from parsed IOE
-      event_data <- data.frame(
-        event_id             = events$event_id,
-        gene_id              = events$gene_id,
-        chr                  = events$chr,
-        strand               = events$strand,
-        event_type           = events$event_type,
-        inclusion_junctions  = events$inclusion_transcripts,
-        exclusion_junctions  = events$exclusion_transcripts,
-        stringsAsFactors     = FALSE
-      )
-    }
-  }
-
-  # --- validate event_data and build object @misc --------------------------
+  # --- stage event_data in @misc; CalculatePSI migrates to assay -----------
   obj_misc <- list()
-
-  if (!is.null(event_data) && nrow(as.data.frame(event_data)) > 0) {
-    required <- c("event_id", "gene_id", "chr", "strand",
-                  "event_type", "inclusion_junctions", "exclusion_junctions")
-    .check_required_columns(event_data, required, "event_data")
-    obj_misc[["event_data"]] <- as.data.frame(event_data)
-  } else {
-    obj_misc[["event_data"]] <- data.frame()
-  }
-
-  if (!is.null(junction_data) && nrow(as.data.frame(junction_data)) > 0) {
-    required <- c("junction_id", "chr", "start", "end", "strand", "gene_id")
-    .check_required_columns(junction_data, required, "junction_data")
-    obj_misc[["junction_data"]] <- as.data.frame(junction_data)
-  }
-
-  # --- record the source path of event annotation for provenance -----------
-  # If event_data came from a file (ioe_files), normalize and store the path.
-  # If it came in as a data.frame directly, store NA_character_.
-  obj_misc[["event_data_path"]] <- if (has_ioe) {
-    if (length(ioe_files) == 1L) {
-      normalizePath(ioe_files, mustWork = FALSE)
-    } else {
-      vapply(ioe_files, normalizePath, character(1), mustWork = FALSE)
-    }
-  } else {
-    NA_character_
-  }
+  obj_misc[["event_data"]] <-
+    if (!is.null(event_data) && nrow(event_data) > 0L) event_data
+    else data.frame()
+  obj_misc[["event_data_path"]] <- events_path
 
   version_str <- tryCatch(
     as.character(utils::packageVersion("Matisse")),
@@ -287,6 +261,28 @@ CreateMatisseObject <- function(
   if (verbose) {
     cli::cli_alert_info(
       "Added 'isoform' assay: {nrow(tx_csc)} transcripts.")
+  }
+  seurat
+}
+
+# Auto-derive per-junction genomic coordinates from junction IDs and write
+# to the "isoform" assay's feature metadata. Junction-mode users get sashimi
+# coordinates "for free" without supplying junction_data; the parser tolerates
+# multiple ID formats and produces NA coords (with a warning) for anything it
+# can't parse — counts still work, only sashimi degrades.
+.write_junction_meta_features <- function(seurat, verbose = TRUE) {
+  iso <- seurat[["isoform"]]
+  jxn_ids <- rownames(iso)
+  parsed <- .parse_junction_names(jxn_ids)
+  rownames(parsed) <- parsed$junction_id
+  parsed$junction_id <- NULL  # rownames carry the ID
+  iso[[]] <- parsed
+  seurat[["isoform"]] <- iso
+  if (verbose) {
+    n_ok <- sum(!is.na(parsed$chr))
+    cli::cli_alert_info(paste0(
+      "Parsed coordinates for {n_ok}/{nrow(parsed)} junctions ",
+      "into the 'isoform' assay's meta.features."))
   }
   seurat
 }
@@ -427,15 +423,15 @@ CreateMatisseObject <- function(
   exc_list <- mapply(setdiff, tot_list, inc_list, SIMPLIFY = FALSE)
 
   events <- data.frame(
-    event_id              = event_ids,
-    gene_id               = gene_ids,
-    chr                   = ioe$seqname,
-    strand                = strand,
-    event_type            = event_types,
-    inclusion_transcripts = vapply(inc_list, paste, character(1), collapse = ";"),
-    exclusion_transcripts = vapply(exc_list, paste, character(1), collapse = ";"),
-    stringsAsFactors      = FALSE,
-    row.names             = NULL
+    event_id           = event_ids,
+    gene_id            = gene_ids,
+    chr                = ioe$seqname,
+    strand             = strand,
+    event_type         = event_types,
+    inclusion_features = vapply(inc_list, paste, character(1), collapse = ";"),
+    exclusion_features = vapply(exc_list, paste, character(1), collapse = ";"),
+    stringsAsFactors   = FALSE,
+    row.names          = NULL
   )
 
   # The same event ID can appear in multiple IOE files (SUPPA2 generates one
@@ -461,8 +457,8 @@ CreateMatisseObject <- function(
                                           min_coverage, cells) {
   tx_names  <- rownames(tx_counts)
 
-  inc_lists <- strsplit(events$inclusion_junctions, ";", fixed = TRUE)
-  exc_lists <- strsplit(events$exclusion_junctions, ";", fixed = TRUE)
+  inc_lists <- strsplit(events$inclusion_features, ";", fixed = TRUE)
+  exc_lists <- strsplit(events$exclusion_features, ";", fixed = TRUE)
 
   A_inc <- .build_indicator_matrix(inc_lists, tx_names)
   A_exc <- .build_indicator_matrix(exc_lists, tx_names)

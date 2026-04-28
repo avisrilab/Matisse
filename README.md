@@ -78,7 +78,7 @@ event_data <- read.csv("events.csv")
 obj <- CreateMatisseObject(
   seurat          = seu,
   junction_counts = jxn_counts,
-  event_data      = event_data
+  events      = event_data
 )
 
 # 5. Calculate PSI for every cell and every event
@@ -104,7 +104,7 @@ PlotHeatmap(obj)
 obj <- CreateMatisseObject(
   seurat            = seu,
   transcript_counts = transcript_counts,
-  ioe_files         = c("events_SE.ioe", "events_RI.ioe")
+  events         = c("events_SE.ioe", "events_RI.ioe")
 )
 
 # 2. Calculate PSI (explicit call required in both modes)
@@ -128,8 +128,7 @@ obj <- CalculatePSI(obj, min_coverage = 5)
 | `FilterCells()` | Remove low-quality cells by isoform QC thresholds |
 | `FilterEvents()` | Remove low-coverage or low-variance splice events |
 | `GetPSI()` | Extract the PSI matrix (cells x events) |
-| `GetJunctionCounts()` | Extract raw junction counts (junction mode) |
-| `GetTranscriptCounts()` | Extract raw transcript counts (transcript mode) |
+| `GetSeurat()` | Pull the embedded Seurat object for native Seurat ops |
 | `PlotUMAP()` | UMAP coloured by any PSI event, junction, or gene |
 | `PlotViolin()` | Violin plot of PSI or QC metrics by cell group |
 | `PlotHeatmap()` | PSI heatmap across events and cells |

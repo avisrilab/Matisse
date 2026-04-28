@@ -335,7 +335,7 @@ test_that("PlotSashimi: returns a ggplot for RI event in transcript mode", {
   obj <- CreateMatisseObject(
     seurat            = seu,
     transcript_counts = tx_mat,
-    ioe_files         = ioe,
+    events         = ioe,
     verbose           = FALSE
   )
   obj <- CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)

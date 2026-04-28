@@ -17,7 +17,7 @@ CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 (cells x junctions) when computing PSI outside the object.}
 
 \item{events}{A \code{data.frame} with columns \code{event_id},
-\code{inclusion_junctions}, and \code{exclusion_junctions}. Defaults to
+\code{inclusion_features}, and \code{exclusion_features}. Defaults to
 the event annotation staged at construction time
 (\code{object@misc[["event_data"]]}, populated by
 \code{\link{CreateMatisseObject}}).}

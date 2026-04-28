@@ -42,9 +42,11 @@ library(Matisse)
 
 obj <- CreateMatisseObject(
   seurat          = seu,
-  junction_counts = jxn_counts,   # cells x junctions matrix from STARsolo
-  event_data      = event_df,     # splice event annotation table
-  junction_data   = junction_df,  # optional: genomic coordinates per junction
+  junction_counts = jxn_counts,   # cells x junctions from STARsolo
+                                   # (junction IDs encode coordinates, e.g.
+                                   #  "chr1-12345-67890-+", auto-parsed for
+                                   #  sashimi plots)
+  events          = event_df,     # data.frame OR path(s) to SUPPA2 .ioe
   min_coverage    = 5L            # minimum reads per cell per event for PSI
 )
 ```
@@ -161,8 +163,9 @@ obj$cell_type
 # PSI matrix: cells x splice events
 psi <- GetPSI(obj)
 
-# Raw junction counts: cells x junctions
-jxn <- GetJunctionCounts(obj)
+# Raw junction counts: cells x junctions (via the native Seurat layer API)
+jxn <- Matrix::t(SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]],
+                                            "counts"))
 
 # Subset to a specific cell type
 neurons <- obj[obj$cell_type == "Neuron", ]

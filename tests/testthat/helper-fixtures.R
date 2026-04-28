@@ -38,10 +38,22 @@ make_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
 
 # ---- Junction count matrix (cells x junctions) -----------------------------
 
+# Junction IDs encode coordinates so .parse_junction_names can derive
+# chr/start/end/strand for sashimi plots without a separate junction_data
+# argument (P7).
+.junction_ids_fixture <- c(
+  "chr1-1000-1500-+",
+  "chr1-2000-2500-+",
+  "chr1-3000-3500-+",
+  "chr1-4000-4500-+",
+  "chr1-5000-5500-+",
+  "chr1-6000-6500-+"
+)
+
 make_junction_counts <- function(n_cells = 10L, n_jxns = 6L, seed = 42L) {
   set.seed(seed)
   cells <- paste0("Cell", seq_len(n_cells))
-  jxns  <- paste0("jxn",  seq_len(n_jxns))
+  jxns  <- .junction_ids_fixture[seq_len(n_jxns)]
   mat   <- matrix(
     sample(c(0L, 0L, 0L, 1L:20L), n_cells * n_jxns, replace = TRUE),
     nrow = n_cells, ncol = n_jxns,
@@ -54,28 +66,15 @@ make_junction_counts <- function(n_cells = 10L, n_jxns = 6L, seed = 42L) {
 
 make_event_data <- function() {
   data.frame(
-    event_id             = c("SE-gene1-e2", "SE-gene1-e3"),
-    gene_id              = c("gene1",        "gene1"),
-    chr                  = c("chr1",          "chr1"),
-    strand               = c("+",             "+"),
-    event_type           = c("SE",            "SE"),
-    inclusion_junctions  = c("jxn1;jxn2",    "jxn3;jxn4"),
-    exclusion_junctions  = c("jxn5",          "jxn6"),
-    stringsAsFactors     = FALSE
-  )
-}
-
-# ---- Junction annotation table ---------------------------------------------
-
-make_junction_data <- function() {
-  data.frame(
-    junction_id = paste0("jxn", 1:6),
-    chr         = rep("chr1", 6),
-    start       = c(1000L, 2000L, 3000L, 4000L, 5000L, 6000L),
-    end         = c(1500L, 2500L, 3500L, 4500L, 5500L, 6500L),
-    strand      = rep("+", 6),
-    gene_id     = rep("gene1", 6),
-    stringsAsFactors = FALSE
+    event_id           = c("SE-gene1-e2", "SE-gene1-e3"),
+    gene_id            = c("gene1",        "gene1"),
+    chr                = c("chr1",          "chr1"),
+    strand             = c("+",             "+"),
+    event_type         = c("SE",            "SE"),
+    inclusion_features = c(paste(.junction_ids_fixture[1], .junction_ids_fixture[2], sep = ";"),
+                            paste(.junction_ids_fixture[3], .junction_ids_fixture[4], sep = ";")),
+    exclusion_features = c(.junction_ids_fixture[5], .junction_ids_fixture[6]),
+    stringsAsFactors   = FALSE
   )
 }
 
@@ -101,15 +100,10 @@ make_matisse_object <- function() {
   # explicitly, so the fixture passes defer_psi = TRUE. Auto-PSI is
   # exercised by dedicated tests in test-MatisseObject.R.
   skip_if_not_installed("Seurat")
-  seu     <- make_seurat()
-  jxn_mat <- make_junction_counts()
-  ev_data <- make_event_data()
-  jd_data <- make_junction_data()
   CreateMatisseObject(
-    seurat          = seu,
-    junction_counts = jxn_mat,
-    event_data      = ev_data,
-    junction_data   = jd_data,
+    seurat          = make_seurat(),
+    junction_counts = make_junction_counts(),
+    events          = make_event_data(),
     defer_psi       = TRUE,
     verbose         = FALSE
   )
@@ -138,15 +132,10 @@ make_seurat_with_umap <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
 
 make_matisse_with_umap <- function() {
   skip_if_not_installed("Seurat")
-  seu     <- make_seurat_with_umap()
-  jxn_mat <- make_junction_counts()
-  ev_data <- make_event_data()
-  jd_data <- make_junction_data()
   CreateMatisseObject(
-    seurat          = seu,
-    junction_counts = jxn_mat,
-    event_data      = ev_data,
-    junction_data   = jd_data,
+    seurat          = make_seurat_with_umap(),
+    junction_counts = make_junction_counts(),
+    events          = make_event_data(),
     min_coverage    = 1L,
     verbose         = FALSE
   )
@@ -156,13 +145,10 @@ make_matisse_with_umap <- function() {
 
 make_matisse_from_transcripts <- function() {
   skip_if_not_installed("Seurat")
-  seu    <- make_seurat()
-  tx_mat <- make_transcript_counts()
-  f      <- make_ioe_file()
   CreateMatisseObject(
-    seurat            = seu,
-    transcript_counts = tx_mat,
-    ioe_files         = f,
+    seurat            = make_seurat(),
+    transcript_counts = make_transcript_counts(),
+    events            = make_ioe_file(),
     min_coverage      = 1L,
     verbose           = FALSE
   )
@@ -175,39 +161,34 @@ make_matisse_from_transcripts <- function() {
 #   Cassette exon: 3000 – 3200
 #   Exon 3:        5000 – 5300
 #
-# Junctions:
+# Junctions (encoded as chr-start-end-strand for auto-coord parsing):
 #   jxn_up  : 1201 → 2999  (exon1 donor  → cassette acceptor)
 #   jxn_dn  : 3201 → 4999  (cassette donor → exon3 acceptor)
 #   jxn_exc : 1201 → 4999  (exon1 donor  → exon3 acceptor, skip)
 #
 # 20 cells: Cell1-10 = TypeA (high inclusion), Cell11-20 = TypeB (high exclusion)
 
-make_se_junction_data <- function() {
-  # Two SE events sharing the upstream junction; second event uses jxn_up2/jxn_dn2.
-  # Assay5 requires >=2 features, so we need >=2 events and >=2 junctions stored.
-  data.frame(
-    junction_id = c("jxn-up", "jxn-dn", "jxn-exc", "jxn-up2", "jxn-dn2"),
-    chr         = rep("chr1", 5),
-    start       = c(1201L, 3201L, 1201L, 5001L, 7001L),
-    end         = c(2999L, 4999L, 4999L, 6999L, 8999L),
-    strand      = rep("+", 5),
-    gene_id     = rep("ENSG1", 5),
-    stringsAsFactors = FALSE
-  )
-}
+.se_junction_ids <- c(
+  "chr1-1201-2999-+",   # jxn_up   (event 1 inclusion)
+  "chr1-3201-4999-+",   # jxn_dn   (event 1 inclusion)
+  "chr1-1201-4999-+",   # jxn_exc  (events 1 & 2 exclusion)
+  "chr1-5001-6999-+",   # jxn_up2  (event 2 inclusion)
+  "chr1-7001-8999-+"    # jxn_dn2  (event 2 inclusion)
+)
 
 make_se_event_data <- function() {
   # Two SE events — required because Assay5 needs >=2 features (events).
   data.frame(
-    event_id            = c("SE:chr1:1201-2999:3201-4999:+",
-                            "SE:chr1:5001-6999:7001-8999:+"),
-    gene_id             = rep("ENSG1", 2),
-    chr                 = rep("chr1", 2),
-    strand              = rep("+", 2),
-    event_type          = rep("SE", 2),
-    inclusion_junctions = c("jxn-up;jxn-dn", "jxn-up2;jxn-dn2"),
-    exclusion_junctions = c("jxn-exc",        "jxn-exc"),
-    stringsAsFactors    = FALSE
+    event_id           = c("SE:chr1:1201-2999:3201-4999:+",
+                           "SE:chr1:5001-6999:7001-8999:+"),
+    gene_id            = rep("ENSG1", 2),
+    chr                = rep("chr1", 2),
+    strand             = rep("+", 2),
+    event_type         = rep("SE", 2),
+    inclusion_features = c(paste(.se_junction_ids[1], .se_junction_ids[2], sep = ";"),
+                            paste(.se_junction_ids[4], .se_junction_ids[5], sep = ";")),
+    exclusion_features = c(.se_junction_ids[3], .se_junction_ids[3]),
+    stringsAsFactors   = FALSE
   )
 }
 
@@ -216,19 +197,24 @@ make_se_junction_counts <- function(n_cells = 20L, seed = 42L) {
   cells <- paste0("Cell", seq_len(n_cells))
   typeA <- seq_len(n_cells / 2L)
   typeB <- seq(n_cells / 2L + 1L, n_cells)
-  jxns  <- c("jxn-up", "jxn-dn", "jxn-exc", "jxn-up2", "jxn-dn2")
+  jxns  <- .se_junction_ids
   mat   <- matrix(0L, nrow = n_cells, ncol = length(jxns),
                   dimnames = list(cells, jxns))
-  mat[typeA, "jxn-up"]  <- sample(8L:15L, length(typeA), replace = TRUE)
-  mat[typeA, "jxn-dn"]  <- sample(8L:15L, length(typeA), replace = TRUE)
-  mat[typeA, "jxn-exc"] <- sample(0L:3L,  length(typeA), replace = TRUE)
-  mat[typeA, "jxn-up2"] <- sample(0L:3L,  length(typeA), replace = TRUE)
-  mat[typeA, "jxn-dn2"] <- sample(0L:3L,  length(typeA), replace = TRUE)
-  mat[typeB, "jxn-up"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
-  mat[typeB, "jxn-dn"]  <- sample(0L:3L,  length(typeB), replace = TRUE)
-  mat[typeB, "jxn-exc"] <- sample(8L:15L, length(typeB), replace = TRUE)
-  mat[typeB, "jxn-up2"] <- sample(8L:15L, length(typeB), replace = TRUE)
-  mat[typeB, "jxn-dn2"] <- sample(8L:15L, length(typeB), replace = TRUE)
+  jxn_up   <- .se_junction_ids[1]
+  jxn_dn   <- .se_junction_ids[2]
+  jxn_exc  <- .se_junction_ids[3]
+  jxn_up2  <- .se_junction_ids[4]
+  jxn_dn2  <- .se_junction_ids[5]
+  mat[typeA, jxn_up]  <- sample(8L:15L, length(typeA), replace = TRUE)
+  mat[typeA, jxn_dn]  <- sample(8L:15L, length(typeA), replace = TRUE)
+  mat[typeA, jxn_exc] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeA, jxn_up2] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeA, jxn_dn2] <- sample(0L:3L,  length(typeA), replace = TRUE)
+  mat[typeB, jxn_up]  <- sample(0L:3L,  length(typeB), replace = TRUE)
+  mat[typeB, jxn_dn]  <- sample(0L:3L,  length(typeB), replace = TRUE)
+  mat[typeB, jxn_exc] <- sample(8L:15L, length(typeB), replace = TRUE)
+  mat[typeB, jxn_up2] <- sample(8L:15L, length(typeB), replace = TRUE)
+  mat[typeB, jxn_dn2] <- sample(8L:15L, length(typeB), replace = TRUE)
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
@@ -246,8 +232,7 @@ make_matisse_short_read <- function() {
   CreateMatisseObject(
     seurat          = seu,
     junction_counts = make_se_junction_counts(n_cells = n_cells),
-    event_data      = make_se_event_data(),
-    junction_data   = make_se_junction_data(),
+    events          = make_se_event_data(),
     min_coverage    = 1L,
     verbose         = FALSE
   )
@@ -308,7 +293,7 @@ make_matisse_long_read <- function() {
   CreateMatisseObject(
     seurat            = seu,
     transcript_counts = make_se_transcript_counts(n_cells = n_cells),
-    ioe_files         = make_se_ioe_file(),
+    events            = make_se_ioe_file(),
     min_coverage      = 1L,
     verbose           = FALSE
   )
