@@ -3,13 +3,15 @@
 RNA-seq analysis, built on top of Seurat and Signac.
 Key capabilities:
 MatisseObject – an S4 class that wraps a Seurat
-object and co-stores junction counts, PSI matrices, and splice event
+object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.
 PSI calculation – CalculatePSI computes
-per-cell Percent Spliced In values from raw junction read counts and
-a user-supplied or auto-generated event annotation table.
-Isoform QC – ComputeIsoformQC derives
-per-cell metrics (junction detection rate, event coverage, mean PSI);
+per-cell Percent Spliced In values from raw junction or transcript
+counts. Works in both junction mode (STARsolo) and transcript mode
+(Bagpiper, FLAMES, LIQA).
+Isoform QC – per-cell metrics (nCount_isoform,
+nFeature_isoform, nPercent_isoform) are written
+automatically at construction and by CalculatePSI;
 FilterCells and FilterEvents enforce
 quality thresholds.
 Visualization – UMAP overlays, violin plots, PSI
@@ -20,13 +22,15 @@ ggplot2-based API.
 RNA-seq analysis, built on top of Seurat and Signac.
 Key capabilities:
 MatisseObject – an S4 class that wraps a Seurat
-object and co-stores junction counts, PSI matrices, and splice event
+object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.
 PSI calculation – CalculatePSI computes
-per-cell Percent Spliced In values from raw junction read counts and
-a user-supplied or auto-generated event annotation table.
-Isoform QC – ComputeIsoformQC derives
-per-cell metrics (junction detection rate, event coverage, mean PSI);
+per-cell Percent Spliced In values from raw junction or transcript
+counts. Works in both junction mode (STARsolo) and transcript mode
+(Bagpiper, FLAMES, LIQA).
+Isoform QC – per-cell metrics (nCount_isoform,
+nFeature_isoform, nPercent_isoform) are written
+automatically at construction and by CalculatePSI;
 FilterCells and FilterEvents enforce
 quality thresholds.
 Visualization – UMAP overlays, violin plots, PSI
@@ -78,13 +82,15 @@ ggplot2-based API.
     <p>Matisse provides an integrated framework for isoform-resolved single-cell
 RNA-seq analysis, built on top of <span class="pkg">Seurat</span> and <span class="pkg">Signac</span>.</p>
 <p>Key capabilities:</p><ul><li><p><strong>MatisseObject</strong> – an S4 class that wraps a <code>Seurat</code>
-object and co-stores junction counts, PSI matrices, and splice event
+object and co-stores raw isoform counts, PSI matrices, and splice event
 annotations, keeping gene expression and isoform layers synchronised.</p></li>
 <li><p><strong>PSI calculation</strong> – <code><a href="CalculatePSI.html">CalculatePSI</a></code> computes
-per-cell Percent Spliced In values from raw junction read counts and
-a user-supplied or auto-generated event annotation table.</p></li>
-<li><p><strong>Isoform QC</strong> – <code>ComputeIsoformQC</code> derives
-per-cell metrics (junction detection rate, event coverage, mean PSI);
+per-cell Percent Spliced In values from raw junction or transcript
+counts. Works in both junction mode (STARsolo) and transcript mode
+(Bagpiper, FLAMES, LIQA).</p></li>
+<li><p><strong>Isoform QC</strong> – per-cell metrics (<code>nCount_isoform</code>,
+<code>nFeature_isoform</code>, <code>nPercent_isoform</code>) are written
+automatically at construction and by <code><a href="CalculatePSI.html">CalculatePSI</a></code>;
 <code><a href="FilterCells.html">FilterCells</a></code> and <code><a href="FilterEvents.html">FilterEvents</a></code> enforce
 quality thresholds.</p></li>
 <li><p><strong>Visualization</strong> – UMAP overlays, violin plots, PSI
