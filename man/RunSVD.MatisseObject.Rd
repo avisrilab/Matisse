@@ -4,7 +4,17 @@
 \alias{RunSVD.MatisseObject}
 \title{Run SVD (LSI) for a MatisseObject}
 \usage{
-\method{RunSVD}{MatisseObject}(object, ...)
+\method{RunSVD}{MatisseObject}(
+  object,
+  assay = NULL,
+  features = NULL,
+  pca = FALSE,
+  n = 50,
+  reduction.key = ifelse(pca, "PCA_", "LSI_"),
+  scale.max = NULL,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}

@@ -44,6 +44,35 @@ test_that("SCTransform dispatches on a junction-mode MatisseObject (regression f
   expect_true("SCT" %in% SeuratObject::Assays(GetSeurat(result)))
 })
 
+test_that("DefaultAssay getter returns the embedded Seurat object's default assay", {
+  skip_if_not_installed("Seurat")
+  obj <- make_matisse_object()
+  expect_equal(SeuratObject::DefaultAssay(obj),
+               SeuratObject::DefaultAssay(GetSeurat(obj)))
+})
+
+test_that("DefaultAssay<- setter updates the embedded Seurat object", {
+  skip_if_not_installed("Seurat")
+  obj <- make_matisse_object()
+  available <- SeuratObject::Assays(GetSeurat(obj))
+  target    <- setdiff(available, SeuratObject::DefaultAssay(obj))[1]
+  skip_if(is.na(target))
+  SeuratObject::DefaultAssay(obj) <- target
+  expect_equal(SeuratObject::DefaultAssay(obj), target)
+  expect_equal(SeuratObject::DefaultAssay(GetSeurat(obj)), target)
+})
+
+test_that("FindMarkers exposes Seurat's named args (.onLoad formals copy)", {
+  # Regression: before .onLoad was added the dispatcher had formals
+  # `(object, ...)`, so RStudio tab-completion never offered ident.1 /
+  # ident.2 / group.by / etc. Asserting these names appear in formals()
+  # locks in the parameter-hint behaviour.
+  expected <- c("ident.1", "ident.2", "group.by", "subset.ident",
+                "assay", "latent.vars")
+  fn <- get("FindMarkers.MatisseObject", envir = asNamespace("Matisse"))
+  expect_true(all(expected %in% names(formals(fn))))
+})
+
 test_that("SCTransform dispatches on a transcript-mode MatisseObject", {
   skip_if_not_installed("Seurat")
   obj    <- make_matisse_from_transcripts()

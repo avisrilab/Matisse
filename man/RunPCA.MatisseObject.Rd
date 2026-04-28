@@ -4,7 +4,21 @@
 \alias{RunPCA.MatisseObject}
 \title{Run PCA on a MatisseObject}
 \usage{
-\method{RunPCA}{MatisseObject}(object, ...)
+\method{RunPCA}{MatisseObject}(
+  object,
+  assay = NULL,
+  features = NULL,
+  npcs = 50,
+  rev.pca = FALSE,
+  weight.by.var = TRUE,
+  verbose = TRUE,
+  ndims.print = 1:5,
+  nfeatures.print = 30,
+  reduction.name = "pca",
+  reduction.key = "PC_",
+  seed.use = 42,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}

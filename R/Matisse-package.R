@@ -66,6 +66,7 @@
 #' @importFrom cli cli_alert_info cli_alert_success cli_alert_warning
 #' @importFrom cowplot theme_cowplot
 #' @importFrom Seurat CenterTitle
+#' @importFrom SeuratObject DefaultAssay "DefaultAssay<-"
 #' @importFrom utils packageVersion
 #' @importFrom stats median sd var hclust dist
 ## usethis namespace: end

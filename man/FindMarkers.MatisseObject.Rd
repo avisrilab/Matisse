@@ -4,7 +4,17 @@
 \alias{FindMarkers.MatisseObject}
 \title{Find differentially expressed markers for a MatisseObject}
 \usage{
-\method{FindMarkers}{MatisseObject}(object, ...)
+\method{FindMarkers}{MatisseObject}(
+  object,
+  ident.1 = NULL,
+  ident.2 = NULL,
+  latent.vars = NULL,
+  group.by = NULL,
+  subset.ident = NULL,
+  assay = NULL,
+  reduction = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}

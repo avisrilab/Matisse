@@ -4,7 +4,15 @@
 \alias{RunTFIDF.MatisseObject}
 \title{Run TF-IDF normalisation for a MatisseObject}
 \usage{
-\method{RunTFIDF}{MatisseObject}(object, ...)
+\method{RunTFIDF}{MatisseObject}(
+  object,
+  assay = NULL,
+  method = 1,
+  scale.factor = 10000,
+  idf = NULL,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}

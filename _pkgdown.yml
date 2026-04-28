@@ -112,12 +112,16 @@ reference:
       - FindClusters.MatisseObject
       - FindMarkers.MatisseObject
 
-  - title: "Metadata"
+  - title: "Metadata and assay selection"
     desc: >
       Add or update per-cell metadata columns. New columns are accessible
-      immediately via <code>MatisseMeta()</code> and the <code>$</code> operator.
+      immediately via <code>MatisseMeta()</code> and the <code>$</code>
+      operator. <code>DefaultAssay</code> picks which assay
+      (<code>"RNA"</code>, <code>"isoform"</code>, <code>"psi"</code>, …)
+      Seurat operations target by default.
     contents:
       - AddMetaData.MatisseObject
+      - DefaultAssay.MatisseObject
 
   - title: "Signac / ATAC-seq methods"
     desc: >

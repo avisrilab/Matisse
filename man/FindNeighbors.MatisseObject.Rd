@@ -4,7 +4,27 @@
 \alias{FindNeighbors.MatisseObject}
 \title{Compute a shared nearest-neighbour graph for a MatisseObject}
 \usage{
-\method{FindNeighbors}{MatisseObject}(object, ...)
+\method{FindNeighbors}{MatisseObject}(
+  object,
+  reduction = "pca",
+  dims = 1:10,
+  assay = NULL,
+  features = NULL,
+  k.param = 20,
+  return.neighbor = FALSE,
+  compute.SNN = !return.neighbor,
+  prune.SNN = 1/15,
+  nn.method = "annoy",
+  n.trees = 50,
+  annoy.metric = "euclidean",
+  nn.eps = 0,
+  verbose = TRUE,
+  do.plot = FALSE,
+  graph.name = NULL,
+  l2.norm = FALSE,
+  cache.index = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}

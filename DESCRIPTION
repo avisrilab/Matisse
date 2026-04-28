@@ -52,5 +52,6 @@ Collate:
     'qc.R'
     'utils.R'
     'visualization.R'
+    'zzz.R'
 URL: https://avisrilab.github.io/Matisse, https://github.com/avisrilab/Matisse
 BugReports: https://github.com/avisrilab/Matisse/issues

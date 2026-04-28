@@ -254,6 +254,34 @@ AddMetaData.MatisseObject <- function(object, metadata, col.name = NULL, ...) {
   result
 }
 
+#' Get or set the default assay of a MatisseObject
+#'
+#' Delegates to \code{\link[SeuratObject]{DefaultAssay}} on the embedded
+#' Seurat object. Lets users switch between \code{"RNA"}, \code{"isoform"},
+#' \code{"psi"}, \code{"SCT"}, etc. without unwrapping the object first.
+#'
+#' @param object A \code{MatisseObject}.
+#' @param ... Additional arguments forwarded to
+#'   \code{\link[SeuratObject]{DefaultAssay}}.
+#' @param value Character. The new default assay name (setter only).
+#' @return The default assay name (getter) or the updated
+#'   \code{MatisseObject} (setter).
+#'
+#' @rdname DefaultAssay.MatisseObject
+#' @method DefaultAssay MatisseObject
+#' @export
+DefaultAssay.MatisseObject <- function(object, ...) {
+  SeuratObject::DefaultAssay(object@seurat, ...)
+}
+
+#' @rdname DefaultAssay.MatisseObject
+#' @method DefaultAssay<- MatisseObject
+#' @export
+`DefaultAssay<-.MatisseObject` <- function(object, ..., value) {
+  object@seurat <- `DefaultAssay<-`(object@seurat, ..., value = value)
+  object
+}
+
 # ---------------------------------------------------------------------------
 # Signac methods (ATAC / multiome)
 # ---------------------------------------------------------------------------

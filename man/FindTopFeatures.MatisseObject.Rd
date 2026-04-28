@@ -4,7 +4,7 @@
 \alias{FindTopFeatures.MatisseObject}
 \title{Find highly variable ATAC-seq features for a MatisseObject}
 \usage{
-\method{FindTopFeatures}{MatisseObject}(object, ...)
+\method{FindTopFeatures}{MatisseObject}(object, assay = NULL, min.cutoff = "q5", verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
