@@ -177,7 +177,8 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   )
 }
 
-.psi_from_sparse_counts <- function(inc_mat, exc_mat, min_coverage) {
+.psi_from_sparse_counts <- function(inc_mat, exc_mat, min_coverage,
+                                     n_inc = NULL, n_exc = NULL) {
   total_mat <- inc_mat + exc_mat
   total_T   <- as(total_mat, "TsparseMatrix")
   nz_i      <- total_T@i
@@ -186,6 +187,10 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   n_cells   <- nrow(inc_mat)
   n_events  <- ncol(inc_mat)
 
+  # Coverage check uses RAW total event-supporting reads regardless of
+  # whether the PSI ratio is normalized below — keeps min_coverage's
+  # user-facing meaning ("at least N reads at this event in this cell")
+  # stable across the two paths.
   covered <- nz_total >= min_coverage
 
   inc_T   <- as(inc_mat, "TsparseMatrix")
@@ -196,7 +201,22 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     cov_lin        <- nz_j[covered] * as.double(n_cells) + nz_i[covered]
     m              <- match(cov_lin, inc_lin)
     inc_cov        <- ifelse(is.na(m), 0.0, inc_T@x[m])
-    psi_x[covered] <- inc_cov / nz_total[covered]
+
+    if (!is.null(n_inc) && !is.null(n_exc)) {
+      # SUPPA2 / rMATS-style per-junction normalization. Without this,
+      # events with asymmetric junction counts (SE has 2 inclusion vs.
+      # 1 exclusion) over-weight the side with more junctions because
+      # the same molecule produces reads at multiple junctions on that
+      # side. Dividing each role's read sum by its junction count
+      # recovers the molecular fraction.
+      exc_cov        <- nz_total[covered] - inc_cov
+      event_idx      <- nz_j[covered] + 1L
+      inc_norm       <- inc_cov / n_inc[event_idx]
+      exc_norm       <- exc_cov / n_exc[event_idx]
+      psi_x[covered] <- inc_norm / (inc_norm + exc_norm)
+    } else {
+      psi_x[covered] <- inc_cov / nz_total[covered]
+    }
   }
   Matrix::sparseMatrix(
     i    = nz_i + 1L,

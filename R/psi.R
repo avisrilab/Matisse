@@ -223,11 +223,20 @@ setMethod("CalculatePSI", "ANY",
   A_exc <- .build_indicator_matrix(exc_lists, jxn_names)
   colnames(A_inc) <- colnames(A_exc) <- events$event_id
 
+  # Per-event supporting-junction counts; passed to .psi_from_sparse_counts
+  # so the PSI ratio normalizes per junction (SUPPA2 / rMATS convention).
+  # Without this, SE events (2 inclusion junctions, 1 exclusion) overweight
+  # inclusion because the same molecule produces reads at both inclusion
+  # junctions while exclusion molecules contribute reads to only one.
+  n_inc <- pmax(as.integer(Matrix::colSums(A_inc)), 1L)
+  n_exc <- pmax(as.integer(Matrix::colSums(A_exc)), 1L)
+
   inc_mat <- jxn_counts %*% A_inc
   exc_mat <- jxn_counts %*% A_exc
   dimnames(inc_mat) <- dimnames(exc_mat) <- list(cells, events$event_id)
 
-  psi_mat <- .psi_from_sparse_counts(inc_mat, exc_mat, min_coverage)
+  psi_mat <- .psi_from_sparse_counts(inc_mat, exc_mat, min_coverage,
+                                      n_inc = n_inc, n_exc = n_exc)
 
   list(
     psi       = psi_mat,

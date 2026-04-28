@@ -54,15 +54,60 @@ test_that("CalculatePSI (matrix): PSI = 0 when only exclusion reads present", {
   expect_equal(result[1, 1], 0.0)
 })
 
-test_that("CalculatePSI (matrix): PSI = 0.5 with equal inclusion/exclusion", {
+test_that("CalculatePSI (matrix): PSI = 0.5 with symmetric SE reads (per-junction normalization)", {
+  # PSI is normalized per junction (SUPPA2 / rMATS convention). For an SE
+  # event the fixture has 2 inclusion junctions and 1 exclusion junction.
+  # "Equal inclusion/exclusion" therefore means equal *per-junction* read
+  # counts: inc_up = inc_dn = exc. With 5 reads at each, the molecular
+  # fraction is 0.5 (each inclusion molecule produces reads at both
+  # inclusion junctions, each exclusion molecule produces reads at one).
   mat <- Matrix::sparseMatrix(
-    i = c(1L, 1L), j = c(1L, 5L), x = c(5, 5),
+    i = c(1L, 1L, 1L), j = c(1L, 2L, 5L), x = c(5, 5, 5),
     dims = c(1L, 6L),
     dimnames = list("Cell1", .junction_ids_fixture)
   )
   result <- CalculatePSI(mat, make_event_data()[1, ],
                           min_coverage = 1L, verbose = FALSE)
   expect_equal(result[1, 1], 0.5)
+})
+
+test_that("CalculatePSI (matrix): SE event with 2 inc + 1 exc junctions normalizes per junction", {
+  # Regression for the bias the old raw-sum formula introduced.
+  #
+  # Biological setup: an SE (skipped exon) event has 2 inclusion junctions
+  # (J_up: E1->cassette, J_dn: cassette->E3) and 1 exclusion junction
+  # (J_skip: E1->E3). One inclusion-isoform molecule produces reads at
+  # BOTH inclusion junctions over time; one exclusion-isoform molecule
+  # produces reads at ONE exclusion junction.
+  #
+  # If true PSI = 0.5 (equal numbers of inclusion and exclusion molecules)
+  # and coverage is uniform, you observe roughly equal reads at every
+  # junction: J_up = J_dn = J_skip = 50.
+  #
+  # The naive raw-sum formula (inc_up+inc_dn) / (inc_up+inc_dn+exc) gives
+  # 100/150 = 0.667 — biased toward inclusion because the same molecule
+  # is counted twice (once at each inclusion junction). Per-junction
+  # normalization (mean-of-inc / (mean-of-inc + mean-of-exc)) gives 0.5,
+  # which is the molecular fraction users expect.
+  events <- data.frame(
+    event_id           = "SE_test",
+    gene_id            = "G1",
+    chr                = "chr1",
+    strand             = "+",
+    event_type         = "SE",
+    inclusion_features = "chr1-100-200-+;chr1-300-400-+",
+    exclusion_features = "chr1-100-400-+",
+    stringsAsFactors   = FALSE
+  )
+  mat <- Matrix::Matrix(
+    matrix(c(50, 50, 50), nrow = 1, ncol = 3,
+           dimnames = list("Cell1",
+                           c("chr1-100-200-+", "chr1-300-400-+",
+                             "chr1-100-400-+"))),
+    sparse = TRUE
+  )
+  result <- CalculatePSI(mat, events, min_coverage = 1L, verbose = FALSE)
+  expect_equal(result["Cell1", "SE_test"], 0.5, tolerance = 1e-9)
 })
 
 test_that("CalculatePSI (matrix): min_coverage threshold is respected", {
