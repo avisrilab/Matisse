@@ -213,13 +213,3 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   not_na  <- !is.na(psi_csc@x)
   tabulate(psi_csc@i[not_na] + 1L, nbins = nrow(psi_sparse))
 }
-
-.psi_rowmeans_sparse <- function(psi_sparse) {
-  psi_csc      <- as(psi_sparse, "dgCMatrix")
-  psi_x        <- psi_csc@x
-  psi_x[is.na(psi_x)] <- 0
-  psi_csc@x   <- psi_x
-  n_cov        <- .n_covered_per_cell(psi_sparse)
-  row_sums     <- as.numeric(Matrix::rowSums(psi_csc))
-  ifelse(n_cov > 0L, row_sums / n_cov, NA_real_)
-}

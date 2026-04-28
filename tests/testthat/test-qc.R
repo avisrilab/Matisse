@@ -84,6 +84,17 @@ test_that("FilterCells: permissive threshold keeps all cells", {
   expect_equal(.n_cells(sub), .n_cells(obj))
 })
 
+test_that("FilterCells verbose message is not truncated (regression for cli_alert multi-arg)", {
+  # Regression: multi-positional-arg cli::cli_alert_info() silently dropped
+  # everything after the first string. We collapsed those calls with paste0;
+  # this asserts the second half ("cells remain") survives in the output.
+  obj <- make_matisse_object()
+  out <- cli::cli_format_method(
+    FilterCells(obj, min_features_isoform = 0L, verbose = TRUE)
+  )
+  expect_true(any(grepl("cells remain", out)))
+})
+
 test_that("FilterCells: max_counts_isoform upper bound works", {
   obj <- make_matisse_object()
   med <- stats::median(MatisseMeta(obj)$nCount_isoform)

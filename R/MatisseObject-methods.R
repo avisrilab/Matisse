@@ -261,10 +261,10 @@ setMethod("MatisseMeta", "MatisseObject", function(object, ...) {
 #' @rdname MatisseMeta
 setMethod("MatisseMeta<-", "MatisseObject", function(object, value) {
   stopifnot(is.data.frame(value))
-  # Merge new columns into seurat@meta.data rather than replacing everything
-  for (col in colnames(value)) {
-    object@seurat@meta.data[[col]] <- value[[col]]
-  }
+  # Delegate to Seurat's AddMetaData so values are aligned by barcode (rownames)
+  # rather than by positional index (which the previous loop did, silently
+  # writing wrong values when value's rownames disagreed with meta.data's).
+  object@seurat <- SeuratObject::AddMetaData(object@seurat, metadata = value)
   object
 })
 

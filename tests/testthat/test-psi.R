@@ -217,12 +217,3 @@ test_that(".n_covered_per_cell: counts non-NA stored entries per row", {
   expect_equal(result, c(2L, 1L, 0L))
 })
 
-test_that(".psi_rowmeans_sparse: ignores NAs and absent entries", {
-  psi_sp <- Matrix::sparseMatrix(
-    i = c(1, 1, 2), j = c(1, 3, 2), x = c(0.8, 0.2, 0.5),
-    dims = c(3, 4), repr = "C")
-  result <- Matisse:::.psi_rowmeans_sparse(psi_sp)
-  expect_equal(result[1], 0.5, tolerance = 1e-6)
-  expect_equal(result[2], 0.5, tolerance = 1e-6)
-  expect_true(is.na(result[3]))
-})

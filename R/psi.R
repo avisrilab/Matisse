@@ -60,17 +60,17 @@ setMethod("CalculatePSI", "MatisseObject",
     # --- Junction mode: aggregate junction reads to splice events ------------
     jxn_counts <- GetJunctionCounts(object)
     if (is.null(jxn_counts)) {
-      rlang::abort(
+      rlang::abort(paste0(
         "No junction assay found. ",
-        "Provide junction_counts via CreateMatisseObject().")
+        "Provide junction_counts via CreateMatisseObject()."))
     }
   }
 
   if (is.null(events)) events <- GetEventData(object)
   if (is.null(events) || nrow(events) == 0) {
-    rlang::abort(
+    rlang::abort(paste0(
       "No splice events defined. Provide event_data via CreateMatisseObject() ",
-      "or the `events` argument.")
+      "or the `events` argument."))
   }
 
   if (object@input.mode == "junction") {
@@ -85,14 +85,14 @@ setMethod("CalculatePSI", "MatisseObject",
     # --- Transcript mode: aggregate transcript counts to splice events -------
     tx_counts <- GetTranscriptCounts(object)
     if (is.null(tx_counts)) {
-      rlang::abort(
+      rlang::abort(paste0(
         "No 'isoform' assay found. ",
-        "Provide transcript_counts via CreateMatisseObject().")
+        "Provide transcript_counts via CreateMatisseObject()."))
     }
     if (verbose) {
-      cli::cli_alert_info(
+      cli::cli_alert_info(paste0(
         "Calculating PSI for {nrow(events)} events across ",
-        "{ncol(tx_counts)} cells...")
+        "{ncol(tx_counts)} cells..."))
     }
     result <- .aggregate_transcript_counts(
       tx_counts    = tx_counts,
@@ -214,11 +214,6 @@ setMethod("CalculatePSI", "ANY",
     inclusion = Matrix::Matrix(round(inc_mat), sparse = TRUE),
     exclusion = Matrix::Matrix(round(exc_mat), sparse = TRUE)
   )
-}
-
-.parse_junction_list <- function(x) {
-  if (is.na(x) || nchar(trimws(x)) == 0) return(character(0))
-  trimws(strsplit(x, ";", fixed = TRUE)[[1]])
 }
 
 # ---------------------------------------------------------------------------

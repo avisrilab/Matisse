@@ -8,6 +8,23 @@ test_that("CreateMatisseObject: requires a Seurat object", {
                regexp = "must be a Seurat object")
 })
 
+test_that("CreateMatisseObject: full abort message survives (regression for rlang::abort multi-arg)", {
+  # Regression: multi-positional-arg rlang::abort() silently truncates the
+  # message and consumes the second string as the error class. We collapsed
+  # all such call sites with paste0(); this asserts the full message survives.
+  skip_if_not_installed("Seurat")
+  seu <- make_seurat()
+  jxn <- make_junction_counts()
+  tx  <- make_transcript_counts()
+  e <- tryCatch(
+    CreateMatisseObject(seurat = seu, junction_counts = jxn, transcript_counts = tx),
+    error = function(e) e
+  )
+  expect_match(conditionMessage(e), "junction_counts.*junction mode")
+  expect_match(conditionMessage(e), "transcript_counts.*transcript mode")
+  expect_match(conditionMessage(e), "not both")
+})
+
 test_that("CreateMatisseObject: succeeds with minimal input", {
   obj <- make_matisse_object()
   expect_s4_class(obj, "MatisseObject")
@@ -248,6 +265,23 @@ test_that("MatisseMeta<-: adds new column to seurat meta.data", {
   new_df <- data.frame(my_col = 1:10, row.names = cells)
   MatisseMeta(obj) <- new_df
   expect_true("my_col" %in% colnames(MatisseMeta(obj)))
+})
+
+test_that("MatisseMeta<-: aligns by barcode rownames, not by position", {
+  # Regression: previously the setter looped value[[col]] -> meta.data[[col]]
+  # by index, silently writing wrong values when value's rownames differed
+  # in order from meta.data's rownames.
+  obj    <- make_matisse_object()
+  cells  <- colnames(GetSeurat(obj))
+  shuffled <- rev(cells)
+  new_df <- data.frame(shuffled_val = seq_along(shuffled),
+                       row.names    = shuffled)
+  MatisseMeta(obj) <- new_df
+  # The cell that was originally last should have value 1 (it was first in `shuffled`)
+  result <- MatisseMeta(obj)$shuffled_val
+  names(result) <- rownames(MatisseMeta(obj))
+  expect_equal(result[shuffled], seq_along(shuffled),
+               ignore_attr = TRUE)
 })
 
 test_that("AddIsoformMetadata: adds new columns to seurat meta.data", {

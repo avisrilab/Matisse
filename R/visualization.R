@@ -122,9 +122,9 @@ setMethod("PlotViolin", "MatisseObject",
     candidates <- c("nCount_isoform", "nFeature_isoform", "nPercent_isoform")
     feature    <- intersect(candidates, colnames(MatisseMeta(object)))
     if (length(feature) == 0L) {
-      rlang::abort(
+      rlang::abort(paste0(
         "No QC metrics found in cell metadata. ",
-        "Run CreateMatisseObject() and CalculatePSI() first.")
+        "Run CreateMatisseObject() and CalculatePSI() first."))
     }
   }
 
@@ -315,11 +315,11 @@ setMethod("PlotHeatmap", "MatisseObject",
 #' structure. Arcs are coloured by role: inclusion (blue) vs exclusion (red).
 #'
 #' In \strong{junction mode} each arc corresponds to an individual junction
-#' with its own read count. In \strong{event mode} the SE event_id is parsed
-#' to derive junction coordinates; inclusion and exclusion counts come from the
-#' \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
+#' with its own read count. In \strong{transcript mode} the SE event_id is
+#' parsed to derive junction coordinates; inclusion and exclusion counts come
+#' from the \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 #'
-#' Supported event types in event mode: \strong{SE} (skipped exon) and
+#' Supported event types in transcript mode: \strong{SE} (skipped exon) and
 #' \strong{RI} (retained intron). Junction mode supports all event types
 #' since coordinates come directly from \code{junction_data}.
 #'
@@ -410,7 +410,7 @@ setMethod("PlotSashimi", "MatisseObject",
       SE = .cov_parse_se(ev),
       RI = .cov_parse_ri(ev),
       rlang::abort(paste0(
-        "PlotSashimi() in event mode does not yet support '", etype,
+        "PlotSashimi() in transcript mode does not yet support '", etype,
         "' events. Supported types: SE, RI."))
     )
   }

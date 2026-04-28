@@ -302,7 +302,7 @@ test_that("PlotSashimi: errors in transcript mode for unsupported event type", {
   )
 })
 
-test_that("PlotSashimi: returns a ggplot for RI event in event mode", {
+test_that("PlotSashimi: returns a ggplot for RI event in transcript mode", {
   n_cells <- 20L
   seu <- make_seurat(n_cells = n_cells)
   set.seed(7L)

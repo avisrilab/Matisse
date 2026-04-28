@@ -55,3 +55,22 @@ test_that("FindMarkers dispatches on MatisseObject and returns a data frame", {
   result <- Seurat::FindMarkers(obj, ident.1 = "A", ident.2 = "B", verbose = FALSE)
   expect_s3_class(result, "data.frame")
 })
+
+test_that("SCTransform dispatches on a junction-mode MatisseObject (regression for @mode bug)", {
+  # Regression: SCTransform.MatisseObject previously read object@mode == "event",
+  # but the slot is input.mode and the value is "junction" / "transcript".
+  # The function crashed on every call. Untested before this fix.
+  skip_if_not_installed("Seurat")
+  obj    <- make_matisse_object()  # junction mode
+  result <- suppressWarnings(Seurat::SCTransform(obj, verbose = FALSE))
+  expect_s4_class(result, "MatisseObject")
+  expect_true("SCT" %in% SeuratObject::Assays(GetSeurat(result)))
+})
+
+test_that("SCTransform dispatches on a transcript-mode MatisseObject", {
+  skip_if_not_installed("Seurat")
+  obj    <- make_matisse_from_transcripts()
+  result <- suppressWarnings(Seurat::SCTransform(obj, verbose = FALSE))
+  expect_s4_class(result, "MatisseObject")
+  expect_true("SCT" %in% SeuratObject::Assays(GetSeurat(result)))
+})

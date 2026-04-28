@@ -86,7 +86,7 @@ FindVariableFeatures.MatisseObject <- function(object, ...) {
 #' SCTransform normalisation for MatisseObjects
 #'
 #' Runs \code{\link[Seurat]{SCTransform}} with mode-aware defaults.
-#' In \strong{event mode} (long-read), normalises the \code{"transcript"}
+#' In \strong{transcript mode} (long-read), normalises the \code{"isoform"}
 #' assay by default, so that transcript-level abundances are variance-stabilised
 #' before dimensionality reduction. In \strong{junction mode} (short-read),
 #' normalises the active default assay (typically \code{"RNA"}).
@@ -102,8 +102,8 @@ FindVariableFeatures.MatisseObject <- function(object, ...) {
 #' }
 #'
 #' @param object A \code{MatisseObject}.
-#' @param assay Character. Assay to normalise. Default: \code{"transcript"}
-#'   in event mode; the active default assay in junction mode.
+#' @param assay Character. Assay to normalise. Default: \code{"isoform"}
+#'   in transcript mode; the active default assay in junction mode.
 #' @param vars_to_regress Character vector. Covariates to regress out
 #'   (e.g. \code{"percent.mt"}). Default: \code{NULL}.
 #' @param verbose Logical. Print progress messages. Default: \code{TRUE}.
@@ -120,7 +120,7 @@ SCTransform.MatisseObject <- function(object,
                                        verbose         = TRUE,
                                        ...) {
   if (is.null(assay)) {
-    assay <- if (object@mode == "event") "transcript"
+    assay <- if (object@input.mode == "transcript") "isoform"
              else SeuratObject::DefaultAssay(object@seurat)
   }
 
@@ -128,7 +128,7 @@ SCTransform.MatisseObject <- function(object,
   if (is.null(.get_assay_safe(seu, assay))) {
     rlang::abort(paste0(
       "No '", assay, "' assay found. ",
-      if (object@mode == "event")
+      if (object@input.mode == "transcript")
         "Run CreateMatisseObject(transcript_counts=..., ioe_files=...) first."
       else
         "Run CreateMatisseObject(junction_counts=...) first, or pass `assay` explicitly."

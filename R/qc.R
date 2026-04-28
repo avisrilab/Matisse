@@ -79,9 +79,9 @@ setMethod("FilterCells", "MatisseObject",
 
   n_removed <- sum(!keep)
   if (verbose) {
-    cli::cli_alert_info(
+    cli::cli_alert_info(paste0(
       "Removing {n_removed} cells ({round(100*n_removed/length(keep),1)}%); ",
-      "{sum(keep)} cells remain.")
+      "{sum(keep)} cells remain."))
   }
 
   object[cells[keep], ]
@@ -130,9 +130,9 @@ setMethod("FilterEvents", "MatisseObject",
 
   n_removed <- sum(!keep)
   if (verbose) {
-    cli::cli_alert_info(
+    cli::cli_alert_info(paste0(
       "Removing {n_removed} events ({round(100*n_removed/length(keep),1)}%); ",
-      "{sum(keep)} events remain.")
+      "{sum(keep)} events remain."))
   }
 
   event_ids <- colnames(psi_cx)[keep]

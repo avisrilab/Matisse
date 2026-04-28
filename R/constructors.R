@@ -83,17 +83,17 @@ CreateMatisseObject <- function(
   has_ioe         <- !is.null(ioe_files) && length(ioe_files) > 0
 
   if (has_junctions && has_transcripts) {
-    rlang::abort(
+    rlang::abort(paste0(
       "Provide either `junction_counts` (junction mode) or ",
-      "`transcript_counts` (transcript mode), not both.")
+      "`transcript_counts` (transcript mode), not both."))
   }
 
   input_mode <- if (has_transcripts) "transcript" else "junction"
 
   if (verbose) {
-    cli::cli_alert_info(
+    cli::cli_alert_info(paste0(
       "Creating MatisseObject ({input_mode} mode): {length(cells)} cells, ",
-      "{nrow(seurat)} gene features.")
+      "{nrow(seurat)} gene features."))
   }
 
   # --- junction mode: store as Assay5("isoform") ---------------------------
@@ -128,9 +128,9 @@ CreateMatisseObject <- function(
   # --- parse IOE files if provided; build and store event annotation -------
   if (has_ioe) {
     if (!has_transcripts) {
-      rlang::abort(
+      rlang::abort(paste0(
         "`transcript_counts` must be supplied together with `ioe_files` ",
-        "for transcript-mode construction.")
+        "for transcript-mode construction."))
     }
     missing_files <- ioe_files[!file.exists(ioe_files)]
     if (length(missing_files) > 0) {
@@ -140,9 +140,9 @@ CreateMatisseObject <- function(
     if (verbose) cli::cli_alert_info("Parsing {length(ioe_files)} IOE file(s)...")
     events <- .parse_ioe_files(ioe_files)
     if (verbose) {
-      cli::cli_alert_info(
+      cli::cli_alert_info(paste0(
         "Found {nrow(events)} events across ",
-        "{length(unique(events$event_type))} event type(s).")
+        "{length(unique(events$event_type))} event type(s)."))
     }
     # Build event_data from parsed IOE
     event_data <- data.frame(
@@ -202,9 +202,9 @@ CreateMatisseObject <- function(
 # Input: cells x junctions (Matisse convention); stored as junctions x cells.
 .add_isoform_assay_junction <- function(seurat, jxn_counts, verbose) {
   if (ncol(jxn_counts) < 2L) {
-    rlang::abort(
+    rlang::abort(paste0(
       "`junction_counts` must have at least 2 junctions ",
-      "(Assay5 requires >=2 features).")
+      "(Assay5 requires >=2 features)."))
   }
   # Transpose: cells x junctions -> junctions x cells for Seurat convention
   jxn_ec    <- Matrix::t(jxn_counts)
@@ -220,9 +220,9 @@ CreateMatisseObject <- function(
 # Input: transcripts x cells (already in Seurat orientation).
 .add_isoform_assay_transcript <- function(seurat, tx_counts, cells, verbose) {
   if (!is.matrix(tx_counts) && !inherits(tx_counts, "Matrix")) {
-    rlang::abort(
+    rlang::abort(paste0(
       "`transcript_counts` must be a matrix or sparse Matrix ",
-      "(transcripts x cells).")
+      "(transcripts x cells)."))
   }
   if (is.null(colnames(tx_counts))) {
     rlang::abort("`transcript_counts` must have column names (cell barcodes).")
