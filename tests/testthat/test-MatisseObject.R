@@ -59,6 +59,39 @@ test_that("CreateMatisseObject: event_data_path is NA when event_data is a data.
   expect_identical(obj@misc[["event_data_path"]], NA_character_)
 })
 
+test_that("CreateMatisseObject: folds PSI calc into construction by default (P5)", {
+  # P5: by default, the constructor computes PSI as part of construction.
+  # The returned object has a populated 'psi' assay.
+  skip_if_not_installed("Seurat")
+  seu     <- make_seurat()
+  jxn_mat <- make_junction_counts()
+  ev_data <- make_event_data()
+  obj <- CreateMatisseObject(
+    seurat          = seu,
+    junction_counts = jxn_mat,
+    event_data      = ev_data,
+    min_coverage    = 1L,
+    verbose         = FALSE
+  )
+  expect_true("psi" %in% SeuratObject::Assays(GetSeurat(obj)))
+  expect_true("nPercent_isoform" %in% colnames(MatisseMeta(obj)))
+})
+
+test_that("CreateMatisseObject: defer_psi=TRUE skips the PSI step", {
+  skip_if_not_installed("Seurat")
+  seu     <- make_seurat()
+  jxn_mat <- make_junction_counts()
+  ev_data <- make_event_data()
+  obj <- CreateMatisseObject(
+    seurat          = seu,
+    junction_counts = jxn_mat,
+    event_data      = ev_data,
+    defer_psi       = TRUE,
+    verbose         = FALSE
+  )
+  expect_false("psi" %in% SeuratObject::Assays(GetSeurat(obj)))
+})
+
 test_that("CreateMatisseObject: event_data_path is the normalized path when ioe_files used", {
   skip_if_not_installed("Seurat")
   ioe <- make_se_ioe_file()

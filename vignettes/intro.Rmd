@@ -83,10 +83,9 @@ library(Matisse)
 obj <- CreateMatisseObject(
   seurat          = seu,          # your existing Seurat object
   junction_counts = jxn_counts,   # cells x junctions from STARsolo
-  event_data      = event_df      # splice event annotation
+  event_data      = event_df,     # splice event annotation
+  min_coverage    = 5L
 )
-obj <- CalculatePSI(obj, min_coverage = 5)
-obj <- ComputeIsoformQC(obj)
 PlotUMAP(obj, feature = "PTBP1:SE:chr18:3433647-3436055")
 ```
 

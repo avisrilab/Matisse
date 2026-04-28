@@ -71,7 +71,6 @@ pagetitle: "Matisse — Understand your cells, layer by layer"
 <span class="mat-compat-label">Event annotations</span>
 <span class="mat-badge">SUPPA2 generateEvents</span>
 <span class="mat-badge">rMATS</span>
-<span class="mat-badge">BuildSimpleEvents()</span>
 </div>
 </div>
 </div>

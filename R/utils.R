@@ -5,48 +5,6 @@ NULL
 # Exported utilities
 # ---------------------------------------------------------------------------
 
-#' Build a minimal junction event annotation table
-#'
-#' Helper for quickly creating the \code{event_data} data.frame required by
-#' \code{\link{CreateMatisseObject}} and \code{\link{CalculatePSI}} from a
-#' table of per-junction metadata.
-#'
-#' @param junctions A \code{data.frame} with at minimum columns
-#'   \code{junction_id} and \code{gene_id}.
-#' @param event_type Character. Currently only \code{"simple"} is supported.
-#'
-#' @return A \code{data.frame} suitable for the \code{event_data} argument
-#'   of \code{\link{CreateMatisseObject}}.
-#'
-#' @export
-BuildSimpleEvents <- function(junctions, event_type = "simple") {
-  .check_required_columns(junctions, c("junction_id", "gene_id"), "junctions")
-
-  if (event_type != "simple") {
-    rlang::abort("Only event_type = 'simple' is currently supported.")
-  }
-
-  genes <- unique(junctions$gene_id)
-  rows  <- lapply(genes, function(g) {
-    jxns <- junctions$junction_id[junctions$gene_id == g]
-    lapply(jxns, function(focal) {
-      other <- setdiff(jxns, focal)
-      data.frame(
-        event_id             = paste0(g, ":", focal),
-        gene_id              = g,
-        chr                  = .safe_col(junctions, focal, "chr"),
-        strand               = .safe_col(junctions, focal, "strand"),
-        event_type           = "simple",
-        inclusion_junctions  = focal,
-        exclusion_junctions  = paste(other, collapse = ";"),
-        stringsAsFactors     = FALSE
-      )
-    })
-  })
-
-  do.call(rbind, unlist(rows, recursive = FALSE))
-}
-
 #' Merge two MatisseObjects by cells
 #'
 #' Concatenates two \code{MatisseObject}s that share the same set of splice
@@ -117,12 +75,6 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
 # ---------------------------------------------------------------------------
 # Internal utilities (not exported)
 # ---------------------------------------------------------------------------
-
-.safe_col <- function(df, id, col) {
-  if (!col %in% colnames(df)) return(NA_character_)
-  val <- df[[col]][df$junction_id == id]
-  if (length(val) == 0) NA_character_ else as.character(val[1])
-}
 
 # ---------------------------------------------------------------------------
 # Shared PSI computation helpers

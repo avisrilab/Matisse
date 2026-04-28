@@ -63,21 +63,18 @@ reference:
 
   - title: "Retrieve or update your data"
     desc: >
-      Functions for pulling specific data tables out of your Matisse object,
-      or putting updated tables back in.
+      Matisse-specific accessors. For raw count and annotation matrices,
+      use the native Seurat API on the embedded Seurat object: e.g.
+      <code>SeuratObject::GetAssayData(GetSeurat(obj)[["isoform"]], "counts")</code>
+      for junction or transcript counts, or
+      <code>GetSeurat(obj)[["psi"]][[]]</code> for the per-event annotation
+      table.
     contents:
       - GetSeurat
       - GetPSI
       - SetPSI
-      - GetJunctionCounts
-      - GetInclusionCounts
-      - GetExclusionCounts
-      - GetTranscriptCounts
-      - GetEventData
-      - GetJunctionData
       - MatisseMeta
       - "MatisseMeta<-"
-      - AddIsoformMetadata
 
   - title: "Normalisation"
     desc: >
@@ -168,9 +165,8 @@ reference:
 
   - title: "Utilities"
     desc: >
-      Helper functions for building event tables and combining datasets.
+      Helper functions for combining datasets.
     contents:
-      - BuildSimpleEvents
       - MergeMatisse
 
 articles:

@@ -5,19 +5,24 @@ NULL
 #' Create a MatisseObject
 #'
 #' The single constructor for \code{\linkS4class{MatisseObject}}. Combines a
-#' \code{Seurat} object with isoform-resolved splicing data. The operating
+#' \code{Seurat} object with isoform-resolved splicing data and \emph{also}
+#' computes PSI in one step (unless \code{defer_psi = TRUE}). The operating
 #' mode is detected automatically from the inputs you supply:
 #'
 #' \itemize{
-#'   \item \strong{Junction mode} (short-read): pass \code{junction_counts}.
-#'     Junction counts are stored as \code{Assay5("isoform")} inside the
-#'     Seurat object. Call \code{\link{CalculatePSI}} afterwards to compute
-#'     PSI values.
+#'   \item \strong{Junction mode} (short-read): pass \code{junction_counts}
+#'     plus an event annotation (\code{event_data}, required). Junction
+#'     counts are stored as \code{Assay5("isoform")} inside the Seurat
+#'     object; PSI values land in \code{Assay5("psi")}.
 #'   \item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
-#'     and optionally \code{ioe_files}. Transcript counts are stored as
-#'     \code{Assay5("isoform")}. Call \code{\link{CalculatePSI}} (with
-#'     \code{ioe_files}) to compute PSI values.
+#'     plus \code{ioe_files} (SUPPA2-style event annotation, required).
+#'     Transcript counts are stored as \code{Assay5("isoform")}; PSI values
+#'     land in \code{Assay5("psi")}.
 #' }
+#'
+#' Matisse intentionally does \strong{not} ship a heuristic event caller —
+#' bring your own splice-event annotation (SUPPA2 IOE, rMATS table, or
+#' equivalent).
 #'
 #' @param seurat A \code{Seurat} object. Required.
 #' @param junction_counts A sparse matrix (dgCMatrix, cells x junctions) of
@@ -28,16 +33,23 @@ NULL
 #'   Seurat object. Column names must overlap with \code{colnames(seurat)}.
 #'   Triggers transcript mode. Default: \code{NULL}.
 #' @param ioe_files Character vector of paths to SUPPA2 \code{.ioe} files.
-#'   When supplied together with \code{transcript_counts}, the parsed event
-#'   annotation is stored in the object and used by \code{\link{CalculatePSI}}.
-#'   Default: \code{NULL}.
-#' @param event_data A \code{data.frame} defining splice events (junction mode
-#'   only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
+#'   Required in transcript mode. The parsed event annotation is staged in
+#'   the object and migrated into \code{seurat[["psi"]][[]]} by
+#'   \code{\link{CalculatePSI}}. Default: \code{NULL}.
+#' @param event_data A \code{data.frame} defining splice events (junction mode).
+#'   Required columns: \code{event_id}, \code{gene_id}, \code{chr},
 #'   \code{strand}, \code{event_type}, \code{inclusion_junctions},
 #'   \code{exclusion_junctions}. Default: \code{NULL}.
 #' @param junction_data A \code{data.frame} of junction annotations. Required
 #'   columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
-#'   \code{strand}, \code{gene_id}. Default: \code{NULL}.
+#'   \code{strand}, \code{gene_id}. Used by \code{\link{PlotSashimi}} in
+#'   junction mode. Default: \code{NULL}.
+#' @param min_coverage Integer. Minimum total reads per cell per event for the
+#'   PSI calculation step. Default: \code{5L}. Forwarded to
+#'   \code{\link{CalculatePSI}} when \code{defer_psi = FALSE}.
+#' @param defer_psi Logical. Skip the PSI calculation step at construction.
+#'   The returned object will have raw counts only (no \code{"psi"} assay).
+#'   Call \code{\link{CalculatePSI}} later. Default: \code{FALSE}.
 #' @param verbose Logical. Print construction progress. Default: \code{TRUE}.
 #'
 #' @return A \code{\linkS4class{MatisseObject}}.
@@ -70,6 +82,8 @@ CreateMatisseObject <- function(
     ioe_files         = NULL,
     event_data        = NULL,
     junction_data     = NULL,
+    min_coverage      = 5L,
+    defer_psi         = FALSE,
     verbose           = TRUE
 ) {
   if (!inherits(seurat, "Seurat")) {
@@ -204,6 +218,18 @@ CreateMatisseObject <- function(
   if (verbose) cli::cli_alert_success("MatisseObject created successfully.")
 
   methods::validObject(obj)
+
+  # P5: fold PSI calculation into construction. Single-step UX — by the time
+  # the constructor returns, the PSI assay exists and event annotation lives
+  # in seurat[["psi"]][[]] (per P1). Skip when defer_psi=TRUE or when no
+  # events were supplied (an isoform-only object with no PSI is still useful
+  # for raw-count exploration).
+  has_events <- !is.null(obj_misc[["event_data"]]) &&
+                nrow(obj_misc[["event_data"]]) > 0L
+  if (!defer_psi && has_events && (has_junctions || has_transcripts)) {
+    obj <- CalculatePSI(obj, min_coverage = min_coverage, verbose = verbose)
+  }
+
   obj
 }
 

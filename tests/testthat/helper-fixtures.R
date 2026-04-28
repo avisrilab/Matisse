@@ -96,6 +96,10 @@ make_seurat <- function(n_cells = 10L, n_genes = 20L, seed = 1L) {
 # ---- Full MatisseObject fixture (junction mode, no PSI yet) ----------------
 
 make_matisse_object <- function() {
+  # P5: CreateMatisseObject now folds PSI calc in by default. Most existing
+  # tests assume the fixture returns a no-PSI object and call CalculatePSI
+  # explicitly, so the fixture passes defer_psi = TRUE. Auto-PSI is
+  # exercised by dedicated tests in test-MatisseObject.R.
   skip_if_not_installed("Seurat")
   seu     <- make_seurat()
   jxn_mat <- make_junction_counts()
@@ -106,6 +110,7 @@ make_matisse_object <- function() {
     junction_counts = jxn_mat,
     event_data      = ev_data,
     junction_data   = jd_data,
+    defer_psi       = TRUE,
     verbose         = FALSE
   )
 }
@@ -137,14 +142,14 @@ make_matisse_with_umap <- function() {
   jxn_mat <- make_junction_counts()
   ev_data <- make_event_data()
   jd_data <- make_junction_data()
-  obj <- CreateMatisseObject(
+  CreateMatisseObject(
     seurat          = seu,
     junction_counts = jxn_mat,
     event_data      = ev_data,
     junction_data   = jd_data,
+    min_coverage    = 1L,
     verbose         = FALSE
   )
-  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
 # ---- MatisseObject from transcripts (transcript mode) ----------------------
@@ -154,13 +159,13 @@ make_matisse_from_transcripts <- function() {
   seu    <- make_seurat()
   tx_mat <- make_transcript_counts()
   f      <- make_ioe_file()
-  obj <- CreateMatisseObject(
+  CreateMatisseObject(
     seurat            = seu,
     transcript_counts = tx_mat,
     ioe_files         = f,
+    min_coverage      = 1L,
     verbose           = FALSE
   )
-  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
 # ---- Realistic SE event fixtures for PlotSashimi --------------------------
@@ -238,14 +243,14 @@ make_matisse_short_read <- function() {
   seu[["umap"]]   <- suppressWarnings(SeuratObject::CreateDimReducObject(
     embeddings = coords, key = "UMAP_"))
   seu$cell_type   <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
-  obj <- CreateMatisseObject(
+  CreateMatisseObject(
     seurat          = seu,
     junction_counts = make_se_junction_counts(n_cells = n_cells),
     event_data      = make_se_event_data(),
     junction_data   = make_se_junction_data(),
+    min_coverage    = 1L,
     verbose         = FALSE
   )
-  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }
 
 make_se_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
@@ -300,11 +305,11 @@ make_matisse_long_read <- function() {
   seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
     embeddings = coords, key = "UMAP_"))
   seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
-  obj <- CreateMatisseObject(
+  CreateMatisseObject(
     seurat            = seu,
     transcript_counts = make_se_transcript_counts(n_cells = n_cells),
     ioe_files         = make_se_ioe_file(),
+    min_coverage      = 1L,
     verbose           = FALSE
   )
-  CalculatePSI(obj, min_coverage = 1L, verbose = FALSE)
 }

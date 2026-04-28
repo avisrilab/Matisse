@@ -11,6 +11,8 @@ CreateMatisseObject(
   ioe_files = NULL,
   event_data = NULL,
   junction_data = NULL,
+  min_coverage = 5L,
+  defer_psi = FALSE,
   verbose = TRUE
 )
 }
@@ -27,18 +29,27 @@ Seurat object. Column names must overlap with \code{colnames(seurat)}.
 Triggers transcript mode. Default: \code{NULL}.}
 
 \item{ioe_files}{Character vector of paths to SUPPA2 \code{.ioe} files.
-When supplied together with \code{transcript_counts}, the parsed event
-annotation is stored in the object and used by \code{\link{CalculatePSI}}.
-Default: \code{NULL}.}
+Required in transcript mode. The parsed event annotation is staged in
+the object and migrated into \code{seurat[["psi"]][[]]} by
+\code{\link{CalculatePSI}}. Default: \code{NULL}.}
 
-\item{event_data}{A \code{data.frame} defining splice events (junction mode
-only). Required columns: \code{event_id}, \code{gene_id}, \code{chr},
+\item{event_data}{A \code{data.frame} defining splice events (junction mode).
+Required columns: \code{event_id}, \code{gene_id}, \code{chr},
 \code{strand}, \code{event_type}, \code{inclusion_junctions},
 \code{exclusion_junctions}. Default: \code{NULL}.}
 
 \item{junction_data}{A \code{data.frame} of junction annotations. Required
 columns: \code{junction_id}, \code{chr}, \code{start}, \code{end},
-\code{strand}, \code{gene_id}. Default: \code{NULL}.}
+\code{strand}, \code{gene_id}. Used by \code{\link{PlotSashimi}} in
+junction mode. Default: \code{NULL}.}
+
+\item{min_coverage}{Integer. Minimum total reads per cell per event for the
+PSI calculation step. Default: \code{5L}. Forwarded to
+\code{\link{CalculatePSI}} when \code{defer_psi = FALSE}.}
+
+\item{defer_psi}{Logical. Skip the PSI calculation step at construction.
+The returned object will have raw counts only (no \code{"psi"} assay).
+Call \code{\link{CalculatePSI}} later. Default: \code{FALSE}.}
 
 \item{verbose}{Logical. Print construction progress. Default: \code{TRUE}.}
 }
@@ -47,20 +58,25 @@ A \code{\linkS4class{MatisseObject}}.
 }
 \description{
 The single constructor for \code{\linkS4class{MatisseObject}}. Combines a
-\code{Seurat} object with isoform-resolved splicing data. The operating
+\code{Seurat} object with isoform-resolved splicing data and \emph{also}
+computes PSI in one step (unless \code{defer_psi = TRUE}). The operating
 mode is detected automatically from the inputs you supply:
 }
 \details{
 \itemize{
-\item \strong{Junction mode} (short-read): pass \code{junction_counts}.
-Junction counts are stored as \code{Assay5("isoform")} inside the
-Seurat object. Call \code{\link{CalculatePSI}} afterwards to compute
-PSI values.
+\item \strong{Junction mode} (short-read): pass \code{junction_counts}
+plus an event annotation (\code{event_data}, required). Junction
+counts are stored as \code{Assay5("isoform")} inside the Seurat
+object; PSI values land in \code{Assay5("psi")}.
 \item \strong{Transcript mode} (long-read): pass \code{transcript_counts}
-and optionally \code{ioe_files}. Transcript counts are stored as
-\code{Assay5("isoform")}. Call \code{\link{CalculatePSI}} (with
-\code{ioe_files}) to compute PSI values.
+plus \code{ioe_files} (SUPPA2-style event annotation, required).
+Transcript counts are stored as \code{Assay5("isoform")}; PSI values
+land in \code{Assay5("psi")}.
 }
+
+Matisse intentionally does \strong{not} ship a heuristic event caller —
+bring your own splice-event annotation (SUPPA2 IOE, rMATS table, or
+equivalent).
 }
 \examples{
 \dontrun{
