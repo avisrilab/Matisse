@@ -119,15 +119,10 @@ setValidity("MatisseObject", function(object) {
   if (is.null(cells)) 0L else length(cells)
 }
 
-# Internal helper: read event annotation from Misc() staging area.
+# Internal helper: read event annotation from the object's own @misc slot.
 # Returns a data.frame (or NULL if not present).
-# Note: Misc<-.Seurat calls c() on list values, converting a data.frame
-# to a named list. Reconstruct with as.data.frame().
 .get_event_data_internal <- function(object) {
-  if (is.null(object@seurat)) return(NULL)
-  val <- SeuratObject::Misc(object@seurat, slot = "matisse_event_data")
-  if (is.null(val)) return(NULL)
-  as.data.frame(val, stringsAsFactors = FALSE)
+  object@misc[["event_data"]]
 }
 
 .n_events <- function(object) {
@@ -144,10 +139,8 @@ setValidity("MatisseObject", function(object) {
 }
 
 # Returns the number of raw input features stored in the "isoform" Assay5.
-# Meaningful in both modes (junctions in junction mode, transcripts in
-# transcript mode).
-.n_junctions <- function(object) {
-  if (object@input.mode != "junction") return(0L)
+# Works in both modes: junctions in junction mode, transcripts in transcript mode.
+.n_isoforms <- function(object) {
   iso_assay <- .get_assay_safe(object@seurat, "isoform")
   if (is.null(iso_assay)) return(0L)
   nrow(iso_assay)   # rows = features (Seurat's features x cells convention)

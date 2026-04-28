@@ -119,11 +119,11 @@ setMethod("CalculatePSI", "MatisseObject",
     idx <- idx[!is.na(idx)]
     if (length(idx) > 0) ev$event_id[idx] <- stored_names
   } else {
-    # events were passed explicitly (not from Misc); store them now
+    # events were passed explicitly (not stored in @misc yet); store them now
     ev <- as.data.frame(events, stringsAsFactors = FALSE)
     ev$event_id <- stored_names
   }
-  object@seurat <- `Misc<-`(object@seurat, slot = "matisse_event_data", value = ev)
+  object@misc[["event_data"]] <- ev
 
   # Write nPercent_isoform to meta.data
   psi_cx  <- GetPSI(object)         # cells x events (uses updated Misc)

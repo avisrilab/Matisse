@@ -157,23 +157,22 @@ CreateMatisseObject <- function(
     )
   }
 
-  # --- validate and stage event_data in Misc() -----------------------------
+  # --- validate event_data and build object @misc --------------------------
+  obj_misc <- list()
+
   if (!is.null(event_data) && nrow(as.data.frame(event_data)) > 0) {
     required <- c("event_id", "gene_id", "chr", "strand",
                   "event_type", "inclusion_junctions", "exclusion_junctions")
     .check_required_columns(event_data, required, "event_data")
-    event_data <- as.data.frame(event_data)
+    obj_misc[["event_data"]] <- as.data.frame(event_data)
   } else {
-    event_data <- data.frame()
+    obj_misc[["event_data"]] <- data.frame()
   }
-  seurat <- `Misc<-`(seurat, slot = "matisse_event_data", value = event_data)
 
-  # --- validate and stage junction_data in Misc() --------------------------
   if (!is.null(junction_data) && nrow(as.data.frame(junction_data)) > 0) {
     required <- c("junction_id", "chr", "start", "end", "strand", "gene_id")
     .check_required_columns(junction_data, required, "junction_data")
-    seurat <- `Misc<-`(seurat, slot = "matisse_junction_data",
-                       value = as.data.frame(junction_data))
+    obj_misc[["junction_data"]] <- as.data.frame(junction_data)
   }
 
   version_str <- tryCatch(
@@ -186,7 +185,7 @@ CreateMatisseObject <- function(
     seurat     = seurat,
     input.mode = input_mode,
     version    = version_str,
-    misc       = list()
+    misc       = obj_misc
   )
 
   if (verbose) cli::cli_alert_success("MatisseObject created successfully.")

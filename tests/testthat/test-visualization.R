@@ -295,7 +295,7 @@ test_that("PlotSashimi: errors in transcript mode for unsupported event type", {
   # Rewrite event_data with an A3SS event ID (unsupported type)
   ed <- GetEventData(obj)
   ed$event_id[1] <- "A3:chr1:1201-2999:3201-4999:+"
-  obj@seurat <- `Misc<-`(obj@seurat, slot = "matisse_event_data", value = ed)
+  obj@misc[["event_data"]] <- ed
   expect_error(
     PlotSashimi(obj, event_id = "A3:chr1:1201-2999:3201-4999:+"),
     regexp = "does not yet support"

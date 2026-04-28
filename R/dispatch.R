@@ -317,7 +317,6 @@ FindMarkers.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{MatisseMeta}}, \code{\link{AddIsoformMetadata}}
 #' @rdname AddMetaData.MatisseObject
-#' @importFrom SeuratObject "Misc<-"
 #' @importFrom SeuratObject AddMetaData
 #' @method AddMetaData MatisseObject
 #' @export

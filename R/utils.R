@@ -92,22 +92,18 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     merged_seurat <- SeuratObject::JoinLayers(merged_seurat, assay = assay_name)
   }
 
-  # Seurat's merge does not carry over Misc() slots; re-populate from x.
-  ev <- GetEventData(x)
-  if (!is.null(ev)) {
-    merged_seurat <- `Misc<-`(merged_seurat, slot = "matisse_event_data", value = ev)
-  }
-  jd <- GetJunctionData(x)
-  if (!is.null(jd)) {
-    merged_seurat <- `Misc<-`(merged_seurat, slot = "matisse_junction_data", value = jd)
-  }
+  # Annotation lives in MatisseObject@misc (not Seurat's Misc), so it carries
+  # through naturally. x's annotation takes precedence over y's on key conflict.
+  merged_misc <- y@misc
+  merged_misc[["event_data"]]   <- x@misc[["event_data"]]
+  merged_misc[["junction_data"]] <- x@misc[["junction_data"]]
 
   obj <- methods::new(
     "MatisseObject",
     seurat     = merged_seurat,
     input.mode = x@input.mode,
     version    = x@version,
-    misc       = c(x@misc, y@misc)
+    misc       = merged_misc
   )
 
   if (verbose) {

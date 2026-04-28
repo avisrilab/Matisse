@@ -61,14 +61,14 @@ test_that("CreateMatisseObject: GetJunctionCounts returns cells x junctions", {
   expect_equal(ncol(jc), 6L)
 })
 
-test_that("CreateMatisseObject: .n_junctions returns junction count in junction mode", {
+test_that("CreateMatisseObject: .n_isoforms returns junction count in junction mode", {
   obj <- make_matisse_object()
-  expect_equal(.n_junctions(obj), 6L)
+  expect_equal(.n_isoforms(obj), 6L)
 })
 
-test_that("CreateMatisseObject: .n_junctions returns 0 in transcript mode", {
+test_that("CreateMatisseObject: .n_isoforms returns transcript count in transcript mode", {
   obj <- make_matisse_from_transcripts()
-  expect_equal(.n_junctions(obj), 0L)
+  expect_equal(.n_isoforms(obj), 8L)   # make_transcript_counts() has 8 transcripts
 })
 
 test_that("CreateMatisseObject: rejects event_data missing required columns", {

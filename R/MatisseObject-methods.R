@@ -57,9 +57,10 @@ setMethod("show", "MatisseObject", function(object) {
     }
   }
 
-  n_junctions <- .n_junctions(object)
-  if (n_junctions > 0L) {
-    cat("  Junctions    :", n_junctions, "\n")
+  n_isoforms <- .n_isoforms(object)
+  if (n_isoforms > 0L) {
+    iso_label <- if (object@input.mode == "junction") "Junctions" else "Transcripts"
+    cat("  ", formatC(iso_label, width = 13, flag = "-"), ":", n_isoforms, "\n", sep = "")
   }
 
   # PSI coverage from the "psi" Assay5
@@ -137,15 +138,14 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
   # gene expression, plus cell metadata and reductions automatically)
   new_seurat <- if (!is.null(x@seurat)) x@seurat[, cell_names] else NULL
 
-  # When subsetting events (j), update the event annotation in Misc()
-  if (!missing(j) && !is.null(new_seurat)) {
-    ev <- .get_event_data_internal(x)
+  # When subsetting events (j), update the event annotation in @misc directly.
+  new_misc <- x@misc
+  if (!missing(j)) {
+    ev <- new_misc[["event_data"]]
     if (!is.null(ev) && nrow(ev) > 0 && length(event_ids) > 0) {
-      new_ev <- ev[match(event_ids, ev$event_id), , drop = FALSE]
-      new_seurat <- `Misc<-`(new_seurat, slot = "matisse_event_data", value = new_ev)
-    } else if (length(event_ids) == 0L && !is.null(ev)) {
-      new_seurat <- `Misc<-`(new_seurat, slot = "matisse_event_data",
-                              value = ev[integer(0), , drop = FALSE])
+      new_misc[["event_data"]] <- ev[match(event_ids, ev$event_id), , drop = FALSE]
+    } else if (!is.null(ev)) {
+      new_misc[["event_data"]] <- ev[integer(0), , drop = FALSE]
     }
   }
 
@@ -153,7 +153,7 @@ setMethod("[", "MatisseObject", function(x, i, j, ..., drop = FALSE) {
     seurat     = new_seurat,
     input.mode = x@input.mode,
     version    = x@version,
-    misc       = x@misc
+    misc       = new_misc
   )
 })
 
@@ -249,10 +249,7 @@ setMethod("GetEventData", "MatisseObject", function(object, ...) {
 
 #' @rdname GetJunctionData
 setMethod("GetJunctionData", "MatisseObject", function(object, ...) {
-  if (is.null(object@seurat)) return(NULL)
-  val <- SeuratObject::Misc(object@seurat, slot = "matisse_junction_data")
-  if (is.null(val)) return(NULL)
-  as.data.frame(val, stringsAsFactors = FALSE)
+  object@misc[["junction_data"]]
 })
 
 #' @rdname MatisseMeta
