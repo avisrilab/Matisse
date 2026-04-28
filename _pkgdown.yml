@@ -79,17 +79,17 @@ reference:
 
   - title: "Normalisation"
     desc: >
-      Normalise count data before clustering. <code>SCTransform</code> applies
-      variance stabilisation and scales for sequencing depth -- in transcript
-      mode it targets the <code>isoform</code> assay automatically; in junction
-      mode it targets the gene-expression assay. <code>NormalizeData</code>,
-      <code>ScaleData</code>, and <code>FindVariableFeatures</code> are
-      log-normalisation alternatives.
+      <code>SCTransform</code> applies variance stabilisation and scales for
+      sequencing depth -- in transcript mode it targets the
+      <code>isoform</code> assay automatically; in junction mode it targets
+      the gene-expression assay. For log-normalisation alternatives
+      (<code>NormalizeData</code>, <code>ScaleData</code>,
+      <code>FindVariableFeatures</code>) use Seurat's functions on the
+      embedded Seurat object via the <code>$</code> operator
+      (<code>obj$NormalizeData(...)</code>) or
+      <code>GetSeurat(obj)</code>.
     contents:
       - SCTransform.MatisseObject
-      - NormalizeData.MatisseObject
-      - ScaleData.MatisseObject
-      - FindVariableFeatures.MatisseObject
 
   - title: "Dimensionality reduction"
     desc: >
@@ -100,7 +100,6 @@ reference:
     contents:
       - RunPCA.MatisseObject
       - RunUMAP.MatisseObject
-      - RunTSNE.MatisseObject
 
   - title: "Clustering and differential expression"
     desc: >

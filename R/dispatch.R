@@ -22,66 +22,10 @@ NULL
 # ---------------------------------------------------------------------------
 # Normalisation
 # ---------------------------------------------------------------------------
-
-#' Normalise gene-expression counts for a MatisseObject
-#'
-#' Runs \code{\link[Seurat]{NormalizeData}} on the embedded Seurat object and
-#' returns the updated \code{MatisseObject}. All splicing assays (junction,
-#' psi, transcript) are unaffected.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments forwarded to \code{\link[Seurat]{NormalizeData}}.
-#' @return The updated \code{MatisseObject}.
-#'
-#' @seealso \code{\link{SCTransform.MatisseObject}}, \code{\link{ScaleData.MatisseObject}}
-#' @rdname NormalizeData.MatisseObject
-#' @importFrom Seurat NormalizeData
-#' @method NormalizeData MatisseObject
-#' @export
-NormalizeData.MatisseObject <- function(object, ...) {
-  .seurat_forward(Seurat::NormalizeData, object, ...)
-}
-
-#' Scale gene-expression data for a MatisseObject
-#'
-#' Runs \code{\link[Seurat]{ScaleData}} on the embedded Seurat object and
-#' returns the updated \code{MatisseObject}. Typically called after
-#' \code{\link{NormalizeData.MatisseObject}} or
-#' \code{\link{FindVariableFeatures.MatisseObject}}.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments forwarded to \code{\link[Seurat]{ScaleData}}.
-#' @return The updated \code{MatisseObject}.
-#'
-#' @seealso \code{\link{NormalizeData.MatisseObject}}, \code{\link{SCTransform.MatisseObject}}
-#' @rdname ScaleData.MatisseObject
-#' @importFrom Seurat ScaleData
-#' @method ScaleData MatisseObject
-#' @export
-ScaleData.MatisseObject <- function(object, ...) {
-  .seurat_forward(Seurat::ScaleData, object, ...)
-}
-
-#' Identify highly variable features for a MatisseObject
-#'
-#' Runs \code{\link[Seurat]{FindVariableFeatures}} on the embedded Seurat
-#' object and returns the updated \code{MatisseObject}. Identifies genes
-#' whose expression varies most across cells — used to select features for
-#' PCA.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments forwarded to
-#'   \code{\link[Seurat]{FindVariableFeatures}}.
-#' @return The updated \code{MatisseObject}.
-#'
-#' @seealso \code{\link{RunPCA.MatisseObject}}, \code{\link{NormalizeData.MatisseObject}}
-#' @rdname FindVariableFeatures.MatisseObject
-#' @importFrom Seurat FindVariableFeatures
-#' @method FindVariableFeatures MatisseObject
-#' @export
-FindVariableFeatures.MatisseObject <- function(object, ...) {
-  .seurat_forward(Seurat::FindVariableFeatures, object, ...)
-}
+# Matisse only ships an SCTransform dispatcher. Users who want
+# NormalizeData / ScaleData / FindVariableFeatures on a MatisseObject can
+# reach Seurat's exported functions transparently via the $ operator
+# (e.g. obj$NormalizeData(...)) — see setMethod("$", "MatisseObject", ...).
 
 #' SCTransform normalisation for MatisseObjects
 #'
@@ -110,7 +54,7 @@ FindVariableFeatures.MatisseObject <- function(object, ...) {
 #' @param ... Additional arguments forwarded to \code{\link[Seurat]{SCTransform}}.
 #' @return The updated \code{MatisseObject} with a new \code{"SCT"} assay.
 #'
-#' @seealso \code{\link{RunPCA.MatisseObject}}, \code{\link{NormalizeData.MatisseObject}}
+#' @seealso \code{\link{RunPCA.MatisseObject}}
 #' @importFrom Seurat SCTransform
 #' @method SCTransform MatisseObject
 #' @export
@@ -208,26 +152,6 @@ RunPCA.MatisseObject <- function(object, ...) {
 #' @export
 RunUMAP.MatisseObject <- function(object, ...) {
   .seurat_forward(Seurat::RunUMAP, object, ...)
-}
-
-#' Run t-SNE on a MatisseObject
-#'
-#' Runs \code{\link[Seurat]{RunTSNE}} on the embedded Seurat object and
-#' returns the updated \code{MatisseObject}. An alternative to
-#' \code{\link{RunUMAP.MatisseObject}} for 2-D cell embedding.
-#'
-#' @param object A \code{MatisseObject}.
-#' @param ... Additional arguments forwarded to \code{\link[Seurat]{RunTSNE}}
-#'   (e.g. \code{dims}, \code{perplexity}).
-#' @return The updated \code{MatisseObject} with a \code{"tsne"} reduction.
-#'
-#' @seealso \code{\link{RunUMAP.MatisseObject}}, \code{\link{RunPCA.MatisseObject}}
-#' @rdname RunTSNE.MatisseObject
-#' @importFrom Seurat RunTSNE
-#' @method RunTSNE MatisseObject
-#' @export
-RunTSNE.MatisseObject <- function(object, ...) {
-  .seurat_forward(Seurat::RunTSNE, object, ...)
 }
 
 # ---------------------------------------------------------------------------

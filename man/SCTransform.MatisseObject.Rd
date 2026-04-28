@@ -41,5 +41,5 @@ obj <- RunUMAP(obj, dims = 1:50)              # embed
 }
 }
 \seealso{
-\code{\link{RunPCA.MatisseObject}}, \code{\link{NormalizeData.MatisseObject}}
+\code{\link{RunPCA.MatisseObject}}
 }
