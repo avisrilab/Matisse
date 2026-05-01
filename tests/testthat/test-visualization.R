@@ -57,6 +57,61 @@ test_that("PlotUMAP: errors if the requested reduction is absent from the Seurat
   expect_error(PlotUMAP(obj, feature = "SE-gene1-e2"))
 })
 
+# ---- Group mode (feature = NULL, DimPlot-style) ---------------------------
+
+test_that("PlotUMAP: group mode (feature = NULL) returns a ggplot using default seurat_clusters", {
+  obj <- make_matisse_with_umap()
+  p   <- PlotUMAP(obj)
+  expect_s3_class(p, "gg")
+})
+
+test_that("PlotUMAP: group mode honours custom group_by column", {
+  obj <- make_matisse_with_umap()
+  p   <- PlotUMAP(obj, group_by = "cell_type")
+  expect_s3_class(p, "gg")
+  expect_equal(p$labels$colour, "cell_type")
+})
+
+test_that("PlotUMAP: group mode does not require a PSI assay", {
+  # No PSI calculated -- DimPlot-style colouring should still work.
+  skip_if_not_installed("Seurat")
+  seu <- make_seurat_with_umap()
+  obj <- CreateMatisseObject(
+    seurat          = seu,
+    junction_counts = make_junction_counts(),
+    events          = make_event_data(),
+    defer_psi       = TRUE,
+    verbose         = FALSE
+  )
+  p <- PlotUMAP(obj, group_by = "cell_type")
+  expect_s3_class(p, "gg")
+})
+
+test_that("PlotUMAP: label = TRUE in group mode adds a centroid text layer", {
+  obj <- make_matisse_with_umap()
+  p   <- PlotUMAP(obj, group_by = "cell_type", label = TRUE)
+  has_text <- any(vapply(p$layers,
+                          function(l) inherits(l$geom, "GeomText"),
+                          logical(1)))
+  expect_true(has_text)
+})
+
+test_that("PlotUMAP: label = TRUE with a feature aborts (continuous scale has no centroids)", {
+  obj <- make_matisse_with_umap()
+  expect_error(
+    PlotUMAP(obj, feature = "SE-gene1-e2", label = TRUE),
+    regexp = "only valid in group mode"
+  )
+})
+
+test_that("PlotUMAP: group mode errors when group_by column is absent", {
+  obj <- make_matisse_with_umap()
+  expect_error(
+    PlotUMAP(obj, group_by = "no_such_col"),
+    regexp = "not found"
+  )
+})
+
 # ============================================================
 # PlotViolin
 # ============================================================
