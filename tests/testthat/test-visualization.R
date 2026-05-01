@@ -255,6 +255,25 @@ test_that("PlotHeatmap: group_by orders cells without error", {
   expect_no_error(PlotHeatmap(obj, group_by = "cell_type"))
 })
 
+test_that("PlotHeatmap: group_by adds a colored bar layer (DoHeatmap-style)", {
+  obj <- make_matisse_with_umap()
+  p   <- PlotHeatmap(obj, group_by = "cell_type")
+  # Layer 1 = main PSI tiles, layer 2 = the group bar (geom_tile on bar_df).
+  expect_gte(length(p$layers), 2L)
+  bar_layer <- p$layers[[2L]]
+  expect_true("__group_bar__" %in% as.character(bar_layer$data$event))
+})
+
+test_that("PlotHeatmap: group_by render does not error (regression for facet-data bug)", {
+  # Regression: the previous facet_grid path assigned df$group AFTER the
+  # ggplot(df, ...) call, so the layer's data did not have the faceting
+  # variable. Construction succeeded but ggplot_build aborted at render
+  # time. This test exercises the build path.
+  obj <- make_matisse_with_umap()
+  p   <- PlotHeatmap(obj, group_by = "cell_type")
+  expect_no_error(ggplot2::ggplot_build(p))
+})
+
 test_that("PlotHeatmap: warns on unknown event IDs (does not error)", {
   obj <- make_matisse_with_umap()
   expect_warning(
