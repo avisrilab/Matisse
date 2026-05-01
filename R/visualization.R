@@ -258,11 +258,14 @@ setMethod("PlotViolin", "MatisseObject",
 # PlotHeatmap
 # ---------------------------------------------------------------------------
 
-#' Heatmap of PSI values (events x cells)
+#' Heatmap of PSI values (events x cells, DoHeatmap-style)
 #'
-#' Draws a DoHeatmap-style tile plot with splice events on the y-axis and cells
-#' on the x-axis. Events are clustered by PSI profile. When \code{group_by} is
-#' supplied, cells are ordered by group and labelled with facet strips.
+#' Draws a tile plot with splice events on the y-axis and cells on the
+#' x-axis. Events are clustered by PSI profile. When \code{group_by} is
+#' supplied, cells are ordered by group and a colored bar is drawn at the
+#' top of the heatmap showing each cell's group (Seurat \code{DoHeatmap}
+#' style). Both legends -- continuous PSI and discrete groups -- appear on
+#' the right.
 #'
 #' @param object A \code{MatisseObject} with a \code{"psi"} assay.
 #' @param events Character vector of event IDs to include.
@@ -270,12 +273,13 @@ setMethod("PlotViolin", "MatisseObject",
 #' @param cells Character vector of cell barcodes to include.
 #'   Default: \code{NULL} (random sample up to \code{max_cells}).
 #' @param group_by Character. Column in \code{Seurat::meta.data} used to
-#'   order and label cells. Default: \code{NULL}.
+#'   order cells and draw the colored top bar. Default: \code{NULL}.
 #' @param max_cells Integer. Downsample to this many cells before plotting.
 #'   Default: \code{500}.
 #' @param max_events Integer. Cap on events to plot. When the candidate set
 #'   exceeds this, the top-variance events are selected automatically.
-#'   Default: \code{200}.
+#'   Default: \code{50}, which keeps event-name labels readable; raise it
+#'   for a denser heatmap (and expect smaller / overlapping y-axis labels).
 #' @param na_colour Character. Colour for \code{NA} entries.
 #'   Default: \code{"grey90"}.
 #' @param title Character. Plot title. Default: \code{"PSI Heatmap"}.
@@ -291,7 +295,7 @@ setMethod("PlotHeatmap", "MatisseObject",
                    cells      = NULL,
                    group_by   = NULL,
                    max_cells  = 500L,
-                   max_events = 200L,
+                   max_events = 50L,
                    na_colour  = "grey90",
                    title      = NULL, ...) {
   .require_psi(object)
@@ -350,15 +354,20 @@ setMethod("PlotHeatmap", "MatisseObject",
     grp   <- grp[ord]
   }
 
+  events_ordered <- events[event_order]
+  event_levels   <- rev(events_ordered)
+  # When we draw a group bar, append a sentinel y level above the events.
+  # ggplot factors plot bottom-to-top, so adding to the end of `levels`
+  # places the bar at the visual top.
+  y_levels <- if (!is.null(group_by)) c(event_levels, "__group_bar__")
+              else                    event_levels
+
   # Build tidy data frame: events on y, cells on x
   df <- data.frame(
-    cell  = rep(cells,               times = length(events)),
-    event = rep(events[event_order], each  = length(cells)),
-    psi   = as.vector(psi_sub[cells, events[event_order]])
+    cell  = factor(rep(cells, times = length(events_ordered)), levels = cells),
+    event = factor(rep(events_ordered, each = length(cells)), levels = y_levels),
+    psi   = as.vector(psi_sub[cells, events_ordered])
   )
-  df$cell  <- factor(df$cell,  levels = cells)
-  # Reverse so the first clustered event sits at the top of the y-axis
-  df$event <- factor(df$event, levels = rev(events[event_order]))
 
   p <- ggplot2::ggplot(df, ggplot2::aes(
     x    = .data$cell,
@@ -371,32 +380,44 @@ setMethod("PlotHeatmap", "MatisseObject",
       limits   = c(0, 1),
       name     = "PSI"
     ) +
-    ggplot2::labs(title = title %||% "PSI Heatmap") +
+    ggplot2::labs(title = title %||% "PSI Heatmap")
+
+  # DoHeatmap-style colored top bar. ggnewscale::new_scale_fill() lets us
+  # have a second `fill` aesthetic in the same ggplot (the heatmap fill is
+  # continuous PSI; the bar fill is discrete group). Without it, ggplot2
+  # only allows one fill scale per plot.
+  if (!is.null(group_by)) {
+    bar_df <- data.frame(
+      cell  = factor(cells, levels = cells),
+      event = factor("__group_bar__", levels = y_levels),
+      group = factor(grp, levels = unique(grp))
+    )
+    n_groups   <- length(levels(bar_df$group))
+    fill_scale <- if (n_groups <= 8L) {
+      ggplot2::scale_fill_brewer(palette = "Set1", name = group_by)
+    } else {
+      ggplot2::scale_fill_discrete(name = group_by)
+    }
+    p <- p +
+      ggnewscale::new_scale_fill() +
+      ggplot2::geom_tile(
+        data = bar_df,
+        ggplot2::aes(x = .data$cell, y = .data$event, fill = .data$group),
+        inherit.aes = FALSE) +
+      fill_scale +
+      # Hide the sentinel level on the y-axis without dropping the row.
+      ggplot2::scale_y_discrete(breaks = event_levels, drop = FALSE)
+  }
+
+  p +
+    .matisse_theme() +
     ggplot2::theme(
       axis.text.x  = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
       axis.title.x = ggplot2::element_blank(),
-      # Adapt y-axis label size to event count: tiny size makes labels
-      # illegible at high event counts but is fine when there are few rows.
-      axis.text.y  = ggplot2::element_text(
-        size = max(3, min(10, round(180 / max(length(events), 1L))))
-      ),
+      axis.text.y  = ggplot2::element_text(size = 8L),
       axis.title.y = ggplot2::element_blank()
-    ) +
-    .matisse_theme()
-
-  # Group annotation strips (DoHeatmap style)
-  if (!is.null(group_by)) {
-    df$group <- factor(rep(grp, times = length(events)), levels = unique(grp))
-    p <- p + ggplot2::facet_grid(. ~ group, scales = "free_x", space = "free") +
-      ggplot2::theme(
-        strip.background = ggplot2::element_rect(fill = "grey85", colour = NA),
-        strip.text       = ggplot2::element_text(size = 8L, face = "bold"),
-        panel.spacing    = ggplot2::unit(0.5, "mm")
-      )
-  }
-
-  p
+    )
 })
 
 # ---------------------------------------------------------------------------

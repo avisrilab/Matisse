@@ -197,18 +197,19 @@ setGeneric("PlotViolin",
                     ncol       = 2L, ...)
              standardGeneric("PlotViolin"))
 
-#' Heatmap of PSI values (events x cells, DoHeatmap style)
+#' Heatmap of PSI values (events x cells, DoHeatmap-style)
 #'
 #' @param object A \code{MatisseObject}.
 #' @param events Character vector of event IDs. Default: top-variance events
 #'   up to \code{max_events}.
 #' @param cells Character vector of cell barcodes. Default: random sample up
 #'   to \code{max_cells}.
-#' @param group_by Character. Metadata column to annotate and order cells.
-#'   Default: \code{NULL}.
+#' @param group_by Character. Metadata column to order cells by; when set, a
+#'   colored bar is drawn at the top of the heatmap indicating each cell's
+#'   group (Seurat \code{DoHeatmap}-style). Default: \code{NULL}.
 #' @param max_cells Integer. Cell downsample cap. Default: \code{500}.
 #' @param max_events Integer. Event cap; top-variance events selected when
-#'   exceeded. Default: \code{200}.
+#'   exceeded. Default: \code{50}, which keeps event-name labels readable.
 #' @param na_colour Character. Colour for \code{NA} entries.
 #'   Default: \code{"grey90"}.
 #' @param title Character. Plot title. Default: \code{"PSI Heatmap"}.
@@ -220,7 +221,7 @@ setGeneric("PlotHeatmap",
                     cells      = NULL,
                     group_by   = NULL,
                     max_cells  = 500L,
-                    max_events = 200L,
+                    max_events = 50L,
                     na_colour  = "grey90",
                     title      = NULL, ...)
              standardGeneric("PlotHeatmap"))

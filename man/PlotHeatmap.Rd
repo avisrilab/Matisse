@@ -3,7 +3,7 @@
 \name{PlotHeatmap}
 \alias{PlotHeatmap}
 \alias{PlotHeatmap,MatisseObject-method}
-\title{Heatmap of PSI values (events x cells, DoHeatmap style)}
+\title{Heatmap of PSI values (events x cells, DoHeatmap-style)}
 \usage{
 PlotHeatmap(
   object,
@@ -11,7 +11,7 @@ PlotHeatmap(
   cells = NULL,
   group_by = NULL,
   max_cells = 500L,
-  max_events = 200L,
+  max_events = 50L,
   na_colour = "grey90",
   title = NULL,
   ...
@@ -23,7 +23,7 @@ PlotHeatmap(
   cells = NULL,
   group_by = NULL,
   max_cells = 500L,
-  max_events = 200L,
+  max_events = 50L,
   na_colour = "grey90",
   title = NULL,
   ...
@@ -39,14 +39,15 @@ Default: \code{NULL} (top-variance events up to \code{max_events}).}
 Default: \code{NULL} (random sample up to \code{max_cells}).}
 
 \item{group_by}{Character. Column in \code{Seurat::meta.data} used to
-order and label cells. Default: \code{NULL}.}
+order cells and draw the colored top bar. Default: \code{NULL}.}
 
 \item{max_cells}{Integer. Downsample to this many cells before plotting.
 Default: \code{500}.}
 
 \item{max_events}{Integer. Cap on events to plot. When the candidate set
 exceeds this, the top-variance events are selected automatically.
-Default: \code{200}.}
+Default: \code{50}, which keeps event-name labels readable; raise it
+for a denser heatmap (and expect smaller / overlapping y-axis labels).}
 
 \item{na_colour}{Character. Colour for \code{NA} entries.
 Default: \code{"grey90"}.}
@@ -61,7 +62,10 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
-Draws a DoHeatmap-style tile plot with splice events on the y-axis and cells
-on the x-axis. Events are clustered by PSI profile. When \code{group_by} is
-supplied, cells are ordered by group and labelled with facet strips.
+Draws a tile plot with splice events on the y-axis and cells on the
+x-axis. Events are clustered by PSI profile. When \code{group_by} is
+supplied, cells are ordered by group and a colored bar is drawn at the
+top of the heatmap showing each cell's group (Seurat \code{DoHeatmap}
+style). Both legends -- continuous PSI and discrete groups -- appear on
+the right.
 }
