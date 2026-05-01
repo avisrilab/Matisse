@@ -132,25 +132,37 @@ setGeneric("FilterEvents",
 # Visualization generics
 # ---------------------------------------------------------------------------
 
-#' UMAP plot coloured by any feature
+#' UMAP plot -- by group (DimPlot-style) or by feature (FeaturePlot-style)
 #'
-#' Overlays the value of a feature on the UMAP embedding stored in the
-#' embedded Seurat object. Pass a PSI event ID, a junction ID, a gene
-#' name, or a cell-metadata column. The colour scale adapts automatically:
-#' diverging RdBu \[0,1\] for PSI; sequential viridis for counts and
-#' expression.
+#' Two modes, switched by \code{feature}:
+#' \itemize{
+#'   \item \strong{Group mode} (default, \code{feature = NULL}): cells coloured
+#'     discretely by a metadata column -- like Seurat's \code{DimPlot}.
+#'   \item \strong{Feature mode} (\code{feature} supplied): cells coloured on a
+#'     continuous scale by a PSI event ID, junction or transcript ID, gene
+#'     name, or numeric metadata column -- like Seurat's \code{FeaturePlot}.
+#'     The palette adapts to the feature type (diverging RdBu \[0,1\] for
+#'     PSI; sequential for counts and expression).
+#' }
 #'
 #' @param object A \code{MatisseObject}.
-#' @param feature Character. Feature to visualise.
+#' @param feature Character. Optional feature to colour by. \code{NULL}
+#'   (the default) selects group mode.
+#' @param group_by Character. Metadata column to colour by in group mode.
+#'   Default: \code{"seurat_clusters"}. Ignored in feature mode.
+#' @param label Logical. Group-mode only -- add group labels at cluster
+#'   centroids. Default: \code{FALSE}.
 #' @param ... Additional arguments (see \code{\link{PlotUMAP}}).
 #' @return A \code{ggplot} object.
 #' @export
 setGeneric("PlotUMAP",
-           function(object, feature,
+           function(object, feature = NULL,
                     reduction = "umap",
                     dims      = c(1L, 2L),
+                    group_by  = "seurat_clusters",
                     pt_size   = 0.5,
                     na_colour = "grey80",
+                    label     = FALSE,
                     title     = NULL, ...)
              standardGeneric("PlotUMAP"))
 

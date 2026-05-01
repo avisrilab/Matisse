@@ -20,37 +20,98 @@ NULL
 # PlotUMAP
 # ---------------------------------------------------------------------------
 
-#' UMAP plot coloured by any feature
+#' UMAP plot -- by group (DimPlot-style) or by feature (FeaturePlot-style)
 #'
-#' Overlays the value of a feature on the UMAP embedding stored in the
-#' embedded Seurat object. The colour scale adapts to the feature type:
-#' diverging RdBu \[0,1\] for PSI events; sequential viridis for junction
-#' counts and gene expression.
+#' Two modes, switched by \code{feature}:
+#' \itemize{
+#'   \item \strong{Group mode} (default, \code{feature = NULL}): cells coloured
+#'     discretely by a metadata column -- like Seurat's \code{DimPlot}. Pass
+#'     \code{label = TRUE} to add group labels at cluster centroids.
+#'   \item \strong{Feature mode} (\code{feature} supplied): cells coloured on a
+#'     continuous scale by a PSI event ID, junction or transcript ID, gene
+#'     name, or numeric metadata column -- like Seurat's \code{FeaturePlot}.
+#'     The palette adapts to the feature type: diverging RdBu \[0,1\] for
+#'     PSI; sequential for counts and expression.
+#' }
 #'
 #' @param object A \code{MatisseObject} with a UMAP reduction.
-#' @param feature Character. Feature to plot. May be a PSI event ID (e.g.
-#'   \code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a
-#'   gene name, or a cell-metadata column.
+#' @param feature Character. Optional feature to plot -- a PSI event ID (e.g.
+#'   \code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a gene
+#'   name, or a numeric cell-metadata column. \code{NULL} (the default)
+#'   selects group mode.
 #' @param reduction Character. Name of the dimensionality reduction to use.
 #'   Default: \code{"umap"}.
 #' @param dims Integer vector of length 2 selecting which dimensions to plot.
 #'   Default: \code{c(1, 2)}.
+#' @param group_by Character. Metadata column to colour by in group mode.
+#'   Default: \code{"seurat_clusters"}. Ignored in feature mode.
 #' @param pt_size Numeric. Point size. Default: \code{0.5}.
 #' @param na_colour Character. Colour for cells with no data.
 #'   Default: \code{"grey80"}.
-#' @param title Character. Plot title. Defaults to the feature name.
+#' @param label Logical. Group-mode only -- add group labels at cluster
+#'   centroids. Default: \code{FALSE}.
+#' @param title Character. Plot title. Defaults to the feature name in
+#'   feature mode and \code{NULL} in group mode.
 #'
 #' @return A \code{ggplot} object.
 #'
 #' @rdname PlotUMAP
 #' @export
 setMethod("PlotUMAP", "MatisseObject",
-          function(object, feature,
+          function(object, feature = NULL,
                    reduction  = "umap",
                    dims       = c(1L, 2L),
+                   group_by   = "seurat_clusters",
                    pt_size    = 0.5,
                    na_colour  = "grey80",
+                   label      = FALSE,
                    title      = NULL, ...) {
+
+  if (isTRUE(label) && !is.null(feature)) {
+    rlang::abort(paste0(
+      "`label = TRUE` is only valid in group mode (feature = NULL). ",
+      "Centroid labels are not meaningful for a continuous colour scale."))
+  }
+
+  # ----- Group mode (DimPlot-style) -----
+  # Resolve the grouping vector first so a missing metadata column errors
+  # before we touch the embedding.
+  if (is.null(feature)) {
+    vals <- .get_seurat_meta_col(object, group_by)
+    if (!is.factor(vals) && !is.character(vals)) vals <- factor(vals)
+
+    emb       <- SeuratObject::Embeddings(object@seurat, reduction = reduction)
+    dim_names <- colnames(emb)[dims]
+    df <- data.frame(
+      x   = emb[, dims[1]],
+      y   = emb[, dims[2]],
+      val = vals
+    )
+
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y,
+                                           colour = .data$val)) +
+      ggplot2::geom_point(size = pt_size, na.rm = TRUE) +
+      ggplot2::labs(
+        title  = title,
+        x      = dim_names[1],
+        y      = dim_names[2],
+        colour = group_by
+      ) +
+      .matisse_theme()
+
+    if (isTRUE(label)) {
+      cents <- stats::aggregate(cbind(x, y) ~ val, data = df, FUN = mean)
+      p <- p + ggplot2::geom_text(
+        data = cents,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$val),
+        colour = "black", fontface = "bold", show.legend = FALSE)
+    }
+    return(p)
+  }
+
+  # ----- Feature mode (FeaturePlot-style) -----
+  # Classify before embedding lookup so feature-not-found / PSI-NULL surfaces
+  # a feature-specific error instead of a missing-reduction one.
   classified <- .classify_feature(object, feature)
   vals       <- classified$values
 

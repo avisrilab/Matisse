@@ -3,26 +3,30 @@
 \name{PlotUMAP}
 \alias{PlotUMAP}
 \alias{PlotUMAP,MatisseObject-method}
-\title{UMAP plot coloured by any feature}
+\title{UMAP plot -- by group (DimPlot-style) or by feature (FeaturePlot-style)}
 \usage{
 PlotUMAP(
   object,
-  feature,
+  feature = NULL,
   reduction = "umap",
   dims = c(1L, 2L),
+  group_by = "seurat_clusters",
   pt_size = 0.5,
   na_colour = "grey80",
+  label = FALSE,
   title = NULL,
   ...
 )
 
 \S4method{PlotUMAP}{MatisseObject}(
   object,
-  feature,
+  feature = NULL,
   reduction = "umap",
   dims = c(1L, 2L),
+  group_by = "seurat_clusters",
   pt_size = 0.5,
   na_colour = "grey80",
+  label = FALSE,
   title = NULL,
   ...
 )
@@ -30,9 +34,10 @@ PlotUMAP(
 \arguments{
 \item{object}{A \code{MatisseObject} with a UMAP reduction.}
 
-\item{feature}{Character. Feature to plot. May be a PSI event ID (e.g.
-\code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a
-gene name, or a cell-metadata column.}
+\item{feature}{Character. Optional feature to plot -- a PSI event ID (e.g.
+\code{"SE:chr1:100-200:300-400:+"}), a junction or transcript ID, a gene
+name, or a numeric cell-metadata column. \code{NULL} (the default)
+selects group mode.}
 
 \item{reduction}{Character. Name of the dimensionality reduction to use.
 Default: \code{"umap"}.}
@@ -40,12 +45,19 @@ Default: \code{"umap"}.}
 \item{dims}{Integer vector of length 2 selecting which dimensions to plot.
 Default: \code{c(1, 2)}.}
 
+\item{group_by}{Character. Metadata column to colour by in group mode.
+Default: \code{"seurat_clusters"}. Ignored in feature mode.}
+
 \item{pt_size}{Numeric. Point size. Default: \code{0.5}.}
 
 \item{na_colour}{Character. Colour for cells with no data.
 Default: \code{"grey80"}.}
 
-\item{title}{Character. Plot title. Defaults to the feature name.}
+\item{label}{Logical. Group-mode only -- add group labels at cluster
+centroids. Default: \code{FALSE}.}
+
+\item{title}{Character. Plot title. Defaults to the feature name in
+feature mode and \code{NULL} in group mode.}
 
 \item{...}{Additional arguments (see \code{\link{PlotUMAP}}).}
 }
@@ -55,14 +67,26 @@ A \code{ggplot} object.
 A \code{ggplot} object.
 }
 \description{
-Overlays the value of a feature on the UMAP embedding stored in the
-embedded Seurat object. Pass a PSI event ID, a junction ID, a gene
-name, or a cell-metadata column. The colour scale adapts automatically:
-diverging RdBu [0,1] for PSI; sequential viridis for counts and
-expression.
+Two modes, switched by \code{feature}:
+\itemize{
+\item \strong{Group mode} (default, \code{feature = NULL}): cells coloured
+discretely by a metadata column -- like Seurat's \code{DimPlot}.
+\item \strong{Feature mode} (\code{feature} supplied): cells coloured on a
+continuous scale by a PSI event ID, junction or transcript ID, gene
+name, or numeric metadata column -- like Seurat's \code{FeaturePlot}.
+The palette adapts to the feature type (diverging RdBu [0,1] for
+PSI; sequential for counts and expression).
+}
 
-Overlays the value of a feature on the UMAP embedding stored in the
-embedded Seurat object. The colour scale adapts to the feature type:
-diverging RdBu [0,1] for PSI events; sequential viridis for junction
-counts and gene expression.
+Two modes, switched by \code{feature}:
+\itemize{
+\item \strong{Group mode} (default, \code{feature = NULL}): cells coloured
+discretely by a metadata column -- like Seurat's \code{DimPlot}. Pass
+\code{label = TRUE} to add group labels at cluster centroids.
+\item \strong{Feature mode} (\code{feature} supplied): cells coloured on a
+continuous scale by a PSI event ID, junction or transcript ID, gene
+name, or numeric metadata column -- like Seurat's \code{FeaturePlot}.
+The palette adapts to the feature type: diverging RdBu [0,1] for
+PSI; sequential for counts and expression.
+}
 }
