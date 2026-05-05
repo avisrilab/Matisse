@@ -160,7 +160,17 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
   }
   id_vec <- unlist(id_lists, use.names = FALSE)
   ev_idx <- rep(seq_len(n_ev), lengths(id_lists))
-  id_idx <- match(id_vec, id_universe)
+  # SeuratObject sanitises feature names by replacing "_" with "-" when
+  # building an Assay5 (and warns once per assay). The IOE inclusion /
+  # exclusion feature columns keep their original underscores, so a raw
+  # match() against the post-sanitisation rownames misses every entry --
+  # which silently zeroed all per-event read counts in transcript mode
+  # for any IOE input with underscored transcript IDs (RefSeq IDs hit
+  # this; ENSEMBL escapes). Mirror SeuratObject's transformation on both
+  # sides so the match works against either the pre- or post-sanitised
+  # form of the universe.
+  id_idx <- match(.sanitize_feature_ids(id_vec),
+                   .sanitize_feature_ids(id_universe))
   keep   <- !is.na(id_idx)
   if (!any(keep)) {
     return(Matrix::sparseMatrix(
@@ -176,6 +186,10 @@ MergeMatisse <- function(x, y, add_cell_ids = c("x", "y"), verbose = TRUE) {
     repr = "C"
   )
 }
+
+# Mirror SeuratObject's `_` -> `-` sanitisation on feature names so we can
+# match IOE-style inclusion/exclusion lists against post-Assay5 rownames.
+.sanitize_feature_ids <- function(x) gsub("_", "-", x, fixed = TRUE)
 
 .psi_from_sparse_counts <- function(inc_mat, exc_mat, min_coverage,
                                      n_inc = NULL, n_exc = NULL) {
