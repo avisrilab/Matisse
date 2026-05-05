@@ -235,3 +235,33 @@ test_that(".n_covered_per_cell: counts non-NA stored entries per row", {
   expect_equal(result, c(2L, 1L, 0L))
 })
 
+test_that(".build_indicator_matrix: matches across SeuratObject's `_` -> `-` sanitisation", {
+  # Regression: SeuratObject sanitises feature names by replacing
+  # underscores with dashes when building an Assay5. IOE inclusion /
+  # exclusion feature columns keep their underscores, so a raw
+  # match() against the post-sanitisation rownames missed every entry
+  # and silently zeroed all per-event read counts in transcript mode
+  # for any IOE input with underscored transcript IDs (RefSeq style).
+  # .build_indicator_matrix now sanitises both sides before matching.
+  id_lists    <- list(c("tx_inc_a", "tx_inc_b"), c("tx_inc_c"))
+  id_universe <- c("tx-inc-a", "tx-inc-b", "tx-inc-c", "tx-exc-a")
+  A <- Matisse:::.build_indicator_matrix(id_lists, id_universe)
+  expect_equal(as.numeric(A[, 1]), c(1, 1, 0, 0))
+  expect_equal(as.numeric(A[, 2]), c(0, 0, 1, 0))
+})
+
+test_that("CalculatePSI (transcript mode): underscored transcript IDs aggregate correctly (regression)", {
+  # End-to-end check that the underscore -> dash sanitisation fix lets a
+  # full IOE input with underscored transcript IDs flow through
+  # CreateMatisseObject + CalculatePSI without zeroing the inc/exc
+  # layers.
+  obj <- make_matisse_long_read()  # SE event with tx_inc_a etc.
+  psi_assay <- GetSeurat(obj)[["psi"]]
+  inc <- as.numeric(SeuratObject::GetAssayData(
+    psi_assay, layer = "counts")["SE:chr1:1201-2999:3201-4999:+", ])
+  exc <- as.numeric(SeuratObject::GetAssayData(
+    psi_assay, layer = "exclusion")["SE:chr1:1201-2999:3201-4999:+", ])
+  expect_gt(sum(inc), 0)
+  expect_gt(sum(exc), 0)
+})
+
