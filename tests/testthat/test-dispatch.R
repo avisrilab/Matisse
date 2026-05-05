@@ -73,6 +73,28 @@ test_that("FindMarkers exposes Seurat's named args (.onLoad formals copy)", {
   expect_true(all(expected %in% names(formals(fn))))
 })
 
+test_that(".onLoad bodies forward by literal call, not via mget / do.call", {
+  # Regression: an earlier version of .onLoad packed the embedded Seurat
+  # into an intermediate args list (via `mget` + `do.call`). That bumps
+  # R's NAMED reference count on the Seurat, which then forces internal
+  # slot mutations inside Seurat::RunUMAP / RunPCA to deep-copy on every
+  # assignment -- a 10x+ slowdown at typical single-cell scales. The
+  # current body uses a literal call expression with each formal
+  # forwarded by symbol reference. Asserting the absence of `mget` and
+  # `do.call` in the body locks in the fast forwarding pattern.
+  for (nm in c("RunPCA.MatisseObject", "RunUMAP.MatisseObject",
+               "FindNeighbors.MatisseObject", "FindClusters.MatisseObject",
+               "FindMarkers.MatisseObject")) {
+    src <- deparse(body(get(nm, envir = asNamespace("Matisse"))))
+    expect_false(any(grepl("\\bmget\\b",   src)),
+                 info = paste0("`mget` reappeared in ", nm))
+    expect_false(any(grepl("\\bdo\\.call\\b", src)),
+                 info = paste0("`do.call` reappeared in ", nm))
+    expect_true(any(grepl("object@seurat", src)),
+                info = paste0("expected `object@seurat` reference in ", nm))
+  }
+})
+
 test_that("SCTransform dispatches on a transcript-mode MatisseObject", {
   skip_if_not_installed("Seurat")
   obj    <- make_matisse_from_transcripts()
