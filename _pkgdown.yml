@@ -62,6 +62,18 @@ reference:
       - MatisseObject-class
       - CreateMatisseObject
 
+  - title: "Short-read input (STARsolo)"
+    desc: >
+      Helpers for the short-read (junction) workflow. <code>ReadSTARsoloSJ</code>
+      loads a STARsolo <code>SJ</code> matrix and relabels its junctions into
+      the <code>chr-start-end-strand</code> IDs Matisse expects.
+      <code>BuildJunctionEvents</code> turns SUPPA2 <code>.ioe</code> events
+      into a junction-ID event table whose features match those junctions —
+      a deterministic coordinate adapter, not a heuristic event caller.
+    contents:
+      - ReadSTARsoloSJ
+      - BuildJunctionEvents
+
   - title: "Retrieve or update your data"
     desc: >
       Matisse-specific accessors. For raw count and annotation matrices,

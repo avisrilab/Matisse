@@ -30,23 +30,53 @@ quantifier (Bagpiper, FLAMES, LIQA), see the
 | Input | Description |
 |-------|-------------|
 | **Seurat object** | Already processed: normalisation, UMAP, cluster labels. |
-| **Junction count matrix** | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`. |
-| **Event annotation** | A `data.frame` with one row per splicing event, or a path to a SUPPA2 `.ioe` file. Required columns when supplied as a `data.frame`: `event_id`, `gene_id`, `chr`, `strand`, `event_type`, `inclusion_features`, `exclusion_features` (the last two hold semicolon-separated junction IDs). Matisse does not ship a heuristic event caller — bring your own. |
+| **STARsolo `SJ` output** | The `Solo.out/SJ/raw` directory from STARsolo run with `--soloFeatures Gene SJ`. Only a *raw* SJ matrix is produced, so it is subset to your filtered cells on read. |
+| **SUPPA2 `.ioe` events** | One file per event type from `suppa.py generateEvents` on your annotation GTF. The junction coordinates are encoded in each `event_id`; Matisse converts them to junction IDs for you. Matisse does not ship a heuristic event caller — bring your own annotation. |
 
 ---
 
-## Step 1 -- Build the Matisse object (PSI is computed in the same call)
+## Step 1 -- Load STARsolo junctions and build the event table
 
-```{r build-object, eval=FALSE}
+`ReadSTARsoloSJ()` reads the SJ matrix and relabels each junction into the
+`chr-start-end-strand` ID form Matisse uses (so sashimi plots work for free).
+Pass your filtered cell barcodes to subset the raw matrix.
+
+```{r read-sj, eval=FALSE}
 library(Matisse)
 
+jxn <- ReadSTARsoloSJ(
+  "Solo.out/SJ/raw",
+  cells = colnames(seu)        # filtered barcodes (e.g. from Gene/filtered)
+)
+```
+
+SUPPA2 `.ioe` files describe events with *transcript* IDs, but junction mode
+needs *junction* IDs. `BuildJunctionEvents()` parses the genomic coordinates
+encoded in each SUPPA2 `event_id` and emits the matching junction IDs. It is a
+deterministic coordinate adapter, not an event caller. Supported event types:
+`SE`, `A3`, `A5`, `MX`, `AF`, `AL`. (`RI` is dropped — intron retention has no
+supporting split junction, so it cannot be scored from SJ counts.)
+
+```{r build-events, eval=FALSE}
+events <- BuildJunctionEvents(
+  list.files("events", pattern = "\\.ioe$", full.names = TRUE),
+  junction_universe = colnames(jxn)   # auto-calibrates the exon/intron
+)                                     # coordinate offset to your data
+```
+
+SUPPA2 reports exon-boundary positions while STARsolo reports intronic
+coordinates; passing `junction_universe` lets `BuildJunctionEvents()` calibrate
+the fixed offset by maximising overlap with the junctions actually observed,
+and reports the match rate so you can sanity-check the annotation matches your
+genome build.
+
+## Step 2 -- Build the Matisse object (PSI is computed in the same call)
+
+```{r build-object, eval=FALSE}
 obj <- CreateMatisseObject(
   seurat          = seu,
-  junction_counts = jxn_counts,   # cells x junctions from STARsolo
-                                   # (junction IDs encode coordinates, e.g.
-                                   #  "chr1-12345-67890-+", auto-parsed for
-                                   #  sashimi plots)
-  events          = event_df,     # data.frame OR path(s) to SUPPA2 .ioe
+  junction_counts = jxn,          # cells x junctions from ReadSTARsoloSJ()
+  events          = events,       # junction-ID table from BuildJunctionEvents()
   min_coverage    = 5L            # minimum reads per cell per event for PSI
 )
 ```

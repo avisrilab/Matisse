@@ -49,6 +49,8 @@ Collate:
     'MatisseObject-methods.R'
     'constructors.R'
     'dispatch.R'
+    'events.R'
+    'io.R'
     'psi.R'
     'qc.R'
     'utils.R'

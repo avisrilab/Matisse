@@ -4,7 +4,7 @@
 \alias{AddMetaData.MatisseObject}
 \title{Add metadata columns to a MatisseObject}
 \usage{
-\method{AddMetaData}{MatisseObject}(object, metadata, col.name = NULL)
+\method{AddMetaData}{MatisseObject}(object, metadata, col.name = NULL, ...)
 }
 \arguments{
 \item{object}{A \code{MatisseObject}.}
