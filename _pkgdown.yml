@@ -74,6 +74,17 @@ reference:
       - ReadSTARsoloSJ
       - BuildJunctionEvents
 
+  - title: "Long-read input (transcript counts)"
+    desc: >
+      Helper for the long-read (transcript) workflow.
+      <code>ReadTranscriptMatrix</code> loads a 10x-style MatrixMarket
+      triplet from a long-read / isoform quantifier (Bagpiper, FLAMES,
+      LIQA), auto-detects orientation, and returns a transcripts × cells
+      matrix with optional version-suffix stripping so the IDs match a
+      SUPPA2 <code>.ioe</code> event annotation.
+    contents:
+      - ReadTranscriptMatrix
+
   - title: "Retrieve or update your data"
     desc: >
       Matisse-specific accessors. For raw count and annotation matrices,

@@ -146,3 +146,165 @@ ReadSTARsoloSJ <- function(sj_dir, cells = NULL,
   }
   hit[1L]
 }
+
+# ---------------------------------------------------------------------------
+# Long-read / transcript-quantifier input
+# ---------------------------------------------------------------------------
+
+#' Read a long-read transcript count matrix
+#'
+#' Loads a per-cell transcript count matrix from a 10x-style MatrixMarket
+#' triplet (\code{matrix.mtx}, \code{barcodes.tsv}, \code{features.tsv},
+#' optionally \code{.gz}) as produced by long-read / isoform quantifiers such
+#' as \strong{Bagpiper}, \strong{FLAMES}, or \strong{LIQA}, and returns it in
+#' the \emph{transcripts x cells} orientation with dimnames that
+#' \code{\link{CreateMatisseObject}}'s transcript mode expects.
+#'
+#' Quantifiers disagree on matrix orientation (Bagpiper writes
+#' \emph{cells x transcripts}; others write \emph{transcripts x cells}), so
+#' \code{orientation = "auto"} infers it by matching the two matrix dimensions
+#' against the feature and barcode counts and transposes as needed.
+#'
+#' \strong{Transcript-version landmine.} SUPPA2 \code{.ioe} events and the
+#' quantifier may disagree on whether transcript IDs carry a version suffix
+#' (\code{ENST...\.3}). PSI aggregation
+#' (\code{.build_indicator_matrix}) matches IDs only after a \code{_}->\code{-}
+#' sanitisation; it never strips versions, so a mismatch silently zeroes PSI.
+#' \code{strip_version = TRUE} removes a trailing \code{.<digits>} from
+#' transcript IDs (summing counts of any IDs that collapse) to defend against
+#' this.
+#'
+#' @param mtx_dir Directory holding \code{matrix.mtx}, \code{barcodes.tsv} and
+#'   \code{features.tsv} (optionally \code{.gz}).
+#' @param cells Optional character vector of cell barcodes to keep (e.g.
+#'   filtered barcodes). Barcodes absent from the matrix are dropped with a
+#'   warning. Default: \code{NULL} (keep all).
+#' @param strip_version Logical. Strip a trailing \code{.<digits>} version
+#'   suffix from transcript IDs; counts of IDs that collapse to the same
+#'   stripped ID are summed. Default: \code{TRUE}.
+#' @param orientation One of \code{"auto"} (infer from dimensions; default),
+#'   \code{"cells_x_tx"} (source is cells x transcripts; transpose), or
+#'   \code{"tx_x_cells"} (source is already transcripts x cells).
+#' @param verbose Logical. Print progress. Default: \code{TRUE}.
+#'
+#' @return A \code{dgCMatrix} of transcript counts, \emph{transcripts x cells},
+#'   transcript IDs as row names and barcodes as column names. Feed directly
+#'   to \code{CreateMatisseObject(transcript_counts = ...)}.
+#'
+#' @seealso \code{\link{ReadSTARsoloSJ}} for the short-read (junction) path;
+#'   \code{\link{CreateMatisseObject}}.
+#'
+#' @examples
+#' \dontrun{
+#' txc <- ReadTranscriptMatrix("bagpiper/mats", cells = colnames(seu))
+#' obj <- CreateMatisseObject(seu, transcript_counts = txc,
+#'                            events = ioe_files)
+#' }
+#'
+#' @export
+ReadTranscriptMatrix <- function(mtx_dir, cells = NULL, strip_version = TRUE,
+                                  orientation = c("auto", "cells_x_tx",
+                                                  "tx_x_cells"),
+                                  verbose = TRUE) {
+  orientation <- match.arg(orientation)
+  if (!dir.exists(mtx_dir)) {
+    rlang::abort(paste0("`mtx_dir` does not exist: ", mtx_dir))
+  }
+  mtx_path  <- .resolve_starsolo_file(mtx_dir, "matrix.mtx")
+  bc_path   <- .resolve_starsolo_file(mtx_dir, "barcodes.tsv")
+  feat_path <- .resolve_starsolo_file(mtx_dir, "features.tsv")
+
+  if (verbose) cli::cli_alert_info("Reading transcript features / barcodes...")
+  # First whitespace/tab-delimited field; tolerates single-column files.
+  tx_ids   <- sub("[\t ].*$", "", readLines(gzfile(feat_path, "rt")))
+  barcodes <- sub("[\t ].*$", "", readLines(gzfile(bc_path, "rt")))
+  nf <- length(tx_ids)
+  nb <- length(barcodes)
+
+  if (verbose) cli::cli_alert_info("Reading transcript matrix...")
+  m  <- Matrix::readMM(gzfile(mtx_path))
+  dr <- nrow(m)
+  dc <- ncol(m)
+
+  tx_rows   <- dr == nf && dc == nb
+  cell_rows <- dr == nb && dc == nf
+  ori <- switch(orientation,
+    tx_x_cells = "tx_x_cells",
+    cells_x_tx = "cells_x_tx",
+    auto = if (tx_rows && !cell_rows) "tx_x_cells"
+           else if (cell_rows && !tx_rows) "cells_x_tx"
+           else if (tx_rows && cell_rows) {
+             rlang::warn(paste0(
+               "Matrix is square in features/barcodes; assuming ",
+               "transcripts x cells. Set `orientation` explicitly if wrong."))
+             "tx_x_cells"
+           } else NA_character_)
+  if (is.na(ori)) {
+    rlang::abort(paste0(
+      "Matrix dimensions (", dr, " x ", dc, ") match neither ",
+      "transcripts x cells (", nf, " x ", nb, ") nor cells x transcripts (",
+      nb, " x ", nf, "). Check the triplet files."))
+  }
+
+  if (ori == "cells_x_tx") {
+    if (!(dr == nb && dc == nf)) {
+      rlang::abort(paste0(
+        "orientation='cells_x_tx' but matrix (", dr, " x ", dc,
+        ") != barcodes x features (", nb, " x ", nf, ")."))
+    }
+    rownames(m) <- barcodes
+    colnames(m) <- tx_ids
+    m <- Matrix::t(m)
+  } else {
+    if (!(dr == nf && dc == nb)) {
+      rlang::abort(paste0(
+        "orientation='tx_x_cells' but matrix (", dr, " x ", dc,
+        ") != features x barcodes (", nf, " x ", nb, ")."))
+    }
+    rownames(m) <- tx_ids
+    colnames(m) <- barcodes
+  }
+  # m is now transcripts x cells
+
+  if (strip_version) {
+    stripped <- sub("\\.[0-9]+$", "", rownames(m))
+    n_dup <- sum(duplicated(stripped))
+    if (n_dup > 0L) {
+      grp <- factor(stripped, levels = unique(stripped))
+      agg <- Matrix::sparseMatrix(
+        i = as.integer(grp), j = seq_len(nrow(m)), x = 1,
+        dims = c(nlevels(grp), nrow(m)))
+      m <- agg %*% m
+      rownames(m) <- levels(grp)
+      rlang::warn(paste0(
+        "Stripping transcript version suffixes collapsed ", n_dup,
+        " ID(s); summed their counts."))
+    } else {
+      rownames(m) <- stripped
+    }
+  }
+
+  if (!is.null(cells)) {
+    keep <- intersect(cells, colnames(m))
+    if (length(keep) == 0L) {
+      rlang::abort(paste0(
+        "None of the requested `cells` are present in the matrix barcodes. ",
+        "Example requested: ", paste(utils::head(cells, 3L), collapse = ", "),
+        "; example matrix: ",
+        paste(utils::head(colnames(m), 3L), collapse = ", ")))
+    }
+    if (length(keep) < length(cells) && verbose) {
+      cli::cli_alert_warning(paste0(
+        "{length(keep)}/{length(cells)} requested cells found; ",
+        "the rest are absent from the matrix and dropped."))
+    }
+    m <- m[, keep, drop = FALSE]
+  }
+
+  out <- methods::as(m, "CsparseMatrix")
+  if (verbose) {
+    cli::cli_alert_success(paste0(
+      "Transcript matrix: {nrow(out)} transcripts x {ncol(out)} cells."))
+  }
+  out
+}
