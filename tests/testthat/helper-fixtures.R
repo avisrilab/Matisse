@@ -279,6 +279,70 @@ make_se_transcript_counts <- function(n_cells = 20L, seed = 42L) {
   Matrix::Matrix(mat, sparse = TRUE)
 }
 
+# SUPPA2 AF / AL / MX event IDs (chr1, + strand). Coordinate grammar
+# matches SUPPA2's .ioe event_id format; only the dash-delimited blocks are
+# load-bearing for junction parsing (single coords are exon anchors).
+#   AF: inc jxn 1200-3000, exc jxn 1700-3000
+#   AL: inc jxn 2000-2500, exc jxn 2000-4000
+#   MX: inc {1000-2000, 2200-3000}, exc {1000-2400, 2600-3000}
+.suppa_event_ids <- c(
+  AF = "AF:chr1:1000:1200-3000:1500:1700-3000:+",
+  AL = "AL:chr1:2000-2500:3000:2000-4000:5000:+",
+  MX = "MX:chr1:1000-2000:2200-3000:1000-2400:2600-3000:+"
+)
+
+make_suppa_ioe_file <- function(file = tempfile(fileext = ".ioe")) {
+  writeLines(c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    paste(c("chr1", paste0("ENSG1;", .suppa_event_ids[["AF"]]),
+            "af_inc", "af_inc,af_exc"), collapse = "\t"),
+    paste(c("chr1", paste0("ENSG1;", .suppa_event_ids[["AL"]]),
+            "al_inc", "al_inc,al_exc"), collapse = "\t"),
+    paste(c("chr1", paste0("ENSG1;", .suppa_event_ids[["MX"]]),
+            "mx_inc", "mx_inc,mx_exc"), collapse = "\t")
+  ), file)
+  file
+}
+
+make_suppa_transcript_counts <- function(n_cells = 20L, seed = 42L) {
+  set.seed(seed)
+  cells <- paste0("Cell", seq_len(n_cells))
+  typeA <- seq_len(n_cells / 2L)
+  typeB <- seq(n_cells / 2L + 1L, n_cells)
+  txs   <- c("af_inc", "af_exc", "al_inc", "al_exc", "mx_inc", "mx_exc")
+  mat   <- matrix(0L, nrow = length(txs), ncol = n_cells,
+                  dimnames = list(txs, cells))
+  for (inc_tx in c("af_inc", "al_inc", "mx_inc")) {
+    mat[inc_tx, typeA] <- sample(5L:12L, length(typeA), replace = TRUE)
+    mat[inc_tx, typeB] <- sample(0L:2L,  length(typeB), replace = TRUE)
+  }
+  for (exc_tx in c("af_exc", "al_exc", "mx_exc")) {
+    mat[exc_tx, typeA] <- sample(0L:2L,  length(typeA), replace = TRUE)
+    mat[exc_tx, typeB] <- sample(5L:12L, length(typeB), replace = TRUE)
+  }
+  Matrix::Matrix(mat, sparse = TRUE)
+}
+
+# Transcript mode with AF / AL / MX SUPPA2 events for PlotSashimi coverage.
+make_matisse_suppa_long_read <- function() {
+  skip_if_not_installed("Seurat")
+  n_cells <- 20L
+  seu <- make_seurat(n_cells = n_cells)
+  set.seed(7L)
+  coords <- matrix(stats::rnorm(n_cells * 2L), nrow = n_cells, ncol = 2L,
+                   dimnames = list(colnames(seu), c("UMAP_1", "UMAP_2")))
+  seu[["umap"]] <- suppressWarnings(SeuratObject::CreateDimReducObject(
+    embeddings = coords, key = "UMAP_"))
+  seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
+  CreateMatisseObject(
+    seurat            = seu,
+    transcript_counts = make_suppa_transcript_counts(n_cells = n_cells),
+    events            = make_suppa_ioe_file(),
+    min_coverage      = 1L,
+    verbose           = FALSE
+  )
+}
+
 # Long-read (transcript mode): 20 cells, 2 types, SE event via transcripts + IOE
 make_matisse_long_read <- function() {
   skip_if_not_installed("Seurat")

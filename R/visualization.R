@@ -434,15 +434,21 @@ setMethod("PlotHeatmap", "MatisseObject",
 #' parsed to derive junction coordinates; inclusion and exclusion counts come
 #' from the \code{"counts"} and \code{"exclusion"} layers of the PSI assay.
 #'
-#' Supported event types in transcript mode: \strong{SE} (skipped exon) and
-#' \strong{RI} (retained intron). Junction mode supports all event types
-#' since coordinates are auto-parsed from junction IDs.
+#' Supported event types in transcript mode: every SUPPA2 type Matisse
+#' ingests -- \strong{SE} (skipped exon), \strong{RI} (retained intron),
+#' \strong{A3}/\strong{A5} (alternative 3'/5' splice site), \strong{AF}/
+#' \strong{AL} (alternative first/last exon), and \strong{MX} (mutually
+#' exclusive exons). Junction coordinates for the SUPPA2 grammar are parsed
+#' with the same logic as the short-read junction adapter. Junction mode
+#' supports all event types since coordinates are auto-parsed from
+#' junction IDs.
 #'
-#' \strong{Note on transcript-mode SE arcs:} transcript-level counting
-#' aggregates reads to events, not to individual junctions. The total
-#' inclusion-event count is therefore split evenly across the two SE
-#' inclusion arcs in the plot. The two arcs may have differed in reality;
-#' use junction-mode input if you need per-junction read counts.
+#' \strong{Note on transcript-mode multi-arc events:} transcript-level
+#' counting aggregates reads to events, not to individual junctions. When
+#' an event side has more than one defining junction (the two SE / MX
+#' inclusion arcs, the two MX exclusion arcs), the total event count for
+#' that side is split evenly across its arcs. The arcs may have differed in
+#' reality; use junction-mode input if you need per-junction read counts.
 #'
 #' @param object A \code{MatisseObject} with a PSI assay computed.
 #' @param event_id Character. A single event ID. Run
@@ -505,7 +511,7 @@ setMethod("PlotSashimi", "MatisseObject",
   jxn_coords <- .cov_jxn_coords(object, ev)
 
   arc_data <- do.call(rbind, lapply(names(groups), function(g) {
-    cnts     <- .cov_counts(object, ev, groups[[g]])
+    cnts     <- .cov_counts(object, ev, groups[[g]], jxn_coords)
     df       <- merge(jxn_coords, cnts, by = "junction_id", all.x = TRUE)
     df$count <- ifelse(is.na(df$count), 0, df$count)
     df$group <- g
@@ -561,9 +567,14 @@ setMethod("PlotSashimi", "MatisseObject",
     switch(etype,
       SE = .cov_parse_se(ev),
       RI = .cov_parse_ri(ev),
+      A3 = ,
+      A5 = ,
+      AF = ,
+      AL = ,
+      MX = .cov_parse_suppa(ev, etype),
       rlang::abort(paste0(
-        "PlotSashimi() in transcript mode does not yet support '", etype,
-        "' events. Supported types: SE, RI."))
+        "PlotSashimi() in transcript mode does not support '", etype,
+        "' events. Supported types: SE, RI, A3, A5, AF, AL, MX."))
     )
   }
 }
@@ -620,8 +631,48 @@ setMethod("PlotSashimi", "MatisseObject",
   )
 }
 
+# Parse an A3/A5/AF/AL/MX event row into a junction coord table by reusing
+# the SUPPA2 coordinate grammar that the short-read junction adapter uses
+# (.suppa_blocks_to_junctions in R/events.R) -- single source of truth so
+# transcript-mode sashimi and the junction adapter never diverge on which
+# junctions define an event. Coordinates are the raw SUPPA2 exon-boundary
+# positions, matching .cov_parse_se / .cov_parse_ri: no intron offset is
+# applied because this is a schematic plot, not SJ-matrix matching.
+.cov_parse_suppa <- function(ev, etype) {
+  event_id <- ev$event_id
+  toks     <- strsplit(event_id, ":", fixed = TRUE)[[1L]]
+  if (length(toks) < 4L) {
+    rlang::abort(paste0(
+      "Malformed ", etype, " event ID: '", event_id,
+      "'. Expected '", etype, ":chr:<coord blocks>:strand'."))
+  }
+  blocks <- toks[3:(length(toks) - 1L)]
+  je <- tryCatch(
+    .suppa_blocks_to_junctions(etype, blocks),
+    error = function(e) rlang::abort(paste0(
+      "Could not parse ", etype, " event ID '", event_id,
+      "' with the SUPPA2 coordinate grammar: ", conditionMessage(e)))
+  )
+  inc   <- je$inc
+  exc   <- je$exc
+  n_inc <- length(inc)
+  n_exc <- length(exc)
+  inc_ids <- if (n_inc == 1L) "inc_jxn" else paste0("inc_jxn", seq_len(n_inc))
+  exc_ids <- if (n_exc == 1L) "exc_jxn" else paste0("exc_jxn", seq_len(n_exc))
+  prs <- c(inc, exc)
+  data.frame(
+    junction_id = c(inc_ids, exc_ids),
+    chr         = ev$chr,
+    start       = vapply(prs, function(p) p[1L], numeric(1)),
+    end         = vapply(prs, function(p) p[2L], numeric(1)),
+    strand      = ev$strand,
+    role        = c(rep("inclusion", n_inc), rep("exclusion", n_exc)),
+    stringsAsFactors = FALSE
+  )
+}
+
 # Return data.frame: junction_id | count
-.cov_counts <- function(object, ev, cells) {
+.cov_counts <- function(object, ev, cells, jxn_coords = NULL) {
   if (object@input.mode == "junction") {
     iso <- .get_assay_safe(object@seurat, "isoform")
     jxn <- if (!is.null(iso))
@@ -645,21 +696,19 @@ setMethod("PlotSashimi", "MatisseObject",
       sum(inc_cx[cells, eid]) else 0
     exc_tot <- if (!is.null(exc_cx) && eid %in% colnames(exc_cx))
       sum(exc_cx[cells, eid]) else 0
-    etype <- strsplit(eid, ":", fixed = TRUE)[[1L]][1L]
-    if (etype == "RI") {
-      data.frame(
-        junction_id = c("inc_jxn", "exc_jxn"),
-        count       = c(inc_tot,    exc_tot),
-        stringsAsFactors = FALSE
-      )
-    } else {
-      # SE (and other 2-junction events): split inclusion evenly across the two arcs
-      data.frame(
-        junction_id = c("inc_jxn1", "inc_jxn2", "exc_jxn"),
-        count       = c(inc_tot / 2, inc_tot / 2, exc_tot),
-        stringsAsFactors = FALSE
-      )
-    }
+    # Transcript counting is per-event, not per-junction. Split the event's
+    # inclusion / exclusion total evenly across the arcs of its side, using
+    # the same junction layout .cov_jxn_coords produced so the merge in
+    # PlotSashimi() aligns. This generalises every SUPPA2 type: RI/AF/AL/
+    # A3/A5 are 1+1, SE is 2+1, MX is 2+2.
+    inc_ids <- jxn_coords$junction_id[jxn_coords$role == "inclusion"]
+    exc_ids <- jxn_coords$junction_id[jxn_coords$role == "exclusion"]
+    data.frame(
+      junction_id = c(inc_ids, exc_ids),
+      count       = c(rep(inc_tot / length(inc_ids), length(inc_ids)),
+                      rep(exc_tot / length(exc_ids), length(exc_ids))),
+      stringsAsFactors = FALSE
+    )
   }
 }
 
@@ -701,8 +750,18 @@ setMethod("PlotSashimi", "MatisseObject",
   acceptors <- sort(unique(jxn_coords$end))
   x_min     <- min(donors)    - x_pad
   x_max     <- max(acceptors) + x_pad
-  exon_xmin <- c(x_min,         acceptors + 1L)
-  exon_xmax <- c(donors  - 1L,  x_max)
+  # Leading exon ends before the first donor; trailing exon starts after the
+  # last acceptor; internal exons sit between acceptor[i] and donor[i+1].
+  # Zipping requires equal counts -- true for SE/RI (this preserves their
+  # exact rendering) but not AF/AL (shared acceptor) or arbitrary MX -- so
+  # the internal-exon count is clamped to the shorter side.
+  n_int     <- min(length(donors), length(acceptors)) - 1L
+  exon_xmin <- c(x_min,
+                 if (n_int > 0L) acceptors[seq_len(n_int)] + 1L,
+                 acceptors[length(acceptors)] + 1L)
+  exon_xmax <- c(donors[1L] - 1L,
+                 if (n_int > 0L) donors[seq_len(n_int) + 1L] - 1L,
+                 x_max)
   list(
     exons   = data.frame(xmin = exon_xmin, xmax = exon_xmax,
                          ymin = -0.08, ymax = 0.08),

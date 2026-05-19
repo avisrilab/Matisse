@@ -416,3 +416,81 @@ test_that("PlotSashimi: returns a ggplot for RI event in transcript mode", {
   expect_s3_class(p, "gg")
 })
 
+test_that("PlotSashimi: AF/AL/MX events plot in transcript mode", {
+  obj <- make_matisse_suppa_long_read()
+  for (etype in c("AF", "AL", "MX")) {
+    p <- PlotSashimi(obj, event_id = .suppa_event_ids[[etype]])
+    expect_s3_class(p, "gg")
+  }
+})
+
+test_that("PlotSashimi: MX transcript event is faceted by group_by", {
+  obj <- make_matisse_suppa_long_read()
+  p   <- PlotSashimi(obj, event_id = .suppa_event_ids[["MX"]],
+                      group_by = "cell_type")
+  expect_s3_class(p, "gg")
+  expect_true(!is.null(p$facet))
+})
+
+test_that(".cov_parse_suppa reuses the SUPPA2 grammar for AF/AL/MX", {
+  # AF: 1 inclusion + 1 exclusion junction; coords from the dash-blocks.
+  af <- Matisse:::.cov_parse_suppa(
+    data.frame(event_id = "AF:chr1:1000:1200-3000:1500:1700-3000:+",
+               chr = "chr1", strand = "+", stringsAsFactors = FALSE), "AF")
+  expect_equal(af$junction_id, c("inc_jxn", "exc_jxn"))
+  expect_equal(af$role,        c("inclusion", "exclusion"))
+  expect_equal(af$start,       c(1200, 1700))
+  expect_equal(af$end,         c(3000, 3000))
+
+  # AL: same 1+1 shape, different coordinate blocks.
+  al <- Matisse:::.cov_parse_suppa(
+    data.frame(event_id = "AL:chr1:2000-2500:3000:2000-4000:5000:+",
+               chr = "chr1", strand = "+", stringsAsFactors = FALSE), "AL")
+  expect_equal(al$junction_id, c("inc_jxn", "exc_jxn"))
+  expect_equal(al$start,       c(2000, 2000))
+  expect_equal(al$end,         c(2500, 4000))
+
+  # MX: 2 inclusion + 2 exclusion junctions.
+  mx <- Matisse:::.cov_parse_suppa(
+    data.frame(event_id = "MX:chr1:1000-2000:2200-3000:1000-2400:2600-3000:+",
+               chr = "chr1", strand = "+", stringsAsFactors = FALSE), "MX")
+  expect_equal(mx$junction_id,
+               c("inc_jxn1", "inc_jxn2", "exc_jxn1", "exc_jxn2"))
+  expect_equal(mx$role, c(rep("inclusion", 2L), rep("exclusion", 2L)))
+  expect_equal(mx$start, c(1000, 2200, 1000, 2600))
+  expect_equal(mx$end,   c(2000, 3000, 2400, 3000))
+
+  # Coordinates must match what the short-read junction adapter derives
+  # from the same event_id, since both reuse .suppa_blocks_to_junctions.
+  je <- Matisse:::.suppa_blocks_to_junctions(
+    "MX", c("1000-2000", "2200-3000", "1000-2400", "2600-3000"))
+  expect_equal(unlist(c(je$inc, je$exc)),
+               as.numeric(rbind(mx$start, mx$end)))
+})
+
+test_that("PlotSashimi: unsupported transcript event type errors clearly", {
+  n_cells <- 20L
+  seu <- make_seurat(n_cells = n_cells)
+  seu$cell_type <- rep(c("TypeA", "TypeB"), each = n_cells / 2L)
+  cells <- paste0("Cell", seq_len(n_cells))
+  tx_mat <- Matrix::Matrix(matrix(
+    sample(1L:9L, 4L * n_cells, replace = TRUE), nrow = 4L,
+    dimnames = list(c("zz_inc", "zz_exc", "af_inc", "af_exc"), cells)),
+    sparse = TRUE)
+  ioe <- tempfile(fileext = ".ioe")
+  writeLines(c(
+    "seqname\tgene_id\tinclusion_transcripts\ttotal_transcripts",
+    paste(c("chr1", "ENSG1;ZZ:chr1:1-2:3-4:+",
+            "zz_inc", "zz_inc,zz_exc"), collapse = "\t"),
+    paste(c("chr1", "ENSG1;AF:chr1:1000:1200-3000:1500:1700-3000:+",
+            "af_inc", "af_inc,af_exc"), collapse = "\t")
+  ), ioe)
+  obj <- CreateMatisseObject(
+    seurat = seu, transcript_counts = tx_mat, events = ioe,
+    min_coverage = 1L, verbose = FALSE)
+  expect_error(
+    PlotSashimi(obj, event_id = "ZZ:chr1:1-2:3-4:+"),
+    regexp = "does not support 'ZZ'.*SE, RI, A3, A5, AF, AL, MX"
+  )
+})
+
