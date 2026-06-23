@@ -11,3 +11,4 @@
 ^codecov\.yml$
 ^CRAN-SUBMISSION$
 ^index\.md$
+^reg_testing$
