@@ -74,3 +74,7 @@ Useful links:
 ## Author
 
 **Maintainer**: k3yavi <avisrilab@gmail.com>
+
+Authors:
+
+- k3yavi <avisrilab@gmail.com>

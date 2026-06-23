@@ -17,26 +17,63 @@ instead.
 
 ## What you need
 
-| Input                     | Description                                                                                                                                                                                                                                                                                                                                                  |
-|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Seurat object**         | Already processed: normalisation, UMAP, cluster labels.                                                                                                                                                                                                                                                                                                      |
-| **Junction count matrix** | *Cells × junctions* sparse matrix of read counts. Row names are cell barcodes; column names are junction IDs. Produced by STARsolo with `--soloFeatures SJ`.                                                                                                                                                                                                 |
-| **Event annotation**      | A `data.frame` with one row per splicing event, or a path to a SUPPA2 `.ioe` file. Required columns when supplied as a `data.frame`: `event_id`, `gene_id`, `chr`, `strand`, `event_type`, `inclusion_features`, `exclusion_features` (the last two hold semicolon-separated junction IDs). Matisse does not ship a heuristic event caller — bring your own. |
+| Input | Description |
+|----|----|
+| **Seurat object** | Already processed: normalisation, UMAP, cluster labels. |
+| **STARsolo `SJ` output** | The `Solo.out/SJ/raw` directory from STARsolo run with `--soloFeatures Gene SJ`. Only a *raw* SJ matrix is produced, so it is subset to your filtered cells on read. |
+| **SUPPA2 `.ioe` events** | One file per event type from `suppa.py generateEvents` on your annotation GTF. The junction coordinates are encoded in each `event_id`; Matisse converts them to junction IDs for you. Matisse does not ship a heuristic event caller — bring your own annotation. |
 
 ------------------------------------------------------------------------
 
-## Step 1 – Build the Matisse object (PSI is computed in the same call)
+## Step 1 – Load STARsolo junctions and build the event table
+
+[`ReadSTARsoloSJ()`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md)
+reads the SJ matrix and relabels each junction into the
+`chr-start-end-strand` ID form Matisse uses (so sashimi plots work for
+free). Pass your filtered cell barcodes to subset the raw matrix.
 
 ``` r
+
 library(Matisse)
+
+jxn <- ReadSTARsoloSJ(
+  "Solo.out/SJ/raw",
+  cells = colnames(seu)        # filtered barcodes (e.g. from Gene/filtered)
+)
+```
+
+SUPPA2 `.ioe` files describe events with *transcript* IDs, but junction
+mode needs *junction* IDs.
+[`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+parses the genomic coordinates encoded in each SUPPA2 `event_id` and
+emits the matching junction IDs. It is a deterministic coordinate
+adapter, not an event caller. Supported event types: `SE`, `A3`, `A5`,
+`MX`, `AF`, `AL`. (`RI` is dropped — intron retention has no supporting
+split junction, so it cannot be scored from SJ counts.)
+
+``` r
+
+events <- BuildJunctionEvents(
+  list.files("events", pattern = "\\.ioe$", full.names = TRUE),
+  junction_universe = colnames(jxn)   # auto-calibrates the exon/intron
+)                                     # coordinate offset to your data
+```
+
+SUPPA2 reports exon-boundary positions while STARsolo reports intronic
+coordinates; passing `junction_universe` lets
+[`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+calibrate the fixed offset by maximising overlap with the junctions
+actually observed, and reports the match rate so you can sanity-check
+the annotation matches your genome build.
+
+## Step 2 – Build the Matisse object (PSI is computed in the same call)
+
+``` r
 
 obj <- CreateMatisseObject(
   seurat          = seu,
-  junction_counts = jxn_counts,   # cells x junctions from STARsolo
-                                   # (junction IDs encode coordinates, e.g.
-                                   #  "chr1-12345-67890-+", auto-parsed for
-                                   #  sashimi plots)
-  events          = event_df,     # data.frame OR path(s) to SUPPA2 .ioe
+  junction_counts = jxn,          # cells x junctions from ReadSTARsoloSJ()
+  events          = events,       # junction-ID table from BuildJunctionEvents()
   min_coverage    = 5L            # minimum reads per cell per event for PSI
 )
 ```
@@ -57,7 +94,10 @@ holds three things ready to use:
 For each cell and event, Matisse sums the inclusion-supporting junctions
 and exclusion-supporting junctions, then computes:
 
-$$PSI_{c,e} = \frac{\sum\text{inclusion junction reads}}{\sum\text{inclusion reads} + \sum\text{exclusion reads}}$$
+``` math
+PSI_{c,e} = \frac{\sum \text{inclusion junction reads}}
+                   {\sum \text{inclusion reads} + \sum \text{exclusion reads}}
+```
 
 Cells with fewer than `min_coverage` total reads for an event are left
 as `NA`. To re-compute PSI with different parameters later, call
@@ -79,12 +119,14 @@ metrics (`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) as a
 faceted panel.
 
 ``` r
+
 PlotViolin(obj)
 ```
 
 ### Remove low-quality cells
 
 ``` r
+
 obj <- FilterCells(
   obj,
   min_features_isoform = 5,    # at least 5 junctions detected
@@ -95,6 +137,7 @@ obj <- FilterCells(
 ### Remove uninformative splice events
 
 ``` r
+
 obj <- FilterEvents(obj, min_cells_covered = 20)
 ```
 
@@ -105,6 +148,7 @@ obj <- FilterEvents(obj, min_cells_covered = 20)
 ### Where does the splicing switch happen on the UMAP?
 
 ``` r
+
 PlotUMAP(
   obj,
   feature = "SE:chr18:3433648-3434699:3434801-3436055:-",
@@ -115,6 +159,7 @@ PlotUMAP(
 ### Distributions by cell type
 
 ``` r
+
 PlotViolin(
   obj,
   feature  = "SE:chr18:3433648-3434699:3434801-3436055:-",
@@ -125,6 +170,7 @@ PlotViolin(
 ### Overview of all events
 
 ``` r
+
 PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
 ```
 
@@ -135,6 +181,7 @@ shows junction arcs scaled by read count, coloured by inclusion (blue)
 vs exclusion (red). Use `group_by` to compare cell types side by side.
 
 ``` r
+
 PlotSashimi(
   obj,
   event_id  = "SE:chr18:3433648-3434699:3434801-3436055:-",
@@ -149,6 +196,7 @@ PlotSashimi(
 ## Accessing data at any point
 
 ``` r
+
 # Extract the Seurat object for any standard Seurat step
 seu <- GetSeurat(obj)
 
@@ -175,6 +223,7 @@ If you have multiple samples and want to analyse them together, merge
 the individual Matisse objects before running QC:
 
 ``` r
+
 # Build each sample's MatisseObject (PSI is computed at construction), then
 # merge. Both objects must share the same `input.mode` and event set.
 combined <- MergeMatisse(
@@ -188,6 +237,7 @@ combined <- MergeMatisse(
 ## Session info
 
 ``` r
+
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -211,10 +261,10 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
 #>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.10.0     
+#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
 #> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
 ```

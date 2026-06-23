@@ -1,9 +1,10 @@
-# Heatmap of PSI values (events x cells, DoHeatmap style)
+# Heatmap of PSI values (events x cells, DoHeatmap-style)
 
-Draws a DoHeatmap-style tile plot with splice events on the y-axis and
-cells on the x-axis. Events are clustered by PSI profile. When
-`group_by` is supplied, cells are ordered by group and labelled with
-facet strips.
+Draws a tile plot with splice events on the y-axis and cells on the
+x-axis. Events are clustered by PSI profile. When `group_by` is
+supplied, cells are ordered by group and a colored bar is drawn at the
+top of the heatmap showing each cell's group (Seurat `DoHeatmap` style).
+Both legends – continuous PSI and discrete groups – appear on the right.
 
 ## Usage
 
@@ -14,7 +15,7 @@ PlotHeatmap(
   cells = NULL,
   group_by = NULL,
   max_cells = 500L,
-  max_events = 200L,
+  max_events = 50L,
   na_colour = "grey90",
   title = NULL,
   ...
@@ -27,7 +28,7 @@ PlotHeatmap(
   cells = NULL,
   group_by = NULL,
   max_cells = 500L,
-  max_events = 200L,
+  max_events = 50L,
   na_colour = "grey90",
   title = NULL,
   ...
@@ -52,8 +53,8 @@ PlotHeatmap(
 
 - group_by:
 
-  Character. Column in `Seurat::meta.data` used to order and label
-  cells. Default: `NULL`.
+  Character. Column in `Seurat::meta.data` used to order cells and draw
+  the colored top bar. Default: `NULL`.
 
 - max_cells:
 
@@ -63,7 +64,9 @@ PlotHeatmap(
 - max_events:
 
   Integer. Cap on events to plot. When the candidate set exceeds this,
-  the top-variance events are selected automatically. Default: `200`.
+  the top-variance events are selected automatically. Default: `50`,
+  which keeps event-name labels readable; raise it for a denser heatmap
+  (and expect smaller / overlapping y-axis labels).
 
 - na_colour:
 

@@ -17,6 +17,31 @@ for long-read (transcript) mode, plus splice events via `events`
 - [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
   : Create a MatisseObject
 
+## Short-read input (STARsolo)
+
+Helpers for the short-read (junction) workflow. `ReadSTARsoloSJ` loads a
+STARsolo `SJ` matrix and relabels its junctions into the
+`chr-start-end-strand` IDs Matisse expects. `BuildJunctionEvents` turns
+SUPPA2 `.ioe` events into a junction-ID event table whose features match
+those junctions — a deterministic coordinate adapter, not a heuristic
+event caller.
+
+- [`ReadSTARsoloSJ()`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md)
+  : Read a STARsolo splice-junction (SJ) matrix
+- [`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+  : Build a junction-ID event table from SUPPA2 events
+
+## Long-read input (transcript counts)
+
+Helper for the long-read (transcript) workflow. `ReadTranscriptMatrix`
+loads a 10x-style MatrixMarket triplet from a long-read / isoform
+quantifier (Bagpiper, FLAMES, LIQA), auto-detects orientation, and
+returns a transcripts × cells matrix with optional version-suffix
+stripping so the IDs match a SUPPA2 `.ioe` event annotation.
+
+- [`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md)
+  : Read a long-read transcript count matrix
+
 ## Retrieve or update your data
 
 Matisse-specific accessors. For raw count and annotation matrices, use
@@ -37,20 +62,16 @@ the per-event annotation table.
 
 ## Normalisation
 
-Normalise count data before clustering. `SCTransform` applies variance
-stabilisation and scales for sequencing depth – in transcript mode it
-targets the `isoform` assay automatically; in junction mode it targets
-the gene-expression assay. `NormalizeData`, `ScaleData`, and
-`FindVariableFeatures` are log-normalisation alternatives.
+`SCTransform` applies variance stabilisation and scales for sequencing
+depth – in transcript mode it targets the `isoform` assay automatically;
+in junction mode it targets the gene-expression assay. For
+log-normalisation alternatives (`NormalizeData`, `ScaleData`,
+`FindVariableFeatures`) use Seurat’s functions on the embedded Seurat
+object via the $`</code> operator (<code>obj`$`NormalizeData(…)`) or
+`GetSeurat(obj)`.
 
 - [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
   : SCTransform normalisation for MatisseObjects
-- [`NormalizeData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/NormalizeData.MatisseObject.md)
-  : Normalise gene-expression counts for a MatisseObject
-- [`ScaleData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/ScaleData.MatisseObject.md)
-  : Scale gene-expression data for a MatisseObject
-- [`FindVariableFeatures(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindVariableFeatures.MatisseObject.md)
-  : Identify highly variable features for a MatisseObject
 
 ## Dimensionality reduction
 
@@ -63,8 +84,6 @@ multiome experiments.
   : Run PCA on a MatisseObject
 - [`RunUMAP(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunUMAP.MatisseObject.md)
   : Run UMAP on a MatisseObject
-- [`RunTSNE(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunTSNE.MatisseObject.md)
-  : Run t-SNE on a MatisseObject
 
 ## Clustering and differential expression
 
@@ -79,15 +98,19 @@ functions operate on the embedded Seurat object and return the updated
 - [`FindMarkers(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindMarkers.MatisseObject.md)
   : Find differentially expressed markers for a MatisseObject
 
-## Metadata
+## Metadata and assay selection
 
 Add or update per-cell metadata columns. New columns are accessible
 immediately via
 [`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
-and the `$` operator.
+and the `$` operator. `DefaultAssay` picks which assay (`“RNA”`,
+`“isoform”`, `“psi”`, …) Seurat operations target by default.
 
 - [`AddMetaData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/AddMetaData.MatisseObject.md)
   : Add metadata columns to a MatisseObject
+- [`DefaultAssay(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/DefaultAssay.MatisseObject.md)
+  [`` `DefaultAssay<-`( ``*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/DefaultAssay.MatisseObject.md)
+  : Get or set the default assay of a MatisseObject
 
 ## Signac / ATAC-seq methods
 
@@ -139,11 +162,12 @@ splicing between cell types, or inspect junction usage for a gene of
 interest. Pass the feature name via the `feature` argument.
 
 - [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md)
-  : UMAP plot coloured by any feature
+  : UMAP plot – by group (DimPlot-style) or by feature
+  (FeaturePlot-style)
 - [`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
   : Violin plot of feature values split by cell group
 - [`PlotHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)
-  : Heatmap of PSI values (events x cells, DoHeatmap style)
+  : Heatmap of PSI values (events x cells, DoHeatmap-style)
 - [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
   : Sashimi-style coverage plot for a splice event
 

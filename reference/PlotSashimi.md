@@ -89,12 +89,17 @@ its own read count. In **transcript mode** the SE event_id is parsed to
 derive junction coordinates; inclusion and exclusion counts come from
 the `"counts"` and `"exclusion"` layers of the PSI assay.
 
-Supported event types in transcript mode: **SE** (skipped exon) and
-**RI** (retained intron). Junction mode supports all event types since
+Supported event types in transcript mode: every SUPPA2 type Matisse
+ingests – **SE** (skipped exon), **RI** (retained intron), **A3**/**A5**
+(alternative 3'/5' splice site), **AF**/ **AL** (alternative first/last
+exon), and **MX** (mutually exclusive exons). Junction coordinates for
+the SUPPA2 grammar are parsed with the same logic as the short-read
+junction adapter. Junction mode supports all event types since
 coordinates are auto-parsed from junction IDs.
 
-**Note on transcript-mode SE arcs:** transcript-level counting
-aggregates reads to events, not to individual junctions. The total
-inclusion-event count is therefore split evenly across the two SE
-inclusion arcs in the plot. The two arcs may have differed in reality;
-use junction-mode input if you need per-junction read counts.
+**Note on transcript-mode multi-arc events:** transcript-level counting
+aggregates reads to events, not to individual junctions. When an event
+side has more than one defining junction (the two SE / MX inclusion
+arcs, the two MX exclusion arcs), the total event count for that side is
+split evenly across its arcs. The arcs may have differed in reality; use
+junction-mode input if you need per-junction read counts.

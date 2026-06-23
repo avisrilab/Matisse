@@ -51,11 +51,11 @@ automatically — call
 [`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
 after normalisation:
 
+
     obj <- SCTransform(obj)                        # normalise
     obj <- RunPCA(obj, assay = "SCT", npcs = 50)  # reduce
     obj <- RunUMAP(obj, dims = 1:50)              # embed
 
 ## See also
 
-[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md),
-[`NormalizeData.MatisseObject`](https://avisrilab.github.io/Matisse/reference/NormalizeData.MatisseObject.md)
+[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)

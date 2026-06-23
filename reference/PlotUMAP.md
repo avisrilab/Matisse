@@ -1,26 +1,40 @@
-# UMAP plot coloured by any feature
+# UMAP plot – by group (DimPlot-style) or by feature (FeaturePlot-style)
 
-Overlays the value of a feature on the UMAP embedding stored in the
-embedded Seurat object. Pass a PSI event ID, a junction ID, a gene name,
-or a cell-metadata column. The colour scale adapts automatically:
-diverging RdBu \[0,1\] for PSI; sequential viridis for counts and
-expression.
+Two modes, switched by `feature`:
 
-Overlays the value of a feature on the UMAP embedding stored in the
-embedded Seurat object. The colour scale adapts to the feature type:
-diverging RdBu \[0,1\] for PSI events; sequential viridis for junction
-counts and gene expression.
+- **Group mode** (default, `feature = NULL`): cells coloured discretely
+  by a metadata column – like Seurat's `DimPlot`.
+
+- **Feature mode** (`feature` supplied): cells coloured on a continuous
+  scale by a PSI event ID, junction or transcript ID, gene name, or
+  numeric metadata column – like Seurat's `FeaturePlot`. The palette
+  adapts to the feature type (diverging RdBu \[0,1\] for PSI; sequential
+  for counts and expression).
+
+Two modes, switched by `feature`:
+
+- **Group mode** (default, `feature = NULL`): cells coloured discretely
+  by a metadata column – like Seurat's `DimPlot`. Pass `label = TRUE` to
+  add group labels at cluster centroids.
+
+- **Feature mode** (`feature` supplied): cells coloured on a continuous
+  scale by a PSI event ID, junction or transcript ID, gene name, or
+  numeric metadata column – like Seurat's `FeaturePlot`. The palette
+  adapts to the feature type: diverging RdBu \[0,1\] for PSI; sequential
+  for counts and expression.
 
 ## Usage
 
 ``` r
 PlotUMAP(
   object,
-  feature,
+  feature = NULL,
   reduction = "umap",
   dims = c(1L, 2L),
+  group_by = "seurat_clusters",
   pt_size = 0.5,
   na_colour = "grey80",
+  label = FALSE,
   title = NULL,
   ...
 )
@@ -28,11 +42,13 @@ PlotUMAP(
 # S4 method for class 'MatisseObject'
 PlotUMAP(
   object,
-  feature,
+  feature = NULL,
   reduction = "umap",
   dims = c(1L, 2L),
+  group_by = "seurat_clusters",
   pt_size = 0.5,
   na_colour = "grey80",
+  label = FALSE,
   title = NULL,
   ...
 )
@@ -46,9 +62,10 @@ PlotUMAP(
 
 - feature:
 
-  Character. Feature to plot. May be a PSI event ID (e.g.
+  Character. Optional feature to plot – a PSI event ID (e.g.
   `"SE:chr1:100-200:300-400:+"`), a junction or transcript ID, a gene
-  name, or a cell-metadata column.
+  name, or a numeric cell-metadata column. `NULL` (the default) selects
+  group mode.
 
 - reduction:
 
@@ -60,6 +77,11 @@ PlotUMAP(
   Integer vector of length 2 selecting which dimensions to plot.
   Default: `c(1, 2)`.
 
+- group_by:
+
+  Character. Metadata column to colour by in group mode. Default:
+  `"seurat_clusters"`. Ignored in feature mode.
+
 - pt_size:
 
   Numeric. Point size. Default: `0.5`.
@@ -68,9 +90,15 @@ PlotUMAP(
 
   Character. Colour for cells with no data. Default: `"grey80"`.
 
+- label:
+
+  Logical. Group-mode only – add group labels at cluster centroids.
+  Default: `FALSE`.
+
 - title:
 
-  Character. Plot title. Defaults to the feature name.
+  Character. Plot title. Defaults to the feature name in feature mode
+  and `NULL` in group mode.
 
 - ...:
 

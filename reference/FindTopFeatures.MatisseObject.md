@@ -9,7 +9,7 @@ Selects the most accessible peaks for downstream LSI / UMAP.
 
 ``` r
 # S3 method for class 'MatisseObject'
-FindTopFeatures(object, ...)
+FindTopFeatures(object, assay = NULL, min.cutoff = "q5", verbose = TRUE, ...)
 ```
 
 ## Arguments

@@ -10,7 +10,17 @@ dimensionality-reduction step for ATAC-seq data. Typically called after
 
 ``` r
 # S3 method for class 'MatisseObject'
-RunSVD(object, ...)
+RunSVD(
+  object,
+  assay = NULL,
+  features = NULL,
+  pca = FALSE,
+  n = 50,
+  reduction.key = ifelse(pca, "PCA_", "LSI_"),
+  scale.max = NULL,
+  verbose = TRUE,
+  ...
+)
 ```
 
 ## Arguments

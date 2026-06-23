@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Short-read workflow: junction-based PSI • Matisse</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <script src="../extra.js"></script><meta property="og:title" content="Short-read workflow: junction-based PSI">
@@ -100,40 +100,67 @@ transcript quantifier (Bagpiper, FLAMES, LIQA), see the <a href="long-reads.html
 <td>Already processed: normalisation, UMAP, cluster labels.</td>
 </tr>
 <tr class="even">
-<td><strong>Junction count matrix</strong></td>
-<td>
-<em>Cells × junctions</em> sparse matrix of read counts. Row names
-are cell barcodes; column names are junction IDs. Produced by STARsolo
-with <code>--soloFeatures SJ</code>.</td>
+<td><strong>STARsolo <code>SJ</code> output</strong></td>
+<td>The <code>Solo.out/SJ/raw</code> directory from STARsolo run with
+<code>--soloFeatures Gene SJ</code>. Only a <em>raw</em> SJ matrix is
+produced, so it is subset to your filtered cells on read.</td>
 </tr>
 <tr class="odd">
-<td><strong>Event annotation</strong></td>
-<td>A <code>data.frame</code> with one row per splicing event, or a path
-to a SUPPA2 <code>.ioe</code> file. Required columns when supplied as a
-<code>data.frame</code>: <code>event_id</code>, <code>gene_id</code>,
-<code>chr</code>, <code>strand</code>, <code>event_type</code>,
-<code>inclusion_features</code>, <code>exclusion_features</code> (the
-last two hold semicolon-separated junction IDs). Matisse does not ship a
-heuristic event caller — bring your own.</td>
+<td><strong>SUPPA2 <code>.ioe</code> events</strong></td>
+<td>One file per event type from <code>suppa.py generateEvents</code> on
+your annotation GTF. The junction coordinates are encoded in each
+<code>event_id</code>; Matisse converts them to junction IDs for you.
+Matisse does not ship a heuristic event caller — bring your own
+annotation.</td>
 </tr>
 </tbody>
 </table>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="step-1-build-the-matisse-object-psi-is-computed-in-the-same-call">Step 1 – Build the Matisse object (PSI is computed in the same
-call)<a class="anchor" aria-label="anchor" href="#step-1-build-the-matisse-object-psi-is-computed-in-the-same-call"></a>
+<h2 id="step-1-load-starsolo-junctions-and-build-the-event-table">Step 1 – Load STARsolo junctions and build the event table<a class="anchor" aria-label="anchor" href="#step-1-load-starsolo-junctions-and-build-the-event-table"></a>
 </h2>
+<p><code><a href="../reference/ReadSTARsoloSJ.html">ReadSTARsoloSJ()</a></code> reads the SJ matrix and relabels each
+junction into the <code>chr-start-end-strand</code> ID form Matisse uses
+(so sashimi plots work for free). Pass your filtered cell barcodes to
+subset the raw matrix.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
+<span><span class="va">jxn</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ReadSTARsoloSJ.html">ReadSTARsoloSJ</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Solo.out/SJ/raw"</span>,</span>
+<span>  cells <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">seu</span><span class="op">)</span>        <span class="co"># filtered barcodes (e.g. from Gene/filtered)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>SUPPA2 <code>.ioe</code> files describe events with
+<em>transcript</em> IDs, but junction mode needs <em>junction</em> IDs.
+<code><a href="../reference/BuildJunctionEvents.html">BuildJunctionEvents()</a></code> parses the genomic coordinates
+encoded in each SUPPA2 <code>event_id</code> and emits the matching
+junction IDs. It is a deterministic coordinate adapter, not an event
+caller. Supported event types: <code>SE</code>, <code>A3</code>,
+<code>A5</code>, <code>MX</code>, <code>AF</code>, <code>AL</code>.
+(<code>RI</code> is dropped — intron retention has no supporting split
+junction, so it cannot be scored from SJ counts.)</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">events</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/BuildJunctionEvents.html">BuildJunctionEvents</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="st">"events"</span>, pattern <span class="op">=</span> <span class="st">"\\.ioe$"</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  junction_universe <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">jxn</span><span class="op">)</span>   <span class="co"># auto-calibrates the exon/intron</span></span>
+<span><span class="op">)</span>                                     <span class="co"># coordinate offset to your data</span></span></code></pre></div>
+<p>SUPPA2 reports exon-boundary positions while STARsolo reports
+intronic coordinates; passing <code>junction_universe</code> lets
+<code><a href="../reference/BuildJunctionEvents.html">BuildJunctionEvents()</a></code> calibrate the fixed offset by
+maximising overlap with the junctions actually observed, and reports the
+match rate so you can sanity-check the annotation matches your genome
+build.</p>
+</div>
+<div class="section level2">
+<h2 id="step-2-build-the-matisse-object-psi-is-computed-in-the-same-call">Step 2 – Build the Matisse object (PSI is computed in the same
+call)<a class="anchor" aria-label="anchor" href="#step-2-build-the-matisse-object-psi-is-computed-in-the-same-call"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
 <span>  seurat          <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  junction_counts <span class="op">=</span> <span class="va">jxn_counts</span>,   <span class="co"># cells x junctions from STARsolo</span></span>
-<span>                                   <span class="co"># (junction IDs encode coordinates, e.g.</span></span>
-<span>                                   <span class="co">#  "chr1-12345-67890-+", auto-parsed for</span></span>
-<span>                                   <span class="co">#  sashimi plots)</span></span>
-<span>  events          <span class="op">=</span> <span class="va">event_df</span>,     <span class="co"># data.frame OR path(s) to SUPPA2 .ioe</span></span>
+<span>  junction_counts <span class="op">=</span> <span class="va">jxn</span>,          <span class="co"># cells x junctions from ReadSTARsoloSJ()</span></span>
+<span>  events          <span class="op">=</span> <span class="va">events</span>,       <span class="co"># junction-ID table from BuildJunctionEvents()</span></span>
 <span>  min_coverage    <span class="op">=</span> <span class="fl">5L</span>            <span class="co"># minimum reads per cell per event for PSI</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/CreateMatisseObject.html">CreateMatisseObject()</a></code> calculates PSI as part of
@@ -174,13 +201,13 @@ at construction (rare), pass <code>defer_psi = TRUE</code> and call
 to automatically plot all three isoform QC metrics
 (<code>nCount_isoform</code>, <code>nFeature_isoform</code>,
 <code>nPercent_isoform</code>) as a faceted panel.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="remove-low-quality-cells">Remove low-quality cells<a class="anchor" aria-label="anchor" href="#remove-low-quality-cells"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCells.html">FilterCells</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  min_features_isoform <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># at least 5 junctions detected</span></span>
@@ -190,7 +217,7 @@ to automatically plot all three isoform QC metrics
 <div class="section level3">
 <h3 id="remove-uninformative-splice-events">Remove uninformative splice events<a class="anchor" aria-label="anchor" href="#remove-uninformative-splice-events"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -201,7 +228,7 @@ to automatically plot all three isoform QC metrics
 <div class="section level3">
 <h3 id="where-does-the-splicing-switch-happen-on-the-umap">Where does the splicing switch happen on the UMAP?<a class="anchor" aria-label="anchor" href="#where-does-the-splicing-switch-happen-on-the-umap"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -211,7 +238,7 @@ to automatically plot all three isoform QC metrics
 <div class="section level3">
 <h3 id="distributions-by-cell-type">Distributions by cell type<a class="anchor" aria-label="anchor" href="#distributions-by-cell-type"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature  <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -221,7 +248,7 @@ to automatically plot all three isoform QC metrics
 <div class="section level3">
 <h3 id="overview-of-all-events">Overview of all events<a class="anchor" aria-label="anchor" href="#overview-of-all-events"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotHeatmap.html">PlotHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"cell_type"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -230,7 +257,7 @@ to automatically plot all three isoform QC metrics
 <p><code><a href="../reference/PlotSashimi.html">PlotSashimi()</a></code> shows junction arcs scaled by read count,
 coloured by inclusion (blue) vs exclusion (red). Use
 <code>group_by</code> to compare cell types side by side.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotSashimi.html">PlotSashimi</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id  <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -244,7 +271,7 @@ coloured by inclusion (blue) vs exclusion (red). Use
 <div class="section level2">
 <h2 id="accessing-data-at-any-point">Accessing data at any point<a class="anchor" aria-label="anchor" href="#accessing-data-at-any-point"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract the Seurat object for any standard Seurat step</span></span>
 <span><span class="va">seu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetSeurat.html">GetSeurat</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span></span>
@@ -268,7 +295,7 @@ coloured by inclusion (blue) vs exclusion (red). Use
 </h2>
 <p>If you have multiple samples and want to analyse them together, merge
 the individual Matisse objects before running QC:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Build each sample's MatisseObject (PSI is computed at construction), then</span></span>
 <span><span class="co"># merge. Both objects must share the same `input.mode` and event set.</span></span>
 <span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MergeMatisse.html">MergeMatisse</a></span><span class="op">(</span></span>
@@ -280,7 +307,7 @@ the individual Matisse objects before running QC:</p>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -304,10 +331,10 @@ the individual Matisse objects before running QC:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
 <span><span class="co">#&gt;  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">#&gt; [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.10.0     </span></span>
+<span><span class="co">#&gt; [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     </span></span>
 <span><span class="co">#&gt; [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
 <span><span class="co">#&gt; [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4</span></span></code></pre></div>
 </div>

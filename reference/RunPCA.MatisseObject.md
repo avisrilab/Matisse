@@ -9,7 +9,21 @@ PCA result is stored inside the Seurat object and accessible via
 
 ``` r
 # S3 method for class 'MatisseObject'
-RunPCA(object, ...)
+RunPCA(
+  object,
+  assay = NULL,
+  features = NULL,
+  npcs = 50,
+  rev.pca = FALSE,
+  weight.by.var = TRUE,
+  verbose = TRUE,
+  ndims.print = 1:5,
+  nfeatures.print = 30,
+  reduction.name = "pca",
+  reduction.key = "PC_",
+  seed.use = 42,
+  ...
+)
 ```
 
 ## Arguments
@@ -32,6 +46,7 @@ The updated `MatisseObject` with a `"pca"` reduction.
 
 Typical usage after
 [`SCTransform.MatisseObject`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md):
+
 
     obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 

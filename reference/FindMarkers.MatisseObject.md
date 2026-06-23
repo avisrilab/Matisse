@@ -10,7 +10,17 @@ returns a `data.frame` of marker statistics rather than an updated
 
 ``` r
 # S3 method for class 'MatisseObject'
-FindMarkers(object, ...)
+FindMarkers(
+  object,
+  ident.1 = NULL,
+  ident.2 = NULL,
+  latent.vars = NULL,
+  group.by = NULL,
+  subset.ident = NULL,
+  assay = NULL,
+  reduction = NULL,
+  ...
+)
 ```
 
 ## Arguments

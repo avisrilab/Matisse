@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Long-read workflow: transcript-based PSI • Matisse</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <script src="../extra.js"></script><meta property="og:title" content="Long-read workflow: transcript-based PSI">
@@ -98,15 +98,18 @@ instead.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><strong>Seurat object</strong></td>
-<td>Already processed: gene-expression normalisation, UMAP, cluster
-labels.</td>
+<td><strong>Transcript count matrix</strong></td>
+<td>A 10x-style MatrixMarket triplet (<code>matrix.mtx</code>,
+<code>barcodes.tsv</code>, <code>features.tsv</code>, optionally
+<code>.gz</code>) from a long-read / isoform quantifier (Bagpiper,
+FLAMES, LIQA). <code><a href="../reference/ReadTranscriptMatrix.html">ReadTranscriptMatrix()</a></code> loads it in any
+orientation.</td>
 </tr>
 <tr class="even">
-<td><strong>Transcript count matrix</strong></td>
-<td>
-<em>Transcripts × cells</em> matrix of UMI counts. Row names are
-transcript IDs matching those in your annotation.</td>
+<td><strong>Seurat object</strong></td>
+<td>A Seurat object whose cells match the transcript matrix. For
+transcript-only data you can build a shell from the matrix and cluster
+on it directly (Steps 3-4).</td>
 </tr>
 <tr class="odd">
 <td><strong>SUPPA2 IOE files</strong></td>
@@ -119,6 +122,29 @@ FL). These map transcripts to the splicing events they support.</td>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="step-0-read-the-transcript-matrix">Step 0 – Read the transcript matrix<a class="anchor" aria-label="anchor" href="#step-0-read-the-transcript-matrix"></a>
+</h2>
+<p><code><a href="../reference/ReadTranscriptMatrix.html">ReadTranscriptMatrix()</a></code> reads the quantifier’s
+MatrixMarket triplet (gzip-aware) and returns a <strong>transcripts ×
+cells</strong> sparse matrix with the dimnames Matisse expects.
+Quantifiers disagree on orientation (Bagpiper writes <em>cells ×
+transcripts</em>; others the reverse) –
+<code>orientation = "auto"</code> detects and transposes as needed.
+<code>strip_version = TRUE</code> removes a trailing
+<code>.&lt;version&gt;</code> from transcript IDs (summing any that
+collapse): SUPPA2 <code>.ioe</code> events and the quantifier must use
+the <strong>same</strong> transcript-ID namespace, and a silent version
+mismatch would zero every PSI value.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">txc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ReadTranscriptMatrix.html">ReadTranscriptMatrix</a></span><span class="op">(</span></span>
+<span>  <span class="st">"bagpiper/mats"</span>,          <span class="co"># dir with matrix.mtx(.gz) + barcodes + features</span></span>
+<span>  cells <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">seu</span><span class="op">)</span>     <span class="co"># optional: subset to your called cells</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="step-1-build-the-matisse-object-psi-is-computed-in-the-same-call">Step 1 – Build the Matisse object (PSI is computed in the same
 call)<a class="anchor" aria-label="anchor" href="#step-1-build-the-matisse-object-psi-is-computed-in-the-same-call"></a>
 </h2>
@@ -127,14 +153,12 @@ The <code>events</code> parameter accepts either a character vector of
 SUPPA2 <code>.ioe</code> file paths (parsed internally) or a pre-built
 <code>data.frame</code>. Matisse stores the transcript counts in an
 internal assay and computes PSI as part of construction.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://avisrilab.github.io/Matisse">Matisse</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># transcript_counts: transcripts x cells sparse matrix (e.g. from Bagpiper)</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># txc: transcripts x cells matrix from ReadTranscriptMatrix() (Step 0)</span></span>
 <span><span class="co"># events: SUPPA2 .ioe file paths, one per event type</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CreateMatisseObject.html">CreateMatisseObject</a></span><span class="op">(</span></span>
 <span>  seurat            <span class="op">=</span> <span class="va">seu</span>,</span>
-<span>  transcript_counts <span class="op">=</span> <span class="va">transcript_counts</span>,</span>
+<span>  transcript_counts <span class="op">=</span> <span class="va">txc</span>,</span>
 <span>  events            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"events_SE.ioe"</span>,   <span class="co"># skipped exons</span></span>
 <span>    <span class="st">"events_RI.ioe"</span>,   <span class="co"># retained introns</span></span>
@@ -177,7 +201,7 @@ to automatically plot all three isoform QC metrics
 <code>nPercent_isoform</code>) as a faceted panel. This is the fastest
 way to spot cells with very few transcripts or low splicing
 coverage.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -185,7 +209,7 @@ coverage.</p>
 </h3>
 <p>Remove cells that have too few transcripts or too little splicing
 coverage:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCells.html">FilterCells</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  min_features_isoform <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># at least 5 transcripts detected</span></span>
@@ -196,7 +220,7 @@ coverage:</p>
 <h3 id="remove-uninformative-splice-events">Remove uninformative splice events<a class="anchor" aria-label="anchor" href="#remove-uninformative-splice-events"></a>
 </h3>
 <p>Remove events that are observed in very few cells:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterEvents.html">FilterEvents</a></span><span class="op">(</span><span class="va">obj</span>, min_cells_covered <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -207,7 +231,7 @@ coverage:</p>
 <p>Normalise the transcript-level count matrix before clustering.
 SCTransform applies variance stabilisation and corrects for sequencing
 depth.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">obj</span>, assay <span class="op">=</span> <span class="st">"SCT"</span>, npcs <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
 <hr>
@@ -217,7 +241,7 @@ depth.</p>
 </h2>
 <p>Standard Seurat clustering functions work directly on the Matisse
 object. The PSI data and all other slots are preserved throughout.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">obj</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">obj</span>, resolution <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
@@ -231,7 +255,7 @@ object. The PSI data and all other slots are preserved throughout.</p>
 </h3>
 <p>Each dot is a cell coloured by its PSI value for one splice event:
 blue = exon skipped (low PSI), red = exon included (high PSI).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotUMAP.html">PlotUMAP</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span>,</span>
@@ -241,7 +265,7 @@ blue = exon skipped (low PSI), red = exon included (high PSI).</p>
 <div class="section level3">
 <h3 id="compare-splicing-between-cell-types">Compare splicing between cell types<a class="anchor" aria-label="anchor" href="#compare-splicing-between-cell-types"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotViolin.html">PlotViolin</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  feature  <span class="op">=</span> <span class="st">"SE:chr18:3433647-3436055:+"</span>,</span>
@@ -251,7 +275,7 @@ blue = exon skipped (low PSI), red = exon included (high PSI).</p>
 <div class="section level3">
 <h3 id="survey-all-events-at-once">Survey all events at once<a class="anchor" aria-label="anchor" href="#survey-all-events-at-once"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotHeatmap.html">PlotHeatmap</a></span><span class="op">(</span><span class="va">obj</span>, group_by <span class="op">=</span> <span class="st">"seurat_clusters"</span>, max_cells <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -260,7 +284,7 @@ blue = exon skipped (low PSI), red = exon included (high PSI).</p>
 <p><code><a href="../reference/PlotSashimi.html">PlotSashimi()</a></code> draws junction arcs scaled by aggregate
 read count, coloured by role (inclusion = blue, exclusion = red). Facet
 by cell type to compare isoform usage across populations.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotSashimi.html">PlotSashimi</a></span><span class="op">(</span></span>
 <span>  <span class="va">obj</span>,</span>
 <span>  event_id <span class="op">=</span> <span class="st">"SE:chr18:3433648-3434699:3434801-3436055:-"</span>,</span>
@@ -281,7 +305,7 @@ or subsetting.</p>
 <div class="section level2">
 <h2 id="accessing-data-at-any-point">Accessing data at any point<a class="anchor" aria-label="anchor" href="#accessing-data-at-any-point"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract the underlying Seurat object</span></span>
 <span><span class="va">seu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetSeurat.html">GetSeurat</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span>
 <span></span>
@@ -302,7 +326,7 @@ or subsetting.</p>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -326,10 +350,10 @@ or subsetting.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
 <span><span class="co">#&gt;  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
-<span><span class="co">#&gt; [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.10.0     </span></span>
+<span><span class="co">#&gt; [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     </span></span>
 <span><span class="co">#&gt; [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>
 <span><span class="co">#&gt; [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4</span></span></code></pre></div>
 </div>

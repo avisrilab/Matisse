@@ -29,10 +29,10 @@ added alongside them.
 Matisse supports two data types via a single constructor. What you pass
 in determines the mode:
 
-| Data type                                                          | How to create                                            | When to use                                                                 |
-|--------------------------------------------------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------|
-| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObject(transcript_counts=..., events=...)` | You have a transcripts x cells count matrix and SUPPA2 IOE files            |
-| **Short-read 10x Chromium** (STARsolo junction counts)             | `CreateMatisseObject(junction_counts=..., events=...)`   | You have a cells x junctions count matrix from STARsolo `--soloFeatures SJ` |
+| Data type | How to create | When to use |
+|----|----|----|
+| **Long-read / transcript quantification** (Bagpiper, FLAMES, LIQA) | `CreateMatisseObject(transcript_counts=..., events=...)` | You have a transcripts x cells count matrix and SUPPA2 IOE files |
+| **Short-read 10x Chromium** (STARsolo junction counts) | `CreateMatisseObject(junction_counts=..., events=...)` | You have a cells x junctions count matrix from STARsolo `--soloFeatures SJ` |
 
 Once the object is built, all downstream functions – QC, filtering,
 normalisation, visualisation – are identical for both data types.
@@ -42,6 +42,7 @@ normalisation, visualisation – are identical for both data types.
 ## Quick-start (long reads)
 
 ``` r
+
 library(Matisse)
 
 # transcript_counts: transcripts x cells (e.g. from Bagpiper, FLAMES, LIQA)
@@ -72,6 +73,7 @@ workflow](https://avisrilab.github.io/Matisse/articles/long-reads.md)
 ## Quick-start (short reads)
 
 ``` r
+
 library(Matisse)
 
 # junction_counts: cells x junctions matrix from STARsolo (--soloFeatures SJ).
@@ -95,6 +97,7 @@ workflow](https://avisrilab.github.io/Matisse/articles/short-reads.md)
 ## Session info
 
 ``` r
+
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -118,10 +121,10 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
 #>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.10.0     
+#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
 #> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
 ```

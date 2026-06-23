@@ -9,7 +9,15 @@ Used for ATAC-seq peak counts in multiome datasets before
 
 ``` r
 # S3 method for class 'MatisseObject'
-RunTFIDF(object, ...)
+RunTFIDF(
+  object,
+  assay = NULL,
+  method = 1,
+  scale.factor = 10000,
+  idf = NULL,
+  verbose = TRUE,
+  ...
+)
 ```
 
 ## Arguments

@@ -18,11 +18,35 @@ instead.
 
 ## What you need
 
-| Input                       | Description                                                                                                                                                          |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Seurat object**           | Already processed: gene-expression normalisation, UMAP, cluster labels.                                                                                              |
-| **Transcript count matrix** | *Transcripts × cells* matrix of UMI counts. Row names are transcript IDs matching those in your annotation.                                                          |
-| **SUPPA2 IOE files**        | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to the splicing events they support. |
+| Input | Description |
+|----|----|
+| **Transcript count matrix** | A 10x-style MatrixMarket triplet (`matrix.mtx`, `barcodes.tsv`, `features.tsv`, optionally `.gz`) from a long-read / isoform quantifier (Bagpiper, FLAMES, LIQA). [`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md) loads it in any orientation. |
+| **Seurat object** | A Seurat object whose cells match the transcript matrix. For transcript-only data you can build a shell from the matrix and cluster on it directly (Steps 3-4). |
+| **SUPPA2 IOE files** | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to the splicing events they support. |
+
+------------------------------------------------------------------------
+
+## Step 0 – Read the transcript matrix
+
+[`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md)
+reads the quantifier’s MatrixMarket triplet (gzip-aware) and returns a
+**transcripts × cells** sparse matrix with the dimnames Matisse expects.
+Quantifiers disagree on orientation (Bagpiper writes *cells ×
+transcripts*; others the reverse) – `orientation = "auto"` detects and
+transposes as needed. `strip_version = TRUE` removes a trailing
+`.<version>` from transcript IDs (summing any that collapse): SUPPA2
+`.ioe` events and the quantifier must use the **same** transcript-ID
+namespace, and a silent version mismatch would zero every PSI value.
+
+``` r
+
+library(Matisse)
+
+txc <- ReadTranscriptMatrix(
+  "bagpiper/mats",          # dir with matrix.mtx(.gz) + barcodes + features
+  cells = colnames(seu)     # optional: subset to your called cells
+)
+```
 
 ------------------------------------------------------------------------
 
@@ -34,13 +58,12 @@ internally) or a pre-built `data.frame`. Matisse stores the transcript
 counts in an internal assay and computes PSI as part of construction.
 
 ``` r
-library(Matisse)
 
-# transcript_counts: transcripts x cells sparse matrix (e.g. from Bagpiper)
+# txc: transcripts x cells matrix from ReadTranscriptMatrix() (Step 0)
 # events: SUPPA2 .ioe file paths, one per event type
 obj <- CreateMatisseObject(
   seurat            = seu,
-  transcript_counts = transcript_counts,
+  transcript_counts = txc,
   events            = c(
     "events_SE.ioe",   # skipped exons
     "events_RI.ioe",   # retained introns
@@ -53,7 +76,10 @@ obj <- CreateMatisseObject(
 For each cell and event, Matisse sums transcript counts from inclusion
 isoforms and exclusion isoforms, then computes:
 
-$$PSI_{c,e} = \frac{\sum\text{inclusion transcript counts}}{\sum\text{inclusion counts} + \sum\text{exclusion counts}}$$
+``` math
+PSI_{c,e} = \frac{\sum \text{inclusion transcript counts}}
+                   {\sum \text{inclusion counts} + \sum \text{exclusion counts}}
+```
 
 Cells with fewer than `min_coverage` total transcripts for a given event
 are reported as `NA`. After construction, three QC columns sit in cell
@@ -84,6 +110,7 @@ faceted panel. This is the fastest way to spot cells with very few
 transcripts or low splicing coverage.
 
 ``` r
+
 PlotViolin(obj)
 ```
 
@@ -93,6 +120,7 @@ Remove cells that have too few transcripts or too little splicing
 coverage:
 
 ``` r
+
 obj <- FilterCells(
   obj,
   min_features_isoform = 5,    # at least 5 transcripts detected
@@ -105,6 +133,7 @@ obj <- FilterCells(
 Remove events that are observed in very few cells:
 
 ``` r
+
 obj <- FilterEvents(obj, min_cells_covered = 20)
 ```
 
@@ -117,6 +146,7 @@ SCTransform applies variance stabilisation and corrects for sequencing
 depth.
 
 ``` r
+
 obj <- SCTransform(obj)
 obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 ```
@@ -129,6 +159,7 @@ Standard Seurat clustering functions work directly on the Matisse
 object. The PSI data and all other slots are preserved throughout.
 
 ``` r
+
 obj <- RunUMAP(obj, dims = 1:50)
 obj <- FindNeighbors(obj, dims = 1:50)
 obj <- FindClusters(obj, resolution = 0.5)
@@ -144,6 +175,7 @@ Each dot is a cell coloured by its PSI value for one splice event: blue
 = exon skipped (low PSI), red = exon included (high PSI).
 
 ``` r
+
 PlotUMAP(
   obj,
   feature = "SE:chr18:3433647-3436055:+",
@@ -154,6 +186,7 @@ PlotUMAP(
 ### Compare splicing between cell types
 
 ``` r
+
 PlotViolin(
   obj,
   feature  = "SE:chr18:3433647-3436055:+",
@@ -164,6 +197,7 @@ PlotViolin(
 ### Survey all events at once
 
 ``` r
+
 PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 ```
 
@@ -175,6 +209,7 @@ draws junction arcs scaled by aggregate read count, coloured by role
 isoform usage across populations.
 
 ``` r
+
 PlotSashimi(
   obj,
   event_id = "SE:chr18:3433648-3434699:3434801-3436055:-",
@@ -196,6 +231,7 @@ PlotSashimi(
 ## Accessing data at any point
 
 ``` r
+
 # Extract the underlying Seurat object
 seu <- GetSeurat(obj)
 
@@ -218,6 +254,7 @@ neurons <- obj[obj$cell_type == "Neuron", ]
 ## Session info
 
 ``` r
+
 sessionInfo()
 #> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -241,10 +278,10 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.57         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
 #>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.10.0     
+#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
 #> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
 ```
