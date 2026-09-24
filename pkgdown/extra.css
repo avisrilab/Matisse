@@ -24,16 +24,16 @@ html[data-bs-theme="dark"] {
   --lab-code-bg: #0c1222;
 }
 html[data-bs-theme="light"] {
-  /* "linen" */
+  /* white with the dark theme's navy undertone, as on avisrilab.org */
   color-scheme: light;
-  --lab-bg: #f7f3ee;        --lab-bg-rgb: 247, 243, 238;
-  --lab-bg-subtle: #efe8df;
-  --lab-border: #dfd4c6;
-  --lab-text: #22201c;      --lab-text-rgb: 34, 32, 28;
-  --lab-muted: #6a635a;
-  --lab-accent: #0f6b73;    --lab-accent-rgb: 15, 107, 115;
-  --lab-accent-hover: #0a5158; --lab-accent-hover-rgb: 10, 81, 88;
-  --lab-code-bg: #fffdf9;
+  --lab-bg: #ffffff;        --lab-bg-rgb: 255, 255, 255;
+  --lab-bg-subtle: #f3f6fb;
+  --lab-border: #dfe5ef;
+  --lab-text: #0b1220;      --lab-text-rgb: 11, 18, 32;
+  --lab-muted: #5a6478;
+  --lab-accent: #0b7c86;    --lab-accent-rgb: 11, 124, 134;
+  --lab-accent-hover: #075f67; --lab-accent-hover-rgb: 7, 95, 103;
+  --lab-code-bg: #f3f6fb;
 }
 
 /* Bootstrap reads these variables, so mapping them re-colours most of the site */
@@ -131,7 +131,7 @@ html[data-bs-theme] .navbar[data-bs-theme] {
   --bs-navbar-toggler-border-color: var(--lab-border);
 }
 html[data-bs-theme="light"] .navbar[data-bs-theme] .navbar-toggler-icon {
-  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2834, 32, 28, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2811, 18, 32, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 .navbar-brand { font-weight: 600; }
 .dropdown-menu {
