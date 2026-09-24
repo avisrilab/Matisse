@@ -1,15 +1,10 @@
 ---
-pagetitle: "Matisse — Understand your cells, layer by layer"
+pagetitle: "Matisse: per-cell splicing (PSI) in Seurat"
 ---
-
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml)
-[![pkgdown](https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg)](https://avisrilab.org/Matisse)
-<!-- badges: end -->
 
 <div class="mat-hero">
 <h1>Understand your cells,<br>layer by layer</h1>
-<p class="mat-hero-sub">Matisse brings isoform-resolved splicing and chromatin accessibility into your single-cell workflow — on top of Seurat and Signac, using the same cells, the same clusters, the same UMAP.</p>
+<p class="mat-hero-sub">Matisse computes percent spliced in (PSI) for each splicing event in each cell and stores it as an assay in your Seurat object, next to gene expression: the same cells, the same clusters, the same UMAP.</p>
 <a href="#installation" class="btn mat-btn-primary">Install</a>&nbsp;<a href="articles/intro.html" class="btn mat-btn-outline">View walkthrough &rarr;</a>
 </div>
 
@@ -20,34 +15,19 @@ pagetitle: "Matisse — Understand your cells, layer by layer"
 <div class="mat-card">
 <div class="mat-card-num">1</div>
 <h3>Cell-type-specific splicing</h3>
-<p>Do my neurons and astrocytes process this exon differently — and by how much?</p>
+<p>Do two cell types include this exon at different rates, and by how much?</p>
 </div>
 <div class="mat-card">
 <div class="mat-card-num">2</div>
-<h3>Chromatin shapes isoforms</h3>
-<p>Is the splicing switch I see linked to chromatin accessibility changes at the same locus?</p>
-</div>
-<div class="mat-card">
-<div class="mat-card-num">3</div>
-<h3>Isoform switches along a trajectory</h3>
-<p>Is there a coordinated splicing change as my cells differentiate or respond to a stimulus?</p>
-</div>
-<div class="mat-card">
-<div class="mat-card-num">4</div>
-<h3>Context for bulk RNA-seq</h3>
-<p>I see a splicing difference in bulk data — which cell type is responsible?</p>
+<h3>Long reads or short reads</h3>
+<p>Start from per-cell transcript counts from a long-read quantifier such as Bagpiper, or from STARsolo splice-junction counts from 10x short reads.</p>
 </div>
 </div>
 </div>
-
-<figure class="mat-figure">
-<img src="man/figures/ptbp1_umap.png" alt="PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells. Neurons skip this exon; astrocytes include it.">
-<figcaption>PSI values for <em>Ptbp1</em> exon 9 on a UMAP of mouse cortex cells. Neurons (blue) consistently skip this exon (low PSI); astrocytes (red) include it (high PSI). Same gene &mdash; different isoforms &mdash; visible at single-cell resolution.</figcaption>
-</figure>
 
 <div class="mat-section">
 <p class="mat-section-title">Works with your existing setup</p>
-<p class="mat-section-sub">Matisse layers on top of Seurat and Signac &mdash; your clusters, UMAP, and cell labels stay intact</p>
+<p class="mat-section-sub">Matisse layers on top of Seurat: your clusters, UMAP, and cell labels stay intact</p>
 <div class="mat-compat">
 <div class="mat-compat-group">
 <span class="mat-compat-label">Short-read RNA (10x)</span>
@@ -59,18 +39,10 @@ pagetitle: "Matisse — Understand your cells, layer by layer"
 <span class="mat-badge">Bagpiper</span>
 <span class="mat-badge">FLAMES</span>
 <span class="mat-badge">LIQA</span>
-<span class="mat-badge">PacBio MAS-seq</span>
-</div>
-<div class="mat-compat-group">
-<span class="mat-compat-label">ATAC / chromatin</span>
-<span class="mat-badge">10x Multiome</span>
-<span class="mat-badge">Signac</span>
-<span class="mat-badge">ArchR</span>
 </div>
 <div class="mat-compat-group">
 <span class="mat-compat-label">Event annotations</span>
 <span class="mat-badge">SUPPA2 generateEvents</span>
-<span class="mat-badge">rMATS</span>
 </div>
 </div>
 </div>

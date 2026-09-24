@@ -125,6 +125,7 @@ SCTransform.MatisseObject <- function(object,
 #'
 #' @seealso \code{\link{RunUMAP.MatisseObject}}, \code{\link{SCTransform.MatisseObject}}
 #' @rdname RunPCA.MatisseObject
+#' @inheritParams Seurat::RunPCA
 #' @importFrom Seurat RunPCA
 #' @method RunPCA MatisseObject
 #' @export
@@ -147,6 +148,7 @@ RunPCA.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{RunPCA.MatisseObject}}, \code{\link{PlotUMAP}}
 #' @rdname RunUMAP.MatisseObject
+#' @inheritParams Seurat::RunUMAP
 #' @importFrom Seurat RunUMAP
 #' @method RunUMAP MatisseObject
 #' @export
@@ -173,6 +175,7 @@ RunUMAP.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{FindClusters.MatisseObject}}, \code{\link{RunPCA.MatisseObject}}
 #' @rdname FindNeighbors.MatisseObject
+#' @inheritParams Seurat::FindNeighbors
 #' @importFrom Seurat FindNeighbors
 #' @method FindNeighbors MatisseObject
 #' @export
@@ -195,6 +198,7 @@ FindNeighbors.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{FindNeighbors.MatisseObject}}, \code{\link{PlotUMAP}}
 #' @rdname FindClusters.MatisseObject
+#' @inheritParams Seurat::FindClusters
 #' @importFrom Seurat FindClusters
 #' @method FindClusters MatisseObject
 #' @export
@@ -218,6 +222,7 @@ FindClusters.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{FindClusters.MatisseObject}}
 #' @rdname FindMarkers.MatisseObject
+#' @inheritParams Seurat::FindMarkers
 #' @importFrom Seurat FindMarkers
 #' @method FindMarkers MatisseObject
 #' @export
@@ -299,6 +304,7 @@ DefaultAssay.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{RunSVD.MatisseObject}}, \code{\link{FindTopFeatures.MatisseObject}}
 #' @rdname RunTFIDF.MatisseObject
+#' @inheritParams Signac::RunTFIDF
 #' @importFrom Signac RunTFIDF
 #' @method RunTFIDF MatisseObject
 #' @export
@@ -320,6 +326,7 @@ RunTFIDF.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{RunTFIDF.MatisseObject}}, \code{\link{RunUMAP.MatisseObject}}
 #' @rdname RunSVD.MatisseObject
+#' @inheritParams Signac::RunSVD
 #' @importFrom Signac RunSVD
 #' @method RunSVD MatisseObject
 #' @export
@@ -340,6 +347,7 @@ RunSVD.MatisseObject <- function(object, ...) {
 #'
 #' @seealso \code{\link{RunTFIDF.MatisseObject}}, \code{\link{RunSVD.MatisseObject}}
 #' @rdname FindTopFeatures.MatisseObject
+#' @inheritParams Signac::FindTopFeatures
 #' @importFrom Signac FindTopFeatures
 #' @method FindTopFeatures MatisseObject
 #' @export

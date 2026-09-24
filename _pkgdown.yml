@@ -39,16 +39,13 @@ template:
       </div>
 
 home:
-  title: "Matisse — Splicing and chromatin, one cell at a time"
+  title: "Matisse: per-cell splicing (PSI) in Seurat"
   description: >
-    Matisse adds isoform-resolved splicing and chromatin accessibility
-    layers to your Seurat/Signac workflow. For each cell, measure which
-    transcript isoform is being made and compare that directly with
-    chromatin accessibility at the same loci — all within one object,
-    on the same UMAP, across the same clusters.
-    Works with 10x Chromium (STARsolo junction counts), long-read
-    isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac
-    for paired ATAC + RNA.
+    Matisse computes percent spliced in (PSI) for each splicing event in each
+    cell and stores it as an assay in the Seurat object, next to gene
+    expression, so splicing can be plotted on the same UMAP and compared across
+    the same clusters. It works from long-read transcript counts (Bagpiper,
+    FLAMES, LIQA) or STARsolo splice-junction counts from 10x short reads.
   links:
     - text: GitHub repository
       href: https://github.com/avisrilab/Matisse
@@ -69,9 +66,9 @@ navbar:
     articles:
       text: Vignettes
       menu:
-        - text: Long-read workflow (transcript counts)
+        - text: "Long-read workflow: transcript-based PSI"
           href: articles/long-reads.html
-        - text: Short-read workflow (junction counts)
+        - text: "Short-read workflow: junction-based PSI"
           href: articles/short-reads.html
     github:
       icon: fab fa-github fa-lg
@@ -97,7 +94,7 @@ reference:
       loads a STARsolo <code>SJ</code> matrix and relabels its junctions into
       the <code>chr-start-end-strand</code> IDs Matisse expects.
       <code>BuildJunctionEvents</code> turns SUPPA2 <code>.ioe</code> events
-      into a junction-ID event table whose features match those junctions —
+      into a junction-ID event table whose features match those junctions:
       a deterministic coordinate adapter, not a heuristic event caller.
     contents:
       - ReadSTARsoloSJ
@@ -147,8 +144,7 @@ reference:
     desc: >
       Reduce the high-dimensional feature space to a compact representation
       before clustering and visualisation. <code>RunPCA</code> is the standard
-      route after <code>SCTransform</code>; <code>RunSVD</code> (LSI) is used
-      for ATAC-seq data in multiome experiments.
+      route after <code>SCTransform</code>.
     contents:
       - RunPCA.MatisseObject
       - RunUMAP.MatisseObject
@@ -157,7 +153,7 @@ reference:
     desc: >
       Group cells by transcriptional state and identify marker genes.
       All functions operate on the embedded Seurat object and return the
-      updated <code>MatisseObject</code> — except <code>FindMarkers</code>,
+      updated <code>MatisseObject</code>, except <code>FindMarkers</code>,
       which returns a data frame.
     contents:
       - FindNeighbors.MatisseObject
@@ -175,12 +171,11 @@ reference:
       - AddMetaData.MatisseObject
       - DefaultAssay.MatisseObject
 
-  - title: "Signac / ATAC-seq methods"
+  - title: "Signac methods"
     desc: >
-      For multiome (paired ATAC + RNA) datasets. <code>RunTFIDF</code>
-      normalises peak counts; <code>FindTopFeatures</code> selects variable
-      peaks; <code>RunSVD</code> performs Latent Semantic Indexing (LSI) —
-      the ATAC equivalent of PCA.
+      Signac methods forwarded to the embedded Seurat object:
+      <code>RunTFIDF</code>, <code>FindTopFeatures</code> and
+      <code>RunSVD</code> (latent semantic indexing).
     contents:
       - RunTFIDF.MatisseObject
       - FindTopFeatures.MatisseObject
@@ -210,8 +205,8 @@ reference:
 
   - title: "Visualisation"
     desc: >
-      Plot splicing patterns across your cells. Overlay any feature — PSI
-      values, junction counts, or gene expression — on a UMAP, compare
+      Plot splicing patterns across your cells. Overlay any feature (PSI
+      values, junction counts, or gene expression) on a UMAP, compare
       splicing between cell types, or inspect junction usage for a gene
       of interest. Pass the feature name via the <code>feature</code>
       argument.

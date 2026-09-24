@@ -284,20 +284,6 @@ html[data-bs-theme="dark"] .template-reference-topic main img {
   font-family: var(--lab-mono); font-size: 0.72rem; text-align: center;
 }
 
-.mat-figure { text-align: center; margin: 0.5rem 0 3rem; }
-.mat-figure img {
-  max-width: 680px; width: 100%;
-  padding: 8px; background: #fff;            /* the plot is drawn on white */
-  border: 1px solid var(--lab-border); border-radius: 4px;
-}
-.mat-figure figcaption {
-  max-width: 620px;
-  margin: 0.9rem auto 0;
-  color: var(--lab-muted);
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
 .mat-compat { max-width: 680px; margin: 0 auto 2.5rem; }
 .mat-compat-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; margin-bottom: 1.1rem; }
 .mat-compat-label {

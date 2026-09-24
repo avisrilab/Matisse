@@ -98,6 +98,6 @@
     formals(target) <- src_formals
     body(target)    <- make_body(j$fn, src_formals)
     environment(target) <- ns
-    assignInNamespace(target_name, target, ns = pkgname)
+    utils::assignInNamespace(target_name, target, ns = pkgname)
   }
 }
