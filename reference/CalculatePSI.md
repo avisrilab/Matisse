@@ -1,14 +1,14 @@
 # Calculate PSI matrix from junction or transcript counts
 
 Typically called automatically by
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md);
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md);
 call directly only to recompute with different parameters (e.g. a
 different `min_coverage`).
 
 Computes a Percent Spliced In (PSI) matrix for all splice events and
 stores it in the `"psi"` assay. Works in both junction mode and
 transcript mode.
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
 calls this automatically by default; you only call it directly to
 recompute with different parameters (e.g. a different `min_coverage`) or
 after constructing with `defer_psi = TRUE`.
@@ -30,7 +30,7 @@ CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
 - object:
 
   A
-  [`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md),
+  [`MatisseObject`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md),
   or a sparse matrix (cells x junctions) when computing PSI outside the
   object.
 
@@ -39,7 +39,7 @@ CalculatePSI(object, events = NULL, min_coverage = 5L, verbose = TRUE, ...)
   A `data.frame` with columns `event_id`, `inclusion_features`, and
   `exclusion_features`. Defaults to the event annotation staged at
   construction time (`object@misc[["event_data"]]`, populated by
-  [`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)).
+  [`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)).
 
 - min_coverage:
 
@@ -87,6 +87,6 @@ splice events with a non-`NA` PSI value in each cell.
 
 ## See also
 
-[`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md),
-[`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md),
-[`PlotHeatmap`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)
+[`FilterCells`](https://avisrilab.org/Matisse/reference/FilterCells.md),
+[`FilterEvents`](https://avisrilab.org/Matisse/reference/FilterEvents.md),
+[`PlotHeatmap`](https://avisrilab.org/Matisse/reference/PlotHeatmap.md)

@@ -42,4 +42,4 @@ A `data.frame` of marker genes with columns `p_val`, `avg_log2FC`,
 
 ## See also
 
-[`FindClusters.MatisseObject`](https://avisrilab.github.io/Matisse/reference/FindClusters.MatisseObject.md)
+[`FindClusters.MatisseObject`](https://avisrilab.org/Matisse/reference/FindClusters.MatisseObject.md)

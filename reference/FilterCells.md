@@ -3,9 +3,9 @@
 Removes cells that do not pass the specified thresholds on QC columns in
 `MatisseMeta(object)` (the Seurat `meta.data`). The columns
 `nCount_isoform` and `nFeature_isoform` are written at construction by
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md);
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md);
 `nPercent_isoform` is written by
-[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md).
+[`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md).
 
 ## Usage
 
@@ -64,7 +64,7 @@ FilterCells(
 
   Numeric (0-100). Minimum `nPercent_isoform` (percentage of splice
   events with a non-NA PSI value). Requires
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  [`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   to have been run. Default: `NULL`.
 
 - custom_filters:
@@ -89,5 +89,5 @@ The filtered `MatisseObject`.
 
 ## See also
 
-[`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md),
-[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+[`FilterEvents`](https://avisrilab.org/Matisse/reference/FilterEvents.md),
+[`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)

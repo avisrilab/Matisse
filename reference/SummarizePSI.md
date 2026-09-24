@@ -2,7 +2,7 @@
 
 Returns a summary table with per-event PSI statistics across all (or a
 subset of) cells. Call this after
-[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md).
+[`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md).
 
 ## Usage
 

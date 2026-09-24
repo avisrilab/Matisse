@@ -5,7 +5,7 @@ triplet (`matrix.mtx`, `barcodes.tsv`, `features.tsv`, optionally `.gz`)
 as produced by long-read / isoform quantifiers such as **Bagpiper**,
 **FLAMES**, or **LIQA**, and returns it in the *transcripts x cells*
 orientation with dimnames that
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)'s
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)'s
 transcript mode expects.
 
 ## Usage
@@ -72,9 +72,9 @@ collapse) to defend against this.
 
 ## See also
 
-[`ReadSTARsoloSJ`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md)
+[`ReadSTARsoloSJ`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md)
 for the short-read (junction) path;
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md).
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md).
 
 ## Examples
 

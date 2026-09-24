@@ -10,16 +10,16 @@ Key capabilities:
   annotations, keeping gene expression and isoform layers synchronised.
 
 - **Single-step construction with PSI** –
-  [`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+  [`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
   computes per-cell Percent Spliced In values as part of construction
   (pass `defer_psi = TRUE` to skip). Works in both junction mode
   (STARsolo) and transcript mode (Bagpiper, FLAMES, LIQA).
 
 - **Isoform QC** – `nCount_isoform` and `nFeature_isoform` are written
   at construction; `nPercent_isoform` is written by the PSI step.
-  [`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
+  [`FilterCells`](https://avisrilab.org/Matisse/reference/FilterCells.md)
   and
-  [`FilterEvents`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
+  [`FilterEvents`](https://avisrilab.org/Matisse/reference/FilterEvents.md)
   enforce quality thresholds.
 
 - **Visualization** – UMAP overlays, violin plots, PSI heatmaps, and
@@ -59,13 +59,13 @@ raw data with native Seurat verbs:
 ## Package website
 
 Full documentation and vignettes are available at
-<https://avisrilab.github.io/Matisse>.
+<https://avisrilab.org/Matisse>.
 
 ## See also
 
 Useful links:
 
-- <https://avisrilab.github.io/Matisse>
+- <https://avisrilab.org/Matisse>
 
 - <https://github.com/avisrilab/Matisse>
 
@@ -73,8 +73,10 @@ Useful links:
 
 ## Author
 
-**Maintainer**: k3yavi <avisrilab@gmail.com>
+**Maintainer**: Avi Srivastava <avisrilab@gmail.com>
+([ORCID](https://orcid.org/0000-0001-9798-2079))
 
 Authors:
 
-- k3yavi <avisrilab@gmail.com>
+- Avi Srivastava <avisrilab@gmail.com>
+  ([ORCID](https://orcid.org/0000-0001-9798-2079))

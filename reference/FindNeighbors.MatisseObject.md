@@ -4,9 +4,9 @@ Runs
 [`FindNeighbors`](https://satijalab.org/seurat/reference/FindNeighbors.html)
 on the embedded Seurat object and returns the updated `MatisseObject`.
 Typically called after
-[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+[`RunPCA.MatisseObject`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)
 and before
-[`FindClusters.MatisseObject`](https://avisrilab.github.io/Matisse/reference/FindClusters.MatisseObject.md).
+[`FindClusters.MatisseObject`](https://avisrilab.org/Matisse/reference/FindClusters.MatisseObject.md).
 
 ## Usage
 
@@ -54,5 +54,5 @@ embedded Seurat object.
 
 ## See also
 
-[`FindClusters.MatisseObject`](https://avisrilab.github.io/Matisse/reference/FindClusters.MatisseObject.md),
-[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+[`FindClusters.MatisseObject`](https://avisrilab.org/Matisse/reference/FindClusters.MatisseObject.md),
+[`RunPCA.MatisseObject`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)

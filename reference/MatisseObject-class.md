@@ -64,30 +64,30 @@ Two input modes are supported, set automatically at construction:
 
   Short-read mode. Raw junction counts (from STARsolo) are stored as
   `Assay5("isoform")` (junctions x cells). Call
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  [`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   to compute PSI values.
 
 - `"transcript"`:
 
   Long-read mode. Transcript isoform counts (from Bagpiper, FLAMES, or
   LIQA) are stored as `Assay5("isoform")` (transcripts x cells). Call
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  [`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   to compute PSI values.
 
 After
-[`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md),
+[`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md),
 PSI values are stored as `Assay5("psi")` (splice events x cells).
 
 ## Functions
 
 - `show(MatisseObject)`: Display a summary of a `MatisseObject`.
 
-- `x[[i`: Access cell metadata or Seurat slots via `[[`. Returns
-  metadata columns as bare vectors (matching Matisse convention), then
-  falls back to the embedded Seurat object's `[[` for assays,
-  reductions, etc. The explicit metadata check is load-bearing —
-  Seurat's own `[[` returns metadata columns wrapped in a 1-column
-  data.frame.
+- `x = MatisseObject[[i = ANY, j = ANY]]`: Access cell metadata or
+  Seurat slots via `[[`. Returns metadata columns as bare vectors
+  (matching Matisse convention), then falls back to the embedded Seurat
+  object's `[[` for assays, reductions, etc. The explicit metadata check
+  is load-bearing — Seurat's own `[[` returns metadata columns wrapped
+  in a 1-column data.frame.
 
 ## Slots
 

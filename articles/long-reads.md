@@ -11,7 +11,7 @@ level.
 
 If you have STARsolo junction counts from standard 10x Chromium short
 reads, see the [Short-read
-workflow](https://avisrilab.github.io/Matisse/articles/short-reads.md)
+workflow](https://avisrilab.org/Matisse/articles/short-reads.md)
 instead.
 
 ------------------------------------------------------------------------
@@ -20,7 +20,7 @@ instead.
 
 | Input | Description |
 |----|----|
-| **Transcript count matrix** | A 10x-style MatrixMarket triplet (`matrix.mtx`, `barcodes.tsv`, `features.tsv`, optionally `.gz`) from a long-read / isoform quantifier (Bagpiper, FLAMES, LIQA). [`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md) loads it in any orientation. |
+| **Transcript count matrix** | A 10x-style MatrixMarket triplet (`matrix.mtx`, `barcodes.tsv`, `features.tsv`, optionally `.gz`) from a long-read / isoform quantifier (Bagpiper, FLAMES, LIQA). [`ReadTranscriptMatrix()`](https://avisrilab.org/Matisse/reference/ReadTranscriptMatrix.md) loads it in any orientation. |
 | **Seurat object** | A Seurat object whose cells match the transcript matrix. For transcript-only data you can build a shell from the matrix and cluster on it directly (Steps 3-4). |
 | **SUPPA2 IOE files** | One or more `.ioe` files from SUPPA2’s `generateEvents` command, one per event type (SE, RI, SS, MX, FL). These map transcripts to the splicing events they support. |
 
@@ -28,7 +28,7 @@ instead.
 
 ## Step 0 – Read the transcript matrix
 
-[`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md)
+[`ReadTranscriptMatrix()`](https://avisrilab.org/Matisse/reference/ReadTranscriptMatrix.md)
 reads the quantifier’s MatrixMarket triplet (gzip-aware) and returns a
 **transcripts × cells** sparse matrix with the dimnames Matisse expects.
 Quantifiers disagree on orientation (Bagpiper writes *cells ×
@@ -93,7 +93,7 @@ metadata:
 To re-compute PSI with different parameters later, call
 `CalculatePSI(obj, min_coverage = ...)`. To skip the PSI step at
 construction (rare), pass `defer_psi = TRUE` and call
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+[`CalculatePSI()`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
 manually.
 
 ------------------------------------------------------------------------
@@ -103,7 +103,7 @@ manually.
 ### Visualise QC metrics
 
 Call
-[`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+[`PlotViolin()`](https://avisrilab.org/Matisse/reference/PlotViolin.md)
 with no `feature` argument to automatically plot all three isoform QC
 metrics (`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) as a
 faceted panel. This is the fastest way to spot cells with very few
@@ -203,7 +203,7 @@ PlotHeatmap(obj, group_by = "seurat_clusters", max_cells = 400)
 
 ### Inspect isoform usage with a sashimi plot
 
-[`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
+[`PlotSashimi()`](https://avisrilab.org/Matisse/reference/PlotSashimi.md)
 draws junction arcs scaled by aggregate read count, coloured by role
 (inclusion = blue, exclusion = red). Facet by cell type to compare
 isoform usage across populations.
@@ -222,8 +222,8 @@ PlotSashimi(
 > `SE:chr:donor1-acceptor1:donor2-acceptor2:strand`
 > (e.g. `SE:chr18:3433648-3434699:3434801-3436055:-`). These become the
 > feature names in `GetPSI(obj)`, so use the same string when calling
-> [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md),
-> [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md),
+> [`PlotUMAP()`](https://avisrilab.org/Matisse/reference/PlotUMAP.md),
+> [`PlotSashimi()`](https://avisrilab.org/Matisse/reference/PlotSashimi.md),
 > or subsetting.
 
 ------------------------------------------------------------------------
@@ -256,9 +256,9 @@ neurons <- obj[obj$cell_type == "Neuron", ]
 ``` r
 
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -278,10 +278,10 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-#>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
-#> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
+#>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+#> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
+#> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-#> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
+#> [25] rlang_1.3.0       fs_2.1.0          htmlwidgets_1.6.4
 ```

@@ -10,8 +10,7 @@ for each splicing event in each cell.
 
 If you have full-transcript counts from a long-read platform or a
 transcript quantifier (Bagpiper, FLAMES, LIQA), see the [Long-read
-workflow](https://avisrilab.github.io/Matisse/articles/long-reads.md)
-instead.
+workflow](https://avisrilab.org/Matisse/articles/long-reads.md) instead.
 
 ------------------------------------------------------------------------
 
@@ -27,7 +26,7 @@ instead.
 
 ## Step 1 – Load STARsolo junctions and build the event table
 
-[`ReadSTARsoloSJ()`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md)
+[`ReadSTARsoloSJ()`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md)
 reads the SJ matrix and relabels each junction into the
 `chr-start-end-strand` ID form Matisse uses (so sashimi plots work for
 free). Pass your filtered cell barcodes to subset the raw matrix.
@@ -44,7 +43,7 @@ jxn <- ReadSTARsoloSJ(
 
 SUPPA2 `.ioe` files describe events with *transcript* IDs, but junction
 mode needs *junction* IDs.
-[`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+[`BuildJunctionEvents()`](https://avisrilab.org/Matisse/reference/BuildJunctionEvents.md)
 parses the genomic coordinates encoded in each SUPPA2 `event_id` and
 emits the matching junction IDs. It is a deterministic coordinate
 adapter, not an event caller. Supported event types: `SE`, `A3`, `A5`,
@@ -61,7 +60,7 @@ events <- BuildJunctionEvents(
 
 SUPPA2 reports exon-boundary positions while STARsolo reports intronic
 coordinates; passing `junction_universe` lets
-[`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+[`BuildJunctionEvents()`](https://avisrilab.org/Matisse/reference/BuildJunctionEvents.md)
 calibrate the fixed offset by maximising overlap with the junctions
 actually observed, and reports the match rate so you can sanity-check
 the annotation matches your genome build.
@@ -78,7 +77,7 @@ obj <- CreateMatisseObject(
 )
 ```
 
-[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+[`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
 calculates PSI as part of construction. After it returns, the object
 holds three things ready to use:
 
@@ -103,7 +102,7 @@ Cells with fewer than `min_coverage` total reads for an event are left
 as `NA`. To re-compute PSI with different parameters later, call
 `CalculatePSI(obj, min_coverage = ...)`. To skip the PSI step at
 construction (rare), pass `defer_psi = TRUE` and call
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+[`CalculatePSI()`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
 manually.
 
 ------------------------------------------------------------------------
@@ -113,7 +112,7 @@ manually.
 ### Visualise QC metrics
 
 Call
-[`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+[`PlotViolin()`](https://avisrilab.org/Matisse/reference/PlotViolin.md)
 with no `feature` argument to automatically plot all three isoform QC
 metrics (`nCount_isoform`, `nFeature_isoform`, `nPercent_isoform`) as a
 faceted panel.
@@ -176,7 +175,7 @@ PlotHeatmap(obj, group_by = "cell_type", max_cells = 400)
 
 ### Sashimi plot for a specific event
 
-[`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
+[`PlotSashimi()`](https://avisrilab.org/Matisse/reference/PlotSashimi.md)
 shows junction arcs scaled by read count, coloured by inclusion (blue)
 vs exclusion (red). Use `group_by` to compare cell types side by side.
 
@@ -239,9 +238,9 @@ combined <- MergeMatisse(
 ``` r
 
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -261,10 +260,10 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.59         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-#>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
-#> [13] pkgdown_2.2.0     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
-#> [17] compiler_4.6.0    tools_4.6.0       ragg_1.5.2        bslib_0.11.0     
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
+#>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+#> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
+#> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
-#> [25] rlang_1.2.0       fs_2.1.0          htmlwidgets_1.6.4
+#> [25] rlang_1.3.0       fs_2.1.0          htmlwidgets_1.6.4
 ```

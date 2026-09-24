@@ -5,7 +5,7 @@ into your single-cell workflow — on top of Seurat and Signac, using the
 same cells, the same clusters, the same UMAP.
 
 [Install](#installation) [View walkthrough
-→](https://avisrilab.github.io/Matisse/articles/intro.md)
+→](https://avisrilab.org/Matisse/articles/intro.md)
 
 What you can discover
 
@@ -71,7 +71,7 @@ remotes::install_github("avisrilab/Matisse")
 Ready to explore your data?
 
 [View the full walkthrough
-→](https://avisrilab.github.io/Matisse/articles/intro.md)
+→](https://avisrilab.org/Matisse/articles/intro.md)
 
 # Package index
 
@@ -83,13 +83,13 @@ into a single Matisse object (and computes PSI) in one call. Pass
 for long-read (transcript) mode, plus splice events via `events`
 (data.frame or path to a SUPPA2 `.ioe` file).
 
-- [`show(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  [`` `[`( ``*`<MatisseObject>`*`,`*`<ANY>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  [`` `[[`( ``*`<MatisseObject>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
-  [`` `$`( ``*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md)
+- [`show(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md)
+  [`dim(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md)
+  [`` `[`( ``*`<MatisseObject>`*`,`*`<ANY>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md)
+  [`` `[[`( ``*`<MatisseObject>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md)
+  [`` `$`( ``*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md)
   : The MatisseObject S4 class
-- [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+- [`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
   : Create a MatisseObject
 
 ## Short-read input (STARsolo)
@@ -101,9 +101,9 @@ SUPPA2 `.ioe` events into a junction-ID event table whose features match
 those junctions — a deterministic coordinate adapter, not a heuristic
 event caller.
 
-- [`ReadSTARsoloSJ()`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md)
+- [`ReadSTARsoloSJ()`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md)
   : Read a STARsolo splice-junction (SJ) matrix
-- [`BuildJunctionEvents()`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+- [`BuildJunctionEvents()`](https://avisrilab.org/Matisse/reference/BuildJunctionEvents.md)
   : Build a junction-ID event table from SUPPA2 events
 
 ## Long-read input (transcript counts)
@@ -114,7 +114,7 @@ quantifier (Bagpiper, FLAMES, LIQA), auto-detects orientation, and
 returns a transcripts × cells matrix with optional version-suffix
 stripping so the IDs match a SUPPA2 `.ioe` event annotation.
 
-- [`ReadTranscriptMatrix()`](https://avisrilab.github.io/Matisse/reference/ReadTranscriptMatrix.md)
+- [`ReadTranscriptMatrix()`](https://avisrilab.org/Matisse/reference/ReadTranscriptMatrix.md)
   : Read a long-read transcript count matrix
 
 ## Retrieve or update your data
@@ -125,14 +125,14 @@ e.g. `SeuratObject::GetAssayData(GetSeurat(obj)[[“isoform”]], “counts”)
 for junction or transcript counts, or `GetSeurat(obj)[[“psi”]][[]]` for
 the per-event annotation table.
 
-- [`GetSeurat()`](https://avisrilab.github.io/Matisse/reference/GetSeurat.md)
+- [`GetSeurat()`](https://avisrilab.org/Matisse/reference/GetSeurat.md)
   : Get the embedded Seurat object
-- [`GetPSI()`](https://avisrilab.github.io/Matisse/reference/GetPSI.md)
-  : Get the PSI matrix
-- [`SetPSI()`](https://avisrilab.github.io/Matisse/reference/SetPSI.md)
-  : Set the PSI matrix
-- [`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
-  [`` `MatisseMeta<-`() ``](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
+- [`GetPSI()`](https://avisrilab.org/Matisse/reference/GetPSI.md) : Get
+  the PSI matrix
+- [`SetPSI()`](https://avisrilab.org/Matisse/reference/SetPSI.md) : Set
+  the PSI matrix
+- [`MatisseMeta()`](https://avisrilab.org/Matisse/reference/MatisseMeta.md)
+  [`` `MatisseMeta<-`() ``](https://avisrilab.org/Matisse/reference/MatisseMeta.md)
   : Get or set cell-level metadata
 
 ## Normalisation
@@ -145,7 +145,7 @@ log-normalisation alternatives (`NormalizeData`, `ScaleData`,
 object via the $`</code> operator (<code>obj`$`NormalizeData(…)`) or
 `GetSeurat(obj)`.
 
-- [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
+- [`SCTransform(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/SCTransform.MatisseObject.md)
   : SCTransform normalisation for MatisseObjects
 
 ## Dimensionality reduction
@@ -155,9 +155,9 @@ before clustering and visualisation. `RunPCA` is the standard route
 after `SCTransform`; `RunSVD` (LSI) is used for ATAC-seq data in
 multiome experiments.
 
-- [`RunPCA(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+- [`RunPCA(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)
   : Run PCA on a MatisseObject
-- [`RunUMAP(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunUMAP.MatisseObject.md)
+- [`RunUMAP(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunUMAP.MatisseObject.md)
   : Run UMAP on a MatisseObject
 
 ## Clustering and differential expression
@@ -166,25 +166,25 @@ Group cells by transcriptional state and identify marker genes. All
 functions operate on the embedded Seurat object and return the updated
 `MatisseObject` — except `FindMarkers`, which returns a data frame.
 
-- [`FindNeighbors(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindNeighbors.MatisseObject.md)
+- [`FindNeighbors(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindNeighbors.MatisseObject.md)
   : Compute a shared nearest-neighbour graph for a MatisseObject
-- [`FindClusters(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindClusters.MatisseObject.md)
+- [`FindClusters(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindClusters.MatisseObject.md)
   : Cluster cells in a MatisseObject
-- [`FindMarkers(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindMarkers.MatisseObject.md)
+- [`FindMarkers(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindMarkers.MatisseObject.md)
   : Find differentially expressed markers for a MatisseObject
 
 ## Metadata and assay selection
 
 Add or update per-cell metadata columns. New columns are accessible
 immediately via
-[`MatisseMeta()`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
+[`MatisseMeta()`](https://avisrilab.org/Matisse/reference/MatisseMeta.md)
 and the `$` operator. `DefaultAssay` picks which assay (`“RNA”`,
 `“isoform”`, `“psi”`, …) Seurat operations target by default.
 
-- [`AddMetaData(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/AddMetaData.MatisseObject.md)
+- [`AddMetaData(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/AddMetaData.MatisseObject.md)
   : Add metadata columns to a MatisseObject
-- [`DefaultAssay(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/DefaultAssay.MatisseObject.md)
-  [`` `DefaultAssay<-`( ``*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/DefaultAssay.MatisseObject.md)
+- [`DefaultAssay(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/DefaultAssay.MatisseObject.md)
+  [`` `DefaultAssay<-`( ``*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/DefaultAssay.MatisseObject.md)
   : Get or set the default assay of a MatisseObject
 
 ## Signac / ATAC-seq methods
@@ -193,11 +193,11 @@ For multiome (paired ATAC + RNA) datasets. `RunTFIDF` normalises peak
 counts; `FindTopFeatures` selects variable peaks; `RunSVD` performs
 Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
 
-- [`RunTFIDF(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunTFIDF.MatisseObject.md)
+- [`RunTFIDF(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunTFIDF.MatisseObject.md)
   : Run TF-IDF normalisation for a MatisseObject
-- [`FindTopFeatures(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/FindTopFeatures.MatisseObject.md)
+- [`FindTopFeatures(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindTopFeatures.MatisseObject.md)
   : Find highly variable ATAC-seq features for a MatisseObject
-- [`RunSVD(`*`<MatisseObject>`*`)`](https://avisrilab.github.io/Matisse/reference/RunSVD.MatisseObject.md)
+- [`RunSVD(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunSVD.MatisseObject.md)
   : Run SVD (LSI) for a MatisseObject
 
 ## Calculate splicing ratios (PSI)
@@ -205,16 +205,16 @@ Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
 Compute PSI (Percent Spliced In) – the fraction of transcripts in each
 cell that include a given exon. Values range from 0 (exon always
 skipped) to 1 (exon always included).
-[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+[`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
 calls
-[`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+[`CalculatePSI()`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
 automatically; you only call it directly to recompute with different
 parameters (e.g. `min_coverage`) or after constructing with
 `defer_psi = TRUE`.
 
-- [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+- [`CalculatePSI()`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   : Calculate PSI matrix from junction or transcript counts
-- [`SummarizePSI()`](https://avisrilab.github.io/Matisse/reference/SummarizePSI.md)
+- [`SummarizePSI()`](https://avisrilab.org/Matisse/reference/SummarizePSI.md)
   : Summarize PSI distribution across cells for each event
 
 ## Quality control and filtering
@@ -224,9 +224,9 @@ for reliable analysis. QC columns written automatically:
 `nCount_isoform` and `nFeature_isoform` at construction;
 `nPercent_isoform` after CalculatePSI().
 
-- [`FilterCells()`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
+- [`FilterCells()`](https://avisrilab.org/Matisse/reference/FilterCells.md)
   : Filter cells by QC thresholds
-- [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md)
+- [`FilterEvents()`](https://avisrilab.org/Matisse/reference/FilterEvents.md)
   : Filter splice events by coverage or variance
 
 ## Visualisation
@@ -236,21 +236,20 @@ values, junction counts, or gene expression — on a UMAP, compare
 splicing between cell types, or inspect junction usage for a gene of
 interest. Pass the feature name via the `feature` argument.
 
-- [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md)
-  : UMAP plot – by group (DimPlot-style) or by feature
-  (FeaturePlot-style)
-- [`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md)
+- [`PlotUMAP()`](https://avisrilab.org/Matisse/reference/PlotUMAP.md) :
+  UMAP plot – by group (DimPlot-style) or by feature (FeaturePlot-style)
+- [`PlotViolin()`](https://avisrilab.org/Matisse/reference/PlotViolin.md)
   : Violin plot of feature values split by cell group
-- [`PlotHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md)
+- [`PlotHeatmap()`](https://avisrilab.org/Matisse/reference/PlotHeatmap.md)
   : Heatmap of PSI values (events x cells, DoHeatmap-style)
-- [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md)
+- [`PlotSashimi()`](https://avisrilab.org/Matisse/reference/PlotSashimi.md)
   : Sashimi-style coverage plot for a splice event
 
 ## Utilities
 
 Helper functions for combining datasets.
 
-- [`MergeMatisse()`](https://avisrilab.github.io/Matisse/reference/MergeMatisse.md)
+- [`MergeMatisse()`](https://avisrilab.org/Matisse/reference/MergeMatisse.md)
   : Merge two MatisseObjects by cells
 
 # Articles
@@ -258,8 +257,8 @@ Helper functions for combining datasets.
 ### Vignettes
 
 - [Getting started with
-  Matisse](https://avisrilab.github.io/Matisse/articles/intro.md):
+  Matisse](https://avisrilab.org/Matisse/articles/intro.md):
 - [Long-read workflow: transcript-based
-  PSI](https://avisrilab.github.io/Matisse/articles/long-reads.md):
+  PSI](https://avisrilab.org/Matisse/articles/long-reads.md):
 - [Short-read workflow: junction-based
-  PSI](https://avisrilab.github.io/Matisse/articles/short-reads.md):
+  PSI](https://avisrilab.org/Matisse/articles/short-reads.md):

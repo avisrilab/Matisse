@@ -39,8 +39,25 @@ Visualization – UMAP overlays, violin plots, PSI
 heatmaps, and sashimi junction-arc plots via a consistent
 ggplot2-based API.
 
-"></head><body>
+"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('lab-theme'); } catch (e) {}
+    document.documentElement.setAttribute('data-bs-theme', t === 'light' ? 'light' : 'dark');
+  })();
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
+    <div class="lab-bar">
+  <div class="lab-bar__inner">
+    <a class="lab-bar__brand" href="/">Srivastava <span>Lab</span></a>
+    <nav class="lab-bar__links" aria-label="Srivastava Lab"><a href="/research.html">Research</a>
+      <a class="lab-bar__tools" href="/tools.html">Tools</a>
+      <a href="/publications.html">Publications</a>
+      <a href="/people.html">People</a>
+      <a href="/contact.html">Contact</a>
+    </nav><button class="lab-bar__theme" id="labTheme" type="button" aria-label="Toggle colour scheme"></button>
+  </div>
+</div>
 
 
     <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
@@ -134,19 +151,19 @@ from junction IDs at construction.</p></dd>
 
 
 <p>Full documentation and vignettes are available at
-<a href="https://avisrilab.github.io/Matisse">https://avisrilab.github.io/Matisse</a>.</p>
+<a href="https://avisrilab.org/Matisse">https://avisrilab.org/Matisse</a>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Useful links:</p><ul><li><p><a href="https://avisrilab.github.io/Matisse">https://avisrilab.github.io/Matisse</a></p></li>
+    <div class="dont-index"><p>Useful links:</p><ul><li><p><a href="https://avisrilab.org/Matisse">https://avisrilab.org/Matisse</a></p></li>
 <li><p><a href="https://github.com/avisrilab/Matisse" class="external-link">https://github.com/avisrilab/Matisse</a></p></li>
 <li><p>Report bugs at <a href="https://github.com/avisrilab/Matisse/issues" class="external-link">https://github.com/avisrilab/Matisse/issues</a></p></li>
 </ul></div>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p><strong>Maintainer</strong>: k3yavi <a href="mailto:avisrilab@gmail.com">avisrilab@gmail.com</a></p>
-<p>Authors:</p><ul><li><p>k3yavi <a href="mailto:avisrilab@gmail.com">avisrilab@gmail.com</a></p></li>
+    <p><strong>Maintainer</strong>: Avi Srivastava <a href="mailto:avisrilab@gmail.com">avisrilab@gmail.com</a> (<a href="https://orcid.org/0000-0001-9798-2079" class="external-link">ORCID</a>)</p>
+<p>Authors:</p><ul><li><p>Avi Srivastava <a href="mailto:avisrilab@gmail.com">avisrilab@gmail.com</a> (<a href="https://orcid.org/0000-0001-9798-2079" class="external-link">ORCID</a>)</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -154,11 +171,11 @@ from junction IDs at construction.</p></dd>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by k3yavi.</p>
+  <p>Developed by Avi Srivastava.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

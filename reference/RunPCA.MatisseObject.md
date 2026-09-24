@@ -45,12 +45,12 @@ The updated `MatisseObject` with a `"pca"` reduction.
 ## Details
 
 Typical usage after
-[`SCTransform.MatisseObject`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md):
+[`SCTransform.MatisseObject`](https://avisrilab.org/Matisse/reference/SCTransform.MatisseObject.md):
 
 
     obj <- RunPCA(obj, assay = "SCT", npcs = 50)
 
 ## See also
 
-[`RunUMAP.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunUMAP.MatisseObject.md),
-[`SCTransform.MatisseObject`](https://avisrilab.github.io/Matisse/reference/SCTransform.MatisseObject.md)
+[`RunUMAP.MatisseObject`](https://avisrilab.org/Matisse/reference/RunUMAP.MatisseObject.md),
+[`SCTransform.MatisseObject`](https://avisrilab.org/Matisse/reference/SCTransform.MatisseObject.md)

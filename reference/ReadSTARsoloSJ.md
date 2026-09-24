@@ -5,7 +5,7 @@ with `--soloFeatures SJ` and relabels its junctions into the
 `chr-start-end-strand` ID form Matisse expects for junction mode (the
 first pattern recognised by the internal junction-ID parser, so the
 counts are ready for
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
 and sashimi plots).
 
 ## Usage
@@ -68,7 +68,7 @@ matrix is emitted for SJ, so pass the filtered cell barcodes (e.g. from
 
 ## See also
 
-[`BuildJunctionEvents`](https://avisrilab.github.io/Matisse/reference/BuildJunctionEvents.md)
+[`BuildJunctionEvents`](https://avisrilab.org/Matisse/reference/BuildJunctionEvents.md)
 to turn SUPPA2 events into a junction-ID event table that matches these
 column names.
 

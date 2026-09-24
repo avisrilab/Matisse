@@ -4,7 +4,7 @@ Runs
 [`AddMetaData`](https://satijalab.github.io/seurat-object/reference/AddMetaData.html)
 on the embedded Seurat object and returns the updated `MatisseObject`.
 New columns are immediately accessible via
-[`MatisseMeta`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
+[`MatisseMeta`](https://avisrilab.org/Matisse/reference/MatisseMeta.md)
 and the `$` operator.
 
 ## Usage
@@ -40,4 +40,4 @@ The updated `MatisseObject` with new metadata columns.
 
 ## See also
 
-[`MatisseMeta`](https://avisrilab.github.io/Matisse/reference/MatisseMeta.md)
+[`MatisseMeta`](https://avisrilab.org/Matisse/reference/MatisseMeta.md)

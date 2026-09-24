@@ -48,7 +48,7 @@ The updated `MatisseObject` with a new `"SCT"` assay.
 
 Override the target assay with the `assay` argument. PCA is **not** run
 automatically — call
-[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+[`RunPCA.MatisseObject`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)
 after normalisation:
 
 
@@ -58,4 +58,4 @@ after normalisation:
 
 ## See also
 
-[`RunPCA.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunPCA.MatisseObject.md)
+[`RunPCA.MatisseObject`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)

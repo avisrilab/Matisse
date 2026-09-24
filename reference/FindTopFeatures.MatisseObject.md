@@ -30,5 +30,5 @@ The updated `MatisseObject` with top ATAC features flagged.
 
 ## See also
 
-[`RunTFIDF.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunTFIDF.MatisseObject.md),
-[`RunSVD.MatisseObject`](https://avisrilab.github.io/Matisse/reference/RunSVD.MatisseObject.md)
+[`RunTFIDF.MatisseObject`](https://avisrilab.org/Matisse/reference/RunTFIDF.MatisseObject.md),
+[`RunSVD.MatisseObject`](https://avisrilab.org/Matisse/reference/RunSVD.MatisseObject.md)

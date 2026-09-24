@@ -7,7 +7,7 @@ of every defining junction are, however, fully encoded in the SUPPA2
 `event_id` (e.g. `SE:chr1:804222-804776:804966-807217:+`). This function
 parses that grammar per event type and emits the `chr-start-end-strand`
 junction IDs Matisse expects, returning the `data.frame` that
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
 accepts via `events`. This is a deterministic coordinate adapter, not a
 heuristic event caller.
 
@@ -74,8 +74,8 @@ requested.
 
 ## See also
 
-[`ReadSTARsoloSJ`](https://avisrilab.github.io/Matisse/reference/ReadSTARsoloSJ.md),
-[`CreateMatisseObject`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md).
+[`ReadSTARsoloSJ`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md),
+[`CreateMatisseObject`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md).
 
 ## Examples
 

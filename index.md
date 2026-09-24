@@ -5,7 +5,7 @@ into your single-cell workflow — on top of Seurat and Signac, using the
 same cells, the same clusters, the same UMAP.
 
 [Install](#installation) [View walkthrough
-→](https://avisrilab.github.io/Matisse/articles/intro.md)
+→](https://avisrilab.org/Matisse/articles/intro.md)
 
 What you can discover
 
@@ -71,4 +71,4 @@ remotes::install_github("avisrilab/Matisse")
 Ready to explore your data?
 
 [View the full walkthrough
-→](https://avisrilab.github.io/Matisse/articles/intro.md)
+→](https://avisrilab.org/Matisse/articles/intro.md)

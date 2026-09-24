@@ -4,7 +4,7 @@
 
 ### Phase 6 (April 2026): unify event input, drop junction_data
 
-- **[`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+- **[`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
   now takes a single `events` parameter** that accepts either a SUPPA2
   `.ioe` path (or vector of paths) or a pre-built `data.frame`. The
   previous `ioe_files` and `event_data` parameters are removed — Matisse
@@ -39,7 +39,7 @@ object.
   Previously stored in `MatisseObject@misc[["event_data"]]`. Single
   source of truth — annotation rides with the assay through any
   subset/merge automatically.
-- [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md)
+- [`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md)
   now folds the PSI calculation into construction by default. The
   two-step “construct then `CalculatePSI`” flow collapses to one. Pass
   `defer_psi = TRUE` to skip the PSI step (rare; for power users who
@@ -110,24 +110,24 @@ object.
   isoform-resolved layers: junction counts, PSI matrix,
   inclusion/exclusion counts, event and junction annotation tables, and
   per-cell isoform metadata.
-- [`CreateMatisseObject()`](https://avisrilab.github.io/Matisse/reference/CreateMatisseObject.md):
+- [`CreateMatisseObject()`](https://avisrilab.org/Matisse/reference/CreateMatisseObject.md):
   primary constructor with input validation and automatic cell-barcode
   alignment.
-- [`CalculatePSI()`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md):
+- [`CalculatePSI()`](https://avisrilab.org/Matisse/reference/CalculatePSI.md):
   computes PSI matrices from junction count data and splice event
   definitions. Supports both `MatisseObject` and bare matrix input.
-- [`SummarizePSI()`](https://avisrilab.github.io/Matisse/reference/SummarizePSI.md):
+- [`SummarizePSI()`](https://avisrilab.org/Matisse/reference/SummarizePSI.md):
   per-event summary statistics (mean, median, sd, coverage).
-- [`FilterCells()`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
+- [`FilterCells()`](https://avisrilab.org/Matisse/reference/FilterCells.md)
   and
-  [`FilterEvents()`](https://avisrilab.github.io/Matisse/reference/FilterEvents.md):
+  [`FilterEvents()`](https://avisrilab.org/Matisse/reference/FilterEvents.md):
   threshold-based filtering with informative removal summaries.
 - Visualization:
-  [`PlotUMAP()`](https://avisrilab.github.io/Matisse/reference/PlotUMAP.md),
-  [`PlotViolin()`](https://avisrilab.github.io/Matisse/reference/PlotViolin.md),
-  [`PlotHeatmap()`](https://avisrilab.github.io/Matisse/reference/PlotHeatmap.md),
-  [`PlotSashimi()`](https://avisrilab.github.io/Matisse/reference/PlotSashimi.md).
-- [`MergeMatisse()`](https://avisrilab.github.io/Matisse/reference/MergeMatisse.md):
+  [`PlotUMAP()`](https://avisrilab.org/Matisse/reference/PlotUMAP.md),
+  [`PlotViolin()`](https://avisrilab.org/Matisse/reference/PlotViolin.md),
+  [`PlotHeatmap()`](https://avisrilab.org/Matisse/reference/PlotHeatmap.md),
+  [`PlotSashimi()`](https://avisrilab.org/Matisse/reference/PlotSashimi.md).
+- [`MergeMatisse()`](https://avisrilab.org/Matisse/reference/MergeMatisse.md):
   concatenate two `MatisseObject`s with cell-prefix deduplication.
 - GitHub Actions workflows for R CMD check (multi-OS), pkgdown website
   deployment, and test coverage reporting.

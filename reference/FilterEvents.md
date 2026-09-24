@@ -55,4 +55,4 @@ The filtered `MatisseObject`.
 
 ## See also
 
-[`FilterCells`](https://avisrilab.github.io/Matisse/reference/FilterCells.md)
+[`FilterCells`](https://avisrilab.org/Matisse/reference/FilterCells.md)

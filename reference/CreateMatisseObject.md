@@ -1,7 +1,7 @@
 # Create a MatisseObject
 
 The single constructor for
-[`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md).
+[`MatisseObject`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md).
 Combines a `Seurat` object with isoform-resolved splicing data and
 *also* computes PSI in one step (unless `defer_psi = TRUE`). The
 operating mode is detected automatically from the inputs you supply:
@@ -60,14 +60,14 @@ CreateMatisseObject(
 
   Integer. Minimum total reads per cell per event for the PSI
   calculation step. Default: `5L`. Forwarded to
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  [`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   when `defer_psi = FALSE`.
 
 - defer_psi:
 
   Logical. Skip the PSI calculation step at construction. The returned
   object will have raw counts only (no `"psi"` assay). Call
-  [`CalculatePSI`](https://avisrilab.github.io/Matisse/reference/CalculatePSI.md)
+  [`CalculatePSI`](https://avisrilab.org/Matisse/reference/CalculatePSI.md)
   later. Default: `FALSE`.
 
 - verbose:
@@ -77,7 +77,7 @@ CreateMatisseObject(
 ## Value
 
 A
-[`MatisseObject`](https://avisrilab.github.io/Matisse/reference/MatisseObject-class.md).
+[`MatisseObject`](https://avisrilab.org/Matisse/reference/MatisseObject-class.md).
 
 ## Details
 
