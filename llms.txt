@@ -1,8 +1,8 @@
 # Understand your cells, layer by layer
 
-Matisse brings isoform-resolved splicing and chromatin accessibility
-into your single-cell workflow — on top of Seurat and Signac, using the
-same cells, the same clusters, the same UMAP.
+Matisse computes percent spliced in (PSI) for each splicing event in
+each cell and stores it as an assay in your Seurat object, next to gene
+expression: the same cells, the same clusters, the same UMAP.
 
 [Install](#installation) [View walkthrough
 →](https://avisrilab.org/Matisse/articles/intro.md)
@@ -15,51 +15,26 @@ Questions Matisse is built to answer
 
 ### Cell-type-specific splicing
 
-Do my neurons and astrocytes process this exon differently — and by how
-much?
+Do two cell types include this exon at different rates, and by how much?
 
 2
 
-### Chromatin shapes isoforms
+### Long reads or short reads
 
-Is the splicing switch I see linked to chromatin accessibility changes
-at the same locus?
-
-3
-
-### Isoform switches along a trajectory
-
-Is there a coordinated splicing change as my cells differentiate or
-respond to a stimulus?
-
-4
-
-### Context for bulk RNA-seq
-
-I see a splicing difference in bulk data — which cell type is
-responsible?
-
-![PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells.
-Neurons skip this exon; astrocytes include
-it.](reference/figures/ptbp1_umap.png)
-
-PSI values for *Ptbp1* exon 9 on a UMAP of mouse cortex cells. Neurons
-(blue) consistently skip this exon (low PSI); astrocytes (red) include
-it (high PSI). Same gene — different isoforms — visible at single-cell
-resolution.
+Start from per-cell transcript counts from a long-read quantifier such
+as Bagpiper, or from STARsolo splice-junction counts from 10x short
+reads.
 
 Works with your existing setup
 
-Matisse layers on top of Seurat and Signac — your clusters, UMAP, and
-cell labels stay intact
+Matisse layers on top of Seurat: your clusters, UMAP, and cell labels
+stay intact
 
 Short-read RNA (10x) STAR / STARsolo junction count matrix
 
-Long-read / isoform Bagpiper FLAMES LIQA PacBio MAS-seq
+Long-read / isoform Bagpiper FLAMES LIQA
 
-ATAC / chromatin 10x Multiome Signac ArchR
-
-Event annotations SUPPA2 generateEvents rMATS
+Event annotations SUPPA2 generateEvents
 
 Installation
 
@@ -98,7 +73,7 @@ Helpers for the short-read (junction) workflow. `ReadSTARsoloSJ` loads a
 STARsolo `SJ` matrix and relabels its junctions into the
 `chr-start-end-strand` IDs Matisse expects. `BuildJunctionEvents` turns
 SUPPA2 `.ioe` events into a junction-ID event table whose features match
-those junctions — a deterministic coordinate adapter, not a heuristic
+those junctions: a deterministic coordinate adapter, not a heuristic
 event caller.
 
 - [`ReadSTARsoloSJ()`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md)
@@ -152,8 +127,7 @@ object via the $`</code> operator (<code>obj`$`NormalizeData(…)`) or
 
 Reduce the high-dimensional feature space to a compact representation
 before clustering and visualisation. `RunPCA` is the standard route
-after `SCTransform`; `RunSVD` (LSI) is used for ATAC-seq data in
-multiome experiments.
+after `SCTransform`.
 
 - [`RunPCA(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)
   : Run PCA on a MatisseObject
@@ -164,7 +138,7 @@ multiome experiments.
 
 Group cells by transcriptional state and identify marker genes. All
 functions operate on the embedded Seurat object and return the updated
-`MatisseObject` — except `FindMarkers`, which returns a data frame.
+`MatisseObject`, except `FindMarkers`, which returns a data frame.
 
 - [`FindNeighbors(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindNeighbors.MatisseObject.md)
   : Compute a shared nearest-neighbour graph for a MatisseObject
@@ -187,11 +161,10 @@ and the `$` operator. `DefaultAssay` picks which assay (`“RNA”`,
   [`` `DefaultAssay<-`( ``*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/DefaultAssay.MatisseObject.md)
   : Get or set the default assay of a MatisseObject
 
-## Signac / ATAC-seq methods
+## Signac methods
 
-For multiome (paired ATAC + RNA) datasets. `RunTFIDF` normalises peak
-counts; `FindTopFeatures` selects variable peaks; `RunSVD` performs
-Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
+Signac methods forwarded to the embedded Seurat object: `RunTFIDF`,
+`FindTopFeatures` and `RunSVD` (latent semantic indexing).
 
 - [`RunTFIDF(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunTFIDF.MatisseObject.md)
   : Run TF-IDF normalisation for a MatisseObject
@@ -231,10 +204,10 @@ for reliable analysis. QC columns written automatically:
 
 ## Visualisation
 
-Plot splicing patterns across your cells. Overlay any feature — PSI
-values, junction counts, or gene expression — on a UMAP, compare
-splicing between cell types, or inspect junction usage for a gene of
-interest. Pass the feature name via the `feature` argument.
+Plot splicing patterns across your cells. Overlay any feature (PSI
+values, junction counts, or gene expression) on a UMAP, compare splicing
+between cell types, or inspect junction usage for a gene of interest.
+Pass the feature name via the `feature` argument.
 
 - [`PlotUMAP()`](https://avisrilab.org/Matisse/reference/PlotUMAP.md) :
   UMAP plot – by group (DimPlot-style) or by feature (FeaturePlot-style)

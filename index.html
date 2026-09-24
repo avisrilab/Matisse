@@ -5,16 +5,16 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Matisse — Splicing and chromatin, one cell at a time • Matisse</title>
+<title>Matisse: per-cell splicing (PSI) in Seurat • Matisse</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
-<script src="extra.js"></script><meta property="og:title" content="Matisse — Splicing and chromatin, one cell at a time">
-<meta name="description" content="Matisse adds isoform-resolved splicing and chromatin accessibility layers to your Seurat/Signac workflow. For each cell, measure which transcript isoform is being made and compare that directly with chromatin accessibility at the same loci — all within one object, on the same UMAP, across the same clusters. Works with 10x Chromium (STARsolo junction counts), long-read isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac for paired ATAC + RNA.
+<script src="extra.js"></script><meta property="og:title" content="Matisse: per-cell splicing (PSI) in Seurat">
+<meta name="description" content="Matisse computes percent spliced in (PSI) for each splicing event in each cell and stores it as an assay in the Seurat object, next to gene expression, so splicing can be plotted on the same UMAP and compared across the same clusters. It works from long-read transcript counts (Bagpiper, FLAMES, LIQA) or STARsolo splice-junction counts from 10x short reads.
 ">
-<meta property="og:description" content="Matisse adds isoform-resolved splicing and chromatin accessibility layers to your Seurat/Signac workflow. For each cell, measure which transcript isoform is being made and compare that directly with chromatin accessibility at the same loci — all within one object, on the same UMAP, across the same clusters. Works with 10x Chromium (STARsolo junction counts), long-read isoform data (Bagpiper, FLAMES, LIQA), and 10x Multiome / Signac for paired ATAC + RNA.
+<meta property="og:description" content="Matisse computes percent spliced in (PSI) for each splicing event in each cell and stores it as an assay in the Seurat object, next to gene expression, so splicing can be plotted on the same UMAP and compared across the same clusters. It works from long-read transcript counts (Bagpiper, FLAMES, LIQA) or STARsolo splice-junction counts from 10x short reads.
 ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,8 +60,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+<li><a class="dropdown-item" href="articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
@@ -79,13 +79,12 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9">
-<div class="mat-hero">
+  <main id="main" class="col-md-9"><div class="mat-hero">
 <div class="page-header"><h1>
 Understand your cells,<br>layer by layer
 </h1></div>
 <p class="mat-hero-sub">
-Matisse brings isoform-resolved splicing and chromatin accessibility into your single-cell workflow — on top of Seurat and Signac, using the same cells, the same clusters, the same UMAP.
+Matisse computes percent spliced in (PSI) for each splicing event in each cell and stores it as an assay in your Seurat object, next to gene expression: the same cells, the same clusters, the same UMAP.
 </p>
 <p><a href="#installation" class="btn mat-btn-primary">Install</a> <a href="articles/intro.html" class="btn mat-btn-outline">View walkthrough →</a></p>
 </div>
@@ -105,7 +104,7 @@ Questions Matisse is built to answer
 Cell-type-specific splicing
 </h3>
 <p>
-Do my neurons and astrocytes process this exon differently — and by how much?
+Do two cell types include this exon at different rates, and by how much?
 </p>
 </div>
 <div class="mat-card">
@@ -113,57 +112,30 @@ Do my neurons and astrocytes process this exon differently — and by how much?
 2
 </div>
 <h3>
-Chromatin shapes isoforms
+Long reads or short reads
 </h3>
 <p>
-Is the splicing switch I see linked to chromatin accessibility changes at the same locus?
-</p>
-</div>
-<div class="mat-card">
-<div class="mat-card-num">
-3
-</div>
-<h3>
-Isoform switches along a trajectory
-</h3>
-<p>
-Is there a coordinated splicing change as my cells differentiate or respond to a stimulus?
-</p>
-</div>
-<div class="mat-card">
-<div class="mat-card-num">
-4
-</div>
-<h3>
-Context for bulk RNA-seq
-</h3>
-<p>
-I see a splicing difference in bulk data — which cell type is responsible?
+Start from per-cell transcript counts from a long-read quantifier such as Bagpiper, or from STARsolo splice-junction counts from 10x short reads.
 </p>
 </div>
 </div>
 </div>
-<figure class="mat-figure"><img src="reference/figures/ptbp1_umap.png" alt="PSI values for Ptbp1 exon 9 overlaid on a UMAP of mouse cortex cells. Neurons skip this exon; astrocytes include it."><figcaption>
-PSI values for <em>Ptbp1</em> exon 9 on a UMAP of mouse cortex cells. Neurons (blue) consistently skip this exon (low PSI); astrocytes (red) include it (high PSI). Same gene — different isoforms — visible at single-cell resolution.
-</figcaption></figure><div class="mat-section">
+<div class="mat-section">
 <p class="mat-section-title">
 Works with your existing setup
 </p>
 <p class="mat-section-sub">
-Matisse layers on top of Seurat and Signac — your clusters, UMAP, and cell labels stay intact
+Matisse layers on top of Seurat: your clusters, UMAP, and cell labels stay intact
 </p>
 <div class="mat-compat">
 <div class="mat-compat-group">
 <p><span class="mat-compat-label">Short-read RNA (10x)</span> <span class="mat-badge">STAR / STARsolo</span> <span class="mat-badge">junction count matrix</span></p>
 </div>
 <div class="mat-compat-group">
-<p><span class="mat-compat-label">Long-read / isoform</span> <span class="mat-badge">Bagpiper</span> <span class="mat-badge">FLAMES</span> <span class="mat-badge">LIQA</span> <span class="mat-badge">PacBio MAS-seq</span></p>
+<p><span class="mat-compat-label">Long-read / isoform</span> <span class="mat-badge">Bagpiper</span> <span class="mat-badge">FLAMES</span> <span class="mat-badge">LIQA</span></p>
 </div>
 <div class="mat-compat-group">
-<p><span class="mat-compat-label">ATAC / chromatin</span> <span class="mat-badge">10x Multiome</span> <span class="mat-badge">Signac</span> <span class="mat-badge">ArchR</span></p>
-</div>
-<div class="mat-compat-group">
-<p><span class="mat-compat-label">Event annotations</span> <span class="mat-badge">SUPPA2 generateEvents</span> <span class="mat-badge">rMATS</span></p>
+<p><span class="mat-compat-label">Event annotations</span> <span class="mat-badge">SUPPA2 generateEvents</span></p>
 </div>
 </div>
 </div>
@@ -216,13 +188,7 @@ Ready to explore your data?
 </ul>
 </div>
 
-<div class="dev-status">
-<h2 data-toc-skip>Dev status</h2>
-<ul class="list-unstyled">
-<li><a href="https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml" class="external-link"><img src="https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://avisrilab.org/Matisse"><img src="https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg" alt="pkgdown"></a></li>
-</ul>
-</div>
+
 
   </aside>
 </div>

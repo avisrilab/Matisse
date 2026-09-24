@@ -23,7 +23,7 @@ Helpers for the short-read (junction) workflow. `ReadSTARsoloSJ` loads a
 STARsolo `SJ` matrix and relabels its junctions into the
 `chr-start-end-strand` IDs Matisse expects. `BuildJunctionEvents` turns
 SUPPA2 `.ioe` events into a junction-ID event table whose features match
-those junctions — a deterministic coordinate adapter, not a heuristic
+those junctions: a deterministic coordinate adapter, not a heuristic
 event caller.
 
 - [`ReadSTARsoloSJ()`](https://avisrilab.org/Matisse/reference/ReadSTARsoloSJ.md)
@@ -77,8 +77,7 @@ object via the $`</code> operator (<code>obj`$`NormalizeData(…)`) or
 
 Reduce the high-dimensional feature space to a compact representation
 before clustering and visualisation. `RunPCA` is the standard route
-after `SCTransform`; `RunSVD` (LSI) is used for ATAC-seq data in
-multiome experiments.
+after `SCTransform`.
 
 - [`RunPCA(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunPCA.MatisseObject.md)
   : Run PCA on a MatisseObject
@@ -89,7 +88,7 @@ multiome experiments.
 
 Group cells by transcriptional state and identify marker genes. All
 functions operate on the embedded Seurat object and return the updated
-`MatisseObject` — except `FindMarkers`, which returns a data frame.
+`MatisseObject`, except `FindMarkers`, which returns a data frame.
 
 - [`FindNeighbors(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/FindNeighbors.MatisseObject.md)
   : Compute a shared nearest-neighbour graph for a MatisseObject
@@ -112,11 +111,10 @@ and the `$` operator. `DefaultAssay` picks which assay (`“RNA”`,
   [`` `DefaultAssay<-`( ``*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/DefaultAssay.MatisseObject.md)
   : Get or set the default assay of a MatisseObject
 
-## Signac / ATAC-seq methods
+## Signac methods
 
-For multiome (paired ATAC + RNA) datasets. `RunTFIDF` normalises peak
-counts; `FindTopFeatures` selects variable peaks; `RunSVD` performs
-Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.
+Signac methods forwarded to the embedded Seurat object: `RunTFIDF`,
+`FindTopFeatures` and `RunSVD` (latent semantic indexing).
 
 - [`RunTFIDF(`*`<MatisseObject>`*`)`](https://avisrilab.org/Matisse/reference/RunTFIDF.MatisseObject.md)
   : Run TF-IDF normalisation for a MatisseObject
@@ -156,10 +154,10 @@ for reliable analysis. QC columns written automatically:
 
 ## Visualisation
 
-Plot splicing patterns across your cells. Overlay any feature — PSI
-values, junction counts, or gene expression — on a UMAP, compare
-splicing between cell types, or inspect junction usage for a gene of
-interest. Pass the feature name via the `feature` argument.
+Plot splicing patterns across your cells. Overlay any feature (PSI
+values, junction counts, or gene expression) on a UMAP, compare splicing
+between cell types, or inspect junction usage for a gene of interest.
+Pass the feature name via the `feature` argument.
 
 - [`PlotUMAP()`](https://avisrilab.org/Matisse/reference/PlotUMAP.md) :
   UMAP plot – by group (DimPlot-style) or by feature (FeaturePlot-style)

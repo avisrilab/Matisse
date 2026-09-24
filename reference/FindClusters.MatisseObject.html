@@ -42,8 +42,8 @@ for PlotUMAP and PlotViolin."><link rel="preconnect" href="https://fonts.googlea
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -102,6 +102,84 @@ for <code><a href="PlotUMAP.html">PlotUMAP</a></code> and <code><a href="PlotVio
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-graph-name">graph.name<a class="anchor" aria-label="anchor" href="#arg-graph-name"></a></dt>
+<dd><p>Name of graph to use for the clustering algorithm</p></dd>
+
+
+<dt id="arg-cluster-name">cluster.name<a class="anchor" aria-label="anchor" href="#arg-cluster-name"></a></dt>
+<dd><p>Name of output clusters</p></dd>
+
+
+<dt id="arg-modularity-fxn">modularity.fxn<a class="anchor" aria-label="anchor" href="#arg-modularity-fxn"></a></dt>
+<dd><p>Modularity function (1 = standard; 2 = alternative).</p></dd>
+
+
+<dt id="arg-initial-membership">initial.membership<a class="anchor" aria-label="anchor" href="#arg-initial-membership"></a></dt>
+<dd><p>Passed to the `initial_membership` parameter
+of `leidenbase::leiden_find_partition`.</p></dd>
+
+
+<dt id="arg-node-sizes">node.sizes<a class="anchor" aria-label="anchor" href="#arg-node-sizes"></a></dt>
+<dd><p>Passed to the `node_sizes` parameter of
+`leidenbase::leiden_find_partition`.</p></dd>
+
+
+<dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
+<dd><p>Value of the resolution parameter, use a value above
+(below) 1.0 if you want to obtain a larger (smaller) number of communities.</p></dd>
+
+
+<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dd><p>DEPRECATED.</p></dd>
+
+
+<dt id="arg-algorithm">algorithm<a class="anchor" aria-label="anchor" href="#arg-algorithm"></a></dt>
+<dd><p>Algorithm for modularity optimization (1 = original Louvain
+algorithm; 2 = Louvain algorithm with multilevel refinement; 3 = SLM
+algorithm; 4 = Leiden algorithm).</p></dd>
+
+
+<dt id="arg-leiden-method">leiden_method<a class="anchor" aria-label="anchor" href="#arg-leiden-method"></a></dt>
+<dd><p>Choose from the leidenbase ("leidenbase") or igraph ("igraph") packages for running leiden.
+Default is "leidenbase"</p></dd>
+
+
+<dt id="arg-leiden-objective-function">leiden_objective_function<a class="anchor" aria-label="anchor" href="#arg-leiden-objective-function"></a></dt>
+<dd><p>objective function to use if `leiden_method = "igraph"`.
+See <code><a href="https://r.igraph.org/reference/cluster_leiden.html" class="external-link">cluster_leiden</a></code> for more information.
+Default is "modularity".</p></dd>
+
+
+<dt id="arg-n-start">n.start<a class="anchor" aria-label="anchor" href="#arg-n-start"></a></dt>
+<dd><p>Number of random starts.</p></dd>
+
+
+<dt id="arg-n-iter">n.iter<a class="anchor" aria-label="anchor" href="#arg-n-iter"></a></dt>
+<dd><p>Maximal number of iterations per random start.</p></dd>
+
+
+<dt id="arg-random-seed">random.seed<a class="anchor" aria-label="anchor" href="#arg-random-seed"></a></dt>
+<dd><p>Seed of the random number generator.</p></dd>
+
+
+<dt id="arg-group-singletons">group.singletons<a class="anchor" aria-label="anchor" href="#arg-group-singletons"></a></dt>
+<dd><p>Group singletons into nearest cluster. If FALSE, assign all singletons to
+a "singleton" group</p></dd>
+
+
+<dt id="arg-temp-file-location">temp.file.location<a class="anchor" aria-label="anchor" href="#arg-temp-file-location"></a></dt>
+<dd><p>Directory where intermediate files will be written.
+Specify the ABSOLUTE path.</p></dd>
+
+
+<dt id="arg-edge-file-name">edge.file.name<a class="anchor" aria-label="anchor" href="#arg-edge-file-name"></a></dt>
+<dd><p>Edge file to use as input for modularity optimizer jar.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Print output</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

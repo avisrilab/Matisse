@@ -40,8 +40,8 @@ peaks for downstream LSI / UMAP."><link rel="preconnect" href="https://fonts.goo
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -79,6 +79,27 @@ peaks for downstream LSI / UMAP.</p>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Name of assay to use</p></dd>
+
+
+<dt id="arg-min-cutoff">min.cutoff<a class="anchor" aria-label="anchor" href="#arg-min-cutoff"></a></dt>
+<dd><p>Cutoff for feature to be included in the VariableFeatures
+for the object. This can be a percentile specified as 'q' followed by the
+minimum percentile, for example 'q5' to set the top 95\<!-- % most common features -->
+as the VariableFeatures for the object. Alternatively, this can be an integer
+specifying the minimum number of counts for the feature
+to be included in the set of VariableFeatures. For example, setting to 10
+will include features with &gt;10 total counts in the set of VariableFeatures. If NULL,
+include all features in VariableFeatures. If NA, VariableFeatures will not be
+altered, and only the feature metadata will be updated with the total counts
+and percentile rank for each feature.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Display messages</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

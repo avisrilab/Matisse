@@ -40,8 +40,8 @@ in multiome datasets before RunSVD.MatisseObject."><link rel="preconnect" href="
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -87,6 +87,37 @@ in multiome datasets before <code><a href="RunSVD.MatisseObject.html">RunSVD.Mat
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Name of assay to use</p></dd>
+
+
+<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dd><p>Which TF-IDF implementation to use. Choice of:</p><ul><li><p>1: The TF-IDF implementation used by Stuart &amp; Butler et al. 2019
+(<a href="https://doi.org/10.1101/460147" class="external-link">doi:10.1101/460147</a>). This computes
+\(\log(TF \times IDF)\).</p></li>
+<li><p>2: The TF-IDF implementation used by Cusanovich &amp; Hill
+et al. 2018 (<a href="https://doi.org/10.1016/j.cell.2018.06.052" class="external-link">doi:10.1016/j.cell.2018.06.052</a>). This
+computes \(TF \times (\log(IDF))\).</p></li>
+<li><p>3: The log-TF method used by Andrew Hill.
+This computes \(\log(TF) \times \log(IDF)\).</p></li>
+<li><p>4: The 10x Genomics method (no TF normalization). This computes
+\(IDF\).</p></li>
+</ul></dd>
+
+
+<dt id="arg-scale-factor">scale.factor<a class="anchor" aria-label="anchor" href="#arg-scale-factor"></a></dt>
+<dd><p>Which scale factor to use. Default is 10000.</p></dd>
+
+
+<dt id="arg-idf">idf<a class="anchor" aria-label="anchor" href="#arg-idf"></a></dt>
+<dd><p>A precomputed IDF vector to use. If NULL, compute based on the
+input data matrix.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Print progress</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

@@ -26,6 +26,41 @@ RunTFIDF(
 
   A `MatisseObject`.
 
+- assay:
+
+  Name of assay to use
+
+- method:
+
+  Which TF-IDF implementation to use. Choice of:
+
+  - 1: The TF-IDF implementation used by Stuart & Butler et al. 2019
+    ([doi:10.1101/460147](https://doi.org/10.1101/460147)). This
+    computes \\\log(TF \times IDF)\\.
+
+  - 2: The TF-IDF implementation used by Cusanovich & Hill et al. 2018
+    ([doi:10.1016/j.cell.2018.06.052](https://doi.org/10.1016/j.cell.2018.06.052)).
+    This computes \\TF \times (\log(IDF))\\.
+
+  - 3: The log-TF method used by Andrew Hill. This computes \\\log(TF)
+    \times \log(IDF)\\.
+
+  - 4: The 10x Genomics method (no TF normalization). This computes
+    \\IDF\\.
+
+- scale.factor:
+
+  Which scale factor to use. Default is 10000.
+
+- idf:
+
+  A precomputed IDF vector to use. If NULL, compute based on the input
+  data matrix.
+
+- verbose:
+
+  Print progress
+
 - ...:
 
   Additional arguments forwarded to

@@ -41,6 +41,84 @@ FindClusters(
 
   A `MatisseObject`.
 
+- graph.name:
+
+  Name of graph to use for the clustering algorithm
+
+- cluster.name:
+
+  Name of output clusters
+
+- modularity.fxn:
+
+  Modularity function (1 = standard; 2 = alternative).
+
+- initial.membership:
+
+  Passed to the \`initial_membership\` parameter of
+  \`leidenbase::leiden_find_partition\`.
+
+- node.sizes:
+
+  Passed to the \`node_sizes\` parameter of
+  \`leidenbase::leiden_find_partition\`.
+
+- resolution:
+
+  Value of the resolution parameter, use a value above (below) 1.0 if
+  you want to obtain a larger (smaller) number of communities.
+
+- method:
+
+  DEPRECATED.
+
+- algorithm:
+
+  Algorithm for modularity optimization (1 = original Louvain algorithm;
+  2 = Louvain algorithm with multilevel refinement; 3 = SLM algorithm; 4
+  = Leiden algorithm).
+
+- leiden_method:
+
+  Choose from the leidenbase ("leidenbase") or igraph ("igraph")
+  packages for running leiden. Default is "leidenbase"
+
+- leiden_objective_function:
+
+  objective function to use if \`leiden_method = "igraph"\`. See
+  [`cluster_leiden`](https://r.igraph.org/reference/cluster_leiden.html)
+  for more information. Default is "modularity".
+
+- n.start:
+
+  Number of random starts.
+
+- n.iter:
+
+  Maximal number of iterations per random start.
+
+- random.seed:
+
+  Seed of the random number generator.
+
+- group.singletons:
+
+  Group singletons into nearest cluster. If FALSE, assign all singletons
+  to a "singleton" group
+
+- temp.file.location:
+
+  Directory where intermediate files will be written. Specify the
+  ABSOLUTE path.
+
+- edge.file.name:
+
+  Edge file to use as input for modularity optimizer jar.
+
+- verbose:
+
+  Print output
+
 - ...:
 
   Additional arguments forwarded to

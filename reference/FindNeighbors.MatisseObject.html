@@ -42,8 +42,8 @@ FindClusters.MatisseObject."><link rel="preconnect" href="https://fonts.googleap
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -102,6 +102,92 @@ returns the updated <code>MatisseObject</code>. Typically called after
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-reduction">reduction<a class="anchor" aria-label="anchor" href="#arg-reduction"></a></dt>
+<dd><p>Reduction to use as input for building the (S)NN</p></dd>
+
+
+<dt id="arg-dims">dims<a class="anchor" aria-label="anchor" href="#arg-dims"></a></dt>
+<dd><p>Dimensions of reduction to use as input</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Assay to use in construction of (S)NN; used only when <code>dims</code>
+is <code>NULL</code></p></dd>
+
+
+<dt id="arg-features">features<a class="anchor" aria-label="anchor" href="#arg-features"></a></dt>
+<dd><p>Features to use as input for building the (S)NN; used only when
+<code>dims</code> is <code>NULL</code></p></dd>
+
+
+<dt id="arg-k-param">k.param<a class="anchor" aria-label="anchor" href="#arg-k-param"></a></dt>
+<dd><p>Defines k for the k-nearest neighbor algorithm</p></dd>
+
+
+<dt id="arg-return-neighbor">return.neighbor<a class="anchor" aria-label="anchor" href="#arg-return-neighbor"></a></dt>
+<dd><p>Return result as <code><a href="https://satijalab.github.io/seurat-object/reference/Neighbor-class.html" class="external-link">Neighbor</a></code> object. Not
+used with distance matrix input.</p></dd>
+
+
+<dt id="arg-compute-snn">compute.SNN<a class="anchor" aria-label="anchor" href="#arg-compute-snn"></a></dt>
+<dd><p>also compute the shared nearest neighbor graph</p></dd>
+
+
+<dt id="arg-prune-snn">prune.SNN<a class="anchor" aria-label="anchor" href="#arg-prune-snn"></a></dt>
+<dd><p>Sets the cutoff for acceptable Jaccard index when
+computing the neighborhood overlap for the SNN construction. Any edges with
+values less than or equal to this will be set to 0 and removed from the SNN
+graph. Essentially sets the stringency of pruning (0 — no pruning, 1 —
+prune everything).</p></dd>
+
+
+<dt id="arg-nn-method">nn.method<a class="anchor" aria-label="anchor" href="#arg-nn-method"></a></dt>
+<dd><p>Method for nearest neighbor finding. Options include: rann,
+annoy</p></dd>
+
+
+<dt id="arg-n-trees">n.trees<a class="anchor" aria-label="anchor" href="#arg-n-trees"></a></dt>
+<dd><p>More trees gives higher precision when using annoy approximate
+nearest neighbor search</p></dd>
+
+
+<dt id="arg-annoy-metric">annoy.metric<a class="anchor" aria-label="anchor" href="#arg-annoy-metric"></a></dt>
+<dd><p>Distance metric for annoy. Options include: euclidean,
+cosine, manhattan, and hamming</p></dd>
+
+
+<dt id="arg-nn-eps">nn.eps<a class="anchor" aria-label="anchor" href="#arg-nn-eps"></a></dt>
+<dd><p>Error bound when performing nearest neighbor search using RANN;
+default of 0.0 implies exact nearest neighbor search</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Whether or not to print output to the console</p></dd>
+
+
+<dt id="arg-do-plot">do.plot<a class="anchor" aria-label="anchor" href="#arg-do-plot"></a></dt>
+<dd><p>Plot SNN graph on tSNE coordinates</p></dd>
+
+
+<dt id="arg-graph-name">graph.name<a class="anchor" aria-label="anchor" href="#arg-graph-name"></a></dt>
+<dd><p>Optional naming parameter for stored (S)NN graph
+(or Neighbor object, if return.neighbor = TRUE). Default is assay.name_(s)nn.
+To store both the neighbor graph and the shared nearest neighbor (SNN) graph,
+you must supply a vector containing two names to the <code>graph.name</code>
+parameter. The first element in the vector will be used to store the nearest
+neighbor (NN) graph, and the second element used to store the SNN graph. If
+only one name is supplied, only the NN graph is stored.</p></dd>
+
+
+<dt id="arg-l-norm">l2.norm<a class="anchor" aria-label="anchor" href="#arg-l-norm"></a></dt>
+<dd><p>Take L2Norm of the data</p></dd>
+
+
+<dt id="arg-cache-index">cache.index<a class="anchor" aria-label="anchor" href="#arg-cache-index"></a></dt>
+<dd><p>Include cached index in returned Neighbor object
+(only relevant if return.neighbor = TRUE)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

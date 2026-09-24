@@ -44,8 +44,8 @@ GetSeurat(obj) and used by PlotUMAP."><link rel="preconnect" href="https://fonts
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -124,6 +124,214 @@ for ATAC data). The resulting embedding is accessible via
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-dims">dims<a class="anchor" aria-label="anchor" href="#arg-dims"></a></dt>
+<dd><p>Which dimensions to use as input features, used only if
+<code>features</code> is NULL</p></dd>
+
+
+<dt id="arg-reduction">reduction<a class="anchor" aria-label="anchor" href="#arg-reduction"></a></dt>
+<dd><p>Which dimensional reduction (PCA or ICA) to use for the
+UMAP input. Default is PCA</p></dd>
+
+
+<dt id="arg-features">features<a class="anchor" aria-label="anchor" href="#arg-features"></a></dt>
+<dd><p>If set, run UMAP on this subset of features (instead of running on a
+set of reduced dimensions). Not set (NULL) by default; <code>dims</code> must be NULL to run
+on features</p></dd>
+
+
+<dt id="arg-graph">graph<a class="anchor" aria-label="anchor" href="#arg-graph"></a></dt>
+<dd><p>Name of graph on which to run UMAP</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Assay to pull data for when using <code>features</code>, or assay used to construct Graph
+if running UMAP on a Graph</p></dd>
+
+
+<dt id="arg-nn-name">nn.name<a class="anchor" aria-label="anchor" href="#arg-nn-name"></a></dt>
+<dd><p>Name of knn output on which to run UMAP</p></dd>
+
+
+<dt id="arg-slot">slot<a class="anchor" aria-label="anchor" href="#arg-slot"></a></dt>
+<dd><p>The slot used to pull data for when using <code>features</code>. data slot is by default.</p></dd>
+
+
+<dt id="arg-umap-method">umap.method<a class="anchor" aria-label="anchor" href="#arg-umap-method"></a></dt>
+<dd><p>UMAP implementation to run. Can be</p><dl><dt><code>uwot</code>:</dt>
+<dd><p>Runs umap via the uwot R package <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">umap</a></code></p></dd>
+
+  <dt><code>uwot2</code>:</dt>
+<dd><p>Runs umap2 via the uwot R package <code><a href="https://jlmelville.github.io/uwot/reference/umap2.html" class="external-link">umap2</a></code></p></dd>
+
+  <dt><code>umap-learn</code>:</dt>
+<dd><p>Run the Seurat wrapper of the python umap-learn package</p></dd>
+
+
+</dl></dd>
+
+
+<dt id="arg-reduction-model">reduction.model<a class="anchor" aria-label="anchor" href="#arg-reduction-model"></a></dt>
+<dd><p><code>DimReduc</code> object that contains the umap model</p></dd>
+
+
+<dt id="arg-return-model">return.model<a class="anchor" aria-label="anchor" href="#arg-return-model"></a></dt>
+<dd><p>whether UMAP will return the uwot model</p></dd>
+
+
+<dt id="arg-n-neighbors">n.neighbors<a class="anchor" aria-label="anchor" href="#arg-n-neighbors"></a></dt>
+<dd><p>This determines the number of neighboring points used in
+local approximations of manifold structure. Larger values will result in more
+global structure being preserved at the loss of detailed local structure. In
+general this parameter should often be in the range 5 to 50.</p></dd>
+
+
+<dt id="arg-n-components">n.components<a class="anchor" aria-label="anchor" href="#arg-n-components"></a></dt>
+<dd><p>The dimension of the space to embed into.</p></dd>
+
+
+<dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
+<dd><p>metric: This determines the choice of metric used to measure
+distance in the input space. A wide variety of metrics are already coded, and
+a user defined function can be passed as long as it has been JITd by numba.</p></dd>
+
+
+<dt id="arg-n-epochs">n.epochs<a class="anchor" aria-label="anchor" href="#arg-n-epochs"></a></dt>
+<dd><p>he number of training epochs to be used in optimizing the low dimensional
+embedding. Larger values result in more accurate embeddings. If NULL is specified, a value will
+be selected based on the size of the input dataset (200 for large datasets, 500 for small).</p></dd>
+
+
+<dt id="arg-learning-rate">learning.rate<a class="anchor" aria-label="anchor" href="#arg-learning-rate"></a></dt>
+<dd><p>The initial learning rate for the embedding optimization.</p></dd>
+
+
+<dt id="arg-min-dist">min.dist<a class="anchor" aria-label="anchor" href="#arg-min-dist"></a></dt>
+<dd><p>This controls how tightly the embedding is allowed compress points together.
+Larger values ensure embedded points are more evenly distributed, while smaller values allow the
+algorithm to optimize more accurately with regard to local structure. Sensible values are in
+the range 0.001 to 0.5.</p></dd>
+
+
+<dt id="arg-spread">spread<a class="anchor" aria-label="anchor" href="#arg-spread"></a></dt>
+<dd><p>The effective scale of embedded points. In combination with min.dist this
+determines how clustered/clumped the embedded points are.</p></dd>
+
+
+<dt id="arg-set-op-mix-ratio">set.op.mix.ratio<a class="anchor" aria-label="anchor" href="#arg-set-op-mix-ratio"></a></dt>
+<dd><p>Interpolate between (fuzzy) union and intersection as the set operation
+used to combine local fuzzy simplicial sets to obtain a global fuzzy simplicial sets. Both fuzzy
+set operations use the product t-norm. The value of this parameter should be between 0.0 and
+1.0; a value of 1.0 will use a pure fuzzy union, while 0.0 will use a pure fuzzy intersection.</p></dd>
+
+
+<dt id="arg-local-connectivity">local.connectivity<a class="anchor" aria-label="anchor" href="#arg-local-connectivity"></a></dt>
+<dd><p>The local connectivity required - i.e. the number of nearest neighbors
+that should be assumed to be connected at a local level. The higher this value the more connected
+the manifold becomes locally. In practice this should be not more than the local intrinsic
+dimension of the manifold.</p></dd>
+
+
+<dt id="arg-repulsion-strength">repulsion.strength<a class="anchor" aria-label="anchor" href="#arg-repulsion-strength"></a></dt>
+<dd><p>Weighting applied to negative samples in low dimensional embedding
+optimization. Values higher than one will result in greater weight being given to negative
+samples.</p></dd>
+
+
+<dt id="arg-negative-sample-rate">negative.sample.rate<a class="anchor" aria-label="anchor" href="#arg-negative-sample-rate"></a></dt>
+<dd><p>The number of negative samples to select per positive sample in the
+optimization process. Increasing this value will result in greater repulsive force being applied,
+greater optimization cost, but slightly more accuracy.</p></dd>
+
+
+<dt id="arg-a">a<a class="anchor" aria-label="anchor" href="#arg-a"></a></dt>
+<dd><p>More specific parameters controlling the embedding. If NULL, these values are set
+automatically as determined by min. dist and spread. Parameter of differentiable approximation of
+right adjoint functor.</p></dd>
+
+
+<dt id="arg-b">b<a class="anchor" aria-label="anchor" href="#arg-b"></a></dt>
+<dd><p>More specific parameters controlling the embedding. If NULL, these values are set
+automatically as determined by min. dist and spread. Parameter of differentiable approximation of
+right adjoint functor.</p></dd>
+
+
+<dt id="arg-uwot-sgd">uwot.sgd<a class="anchor" aria-label="anchor" href="#arg-uwot-sgd"></a></dt>
+<dd><p>Set <code>uwot::umap(fast_sgd = TRUE)</code>; see <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">umap</a></code> for more details</p></dd>
+
+
+<dt id="arg-uwot-approx-pow">uwot.approx_pow<a class="anchor" aria-label="anchor" href="#arg-uwot-approx-pow"></a></dt>
+<dd><p>Set <code>uwot::umap(approx_pow = TRUE)</code>. Default is <code>FALSE</code>. See
+<code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">umap</a></code> for more details.</p></dd>
+
+
+<dt id="arg-uwot-init">uwot.init<a class="anchor" aria-label="anchor" href="#arg-uwot-init"></a></dt>
+<dd><p>Set the initialization method to use for <code><a href="https://jlmelville.github.io/uwot/reference/umap.html" class="external-link">umap</a></code> or
+<code><a href="https://jlmelville.github.io/uwot/reference/umap2.html" class="external-link">umap2</a></code>, which is passed to the <code>init</code> parameter of these functions.
+See these functions for available options. Default is <code>"spectral"</code>.</p></dd>
+
+
+<dt id="arg-seed-use">seed.use<a class="anchor" aria-label="anchor" href="#arg-seed-use"></a></dt>
+<dd><p>Set a random seed. By default, sets the seed to 42. Setting
+NULL will not set a seed</p></dd>
+
+
+<dt id="arg-metric-kwds">metric.kwds<a class="anchor" aria-label="anchor" href="#arg-metric-kwds"></a></dt>
+<dd><p>A dictionary of arguments to pass on to the metric, such as the p value for
+Minkowski distance. If NULL then no arguments are passed on.</p></dd>
+
+
+<dt id="arg-angular-rp-forest">angular.rp.forest<a class="anchor" aria-label="anchor" href="#arg-angular-rp-forest"></a></dt>
+<dd><p>Whether to use an angular random projection forest to initialize the
+approximate nearest neighbor search. This can be faster, but is mostly on useful for metric that
+use an angular style distance such as cosine, correlation etc. In the case of those metrics
+angular forests will be chosen automatically.</p></dd>
+
+
+<dt id="arg-densmap">densmap<a class="anchor" aria-label="anchor" href="#arg-densmap"></a></dt>
+<dd><p>Whether to use the density-augmented objective of densMAP.
+Turning on this option generates an embedding where the local densities
+are encouraged to be correlated with those in the original space.
+Parameters below with the prefix ‘dens’ further control the behavior
+of this extension. Default is FALSE. Only compatible with 'umap-learn' method
+and version of umap-learn &gt;= 0.5.0</p></dd>
+
+
+<dt id="arg-dens-lambda">dens.lambda<a class="anchor" aria-label="anchor" href="#arg-dens-lambda"></a></dt>
+<dd><p>Specific parameter which controls the regularization weight
+of the density correlation term in densMAP. Higher values prioritize density
+preservation over the UMAP objective, and vice versa for values closer to zero.
+Setting this parameter to zero is equivalent to running the original UMAP algorithm.
+Default value is 2.</p></dd>
+
+
+<dt id="arg-dens-frac">dens.frac<a class="anchor" aria-label="anchor" href="#arg-dens-frac"></a></dt>
+<dd><p>Specific parameter which controls the fraction of epochs
+(between 0 and 1) where the density-augmented objective is used in densMAP.
+The first (1 - dens_frac) fraction of epochs optimize the original UMAP
+objective before introducing the density correlation term. Default is 0.3.</p></dd>
+
+
+<dt id="arg-dens-var-shift">dens.var.shift<a class="anchor" aria-label="anchor" href="#arg-dens-var-shift"></a></dt>
+<dd><p>Specific parameter which specifies a small constant
+added to the variance of local radii in the embedding when calculating
+the density correlation objective to prevent numerical instability from
+dividing by a small number. Default is 0.1.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Controls verbosity</p></dd>
+
+
+<dt id="arg-reduction-name">reduction.name<a class="anchor" aria-label="anchor" href="#arg-reduction-name"></a></dt>
+<dd><p>Name to store dimensional reduction under in the Seurat object</p></dd>
+
+
+<dt id="arg-reduction-key">reduction.key<a class="anchor" aria-label="anchor" href="#arg-reduction-key"></a></dt>
+<dd><p>dimensional reduction key, specifies the string before
+the number for the dimension names. UMAP by default</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

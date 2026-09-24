@@ -40,8 +40,8 @@ marker statistics rather than an updated MatisseObject."><link rel="preconnect" 
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -89,6 +89,42 @@ marker statistics rather than an updated <code>MatisseObject</code>.</p>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>A <code>MatisseObject</code>.</p></dd>
+
+
+<dt id="arg-ident-">ident.1<a class="anchor" aria-label="anchor" href="#arg-ident-"></a></dt>
+<dd><p>Identity class to define markers for; pass an object of class
+<code>phylo</code> or 'clustertree' to find markers for a node in a cluster tree;
+passing 'clustertree' requires <code><a href="https://satijalab.org/seurat/reference/BuildClusterTree.html" class="external-link">BuildClusterTree</a></code> to have been run</p></dd>
+
+
+<dt id="arg-ident-">ident.2<a class="anchor" aria-label="anchor" href="#arg-ident-"></a></dt>
+<dd><p>A second identity class for comparison; if <code>NULL</code>,
+use all other cells for comparison; if an object of class <code>phylo</code> or
+'clustertree' is passed to <code>ident.1</code>, must pass a node to find markers for</p></dd>
+
+
+<dt id="arg-latent-vars">latent.vars<a class="anchor" aria-label="anchor" href="#arg-latent-vars"></a></dt>
+<dd><p>Variables to test, used only when <code>test.use</code> is one of
+'LR', 'negbinom', 'poisson', or 'MAST'</p></dd>
+
+
+<dt id="arg-group-by">group.by<a class="anchor" aria-label="anchor" href="#arg-group-by"></a></dt>
+<dd><p>Regroup cells into a different identity class prior to
+performing differential expression (see example); <code>"ident"</code> to use Idents</p></dd>
+
+
+<dt id="arg-subset-ident">subset.ident<a class="anchor" aria-label="anchor" href="#arg-subset-ident"></a></dt>
+<dd><p>Subset a particular identity class prior to regrouping.
+Only relevant if group.by is set (see example)</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Assay to use in differential expression testing</p></dd>
+
+
+<dt id="arg-reduction">reduction<a class="anchor" aria-label="anchor" href="#arg-reduction"></a></dt>
+<dd><p>Reduction to use in differential expression testing - will
+test for DE on cell embeddings</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

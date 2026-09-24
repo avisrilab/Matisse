@@ -29,6 +29,44 @@ FindMarkers(
 
   A `MatisseObject`.
 
+- ident.1:
+
+  Identity class to define markers for; pass an object of class `phylo`
+  or 'clustertree' to find markers for a node in a cluster tree; passing
+  'clustertree' requires
+  [`BuildClusterTree`](https://satijalab.org/seurat/reference/BuildClusterTree.html)
+  to have been run
+
+- ident.2:
+
+  A second identity class for comparison; if `NULL`, use all other cells
+  for comparison; if an object of class `phylo` or 'clustertree' is
+  passed to `ident.1`, must pass a node to find markers for
+
+- latent.vars:
+
+  Variables to test, used only when `test.use` is one of 'LR',
+  'negbinom', 'poisson', or 'MAST'
+
+- group.by:
+
+  Regroup cells into a different identity class prior to performing
+  differential expression (see example); `"ident"` to use Idents
+
+- subset.ident:
+
+  Subset a particular identity class prior to regrouping. Only relevant
+  if group.by is set (see example)
+
+- assay:
+
+  Assay to use in differential expression testing
+
+- reduction:
+
+  Reduction to use in differential expression testing - will test for DE
+  on cell embeddings
+
 - ...:
 
   Additional arguments forwarded to

@@ -36,8 +36,8 @@
 <li class="nav-item"><a class="nav-link" href="../articles/intro.html">Getting Started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -81,7 +81,7 @@
       </dl></div><div class="section level2">
       <h2 id="short-read-input-starsolo-">Short-read input (STARsolo)<a class="anchor" aria-label="anchor" href="#short-read-input-starsolo-"></a></h2>
 
-      <div class="section-desc"><p>Helpers for the short-read (junction) workflow. <code>ReadSTARsoloSJ</code> loads a STARsolo <code>SJ</code> matrix and relabels its junctions into the <code>chr-start-end-strand</code> IDs Matisse expects. <code>BuildJunctionEvents</code> turns SUPPA2 <code>.ioe</code> events into a junction-ID event table whose features match those junctions — a deterministic coordinate adapter, not a heuristic event caller.</p></div>
+      <div class="section-desc"><p>Helpers for the short-read (junction) workflow. <code>ReadSTARsoloSJ</code> loads a STARsolo <code>SJ</code> matrix and relabels its junctions into the <code>chr-start-end-strand</code> IDs Matisse expects. <code>BuildJunctionEvents</code> turns SUPPA2 <code>.ioe</code> events into a junction-ID event table whose features match those junctions: a deterministic coordinate adapter, not a heuristic event caller.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -173,7 +173,7 @@
       </dl></div><div class="section level2">
       <h2 id="dimensionality-reduction">Dimensionality reduction<a class="anchor" aria-label="anchor" href="#dimensionality-reduction"></a></h2>
 
-      <div class="section-desc"><p>Reduce the high-dimensional feature space to a compact representation before clustering and visualisation. <code>RunPCA</code> is the standard route after <code>SCTransform</code>; <code>RunSVD</code> (LSI) is used for ATAC-seq data in multiome experiments.</p></div>
+      <div class="section-desc"><p>Reduce the high-dimensional feature space to a compact representation before clustering and visualisation. <code>RunPCA</code> is the standard route after <code>SCTransform</code>.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -196,7 +196,7 @@
       </dl></div><div class="section level2">
       <h2 id="clustering-and-differential-expression">Clustering and differential expression<a class="anchor" aria-label="anchor" href="#clustering-and-differential-expression"></a></h2>
 
-      <div class="section-desc"><p>Group cells by transcriptional state and identify marker genes. All functions operate on the embedded Seurat object and return the updated <code>MatisseObject</code> — except <code>FindMarkers</code>, which returns a data frame.</p></div>
+      <div class="section-desc"><p>Group cells by transcriptional state and identify marker genes. All functions operate on the embedded Seurat object and return the updated <code>MatisseObject</code>, except <code>FindMarkers</code>, which returns a data frame.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -247,9 +247,9 @@
         </dt>
         <dd>Get or set the default assay of a MatisseObject</dd>
       </dl></div><div class="section level2">
-      <h2 id="signac-atac-seq-methods">Signac / ATAC-seq methods<a class="anchor" aria-label="anchor" href="#signac-atac-seq-methods"></a></h2>
+      <h2 id="signac-methods">Signac methods<a class="anchor" aria-label="anchor" href="#signac-methods"></a></h2>
 
-      <div class="section-desc"><p>For multiome (paired ATAC + RNA) datasets. <code>RunTFIDF</code> normalises peak counts; <code>FindTopFeatures</code> selects variable peaks; <code>RunSVD</code> performs Latent Semantic Indexing (LSI) — the ATAC equivalent of PCA.</p></div>
+      <div class="section-desc"><p>Signac methods forwarded to the embedded Seurat object: <code>RunTFIDF</code>, <code>FindTopFeatures</code> and <code>RunSVD</code> (latent semantic indexing).</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -325,7 +325,7 @@
       </dl></div><div class="section level2">
       <h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a></h2>
 
-      <div class="section-desc"><p>Plot splicing patterns across your cells. Overlay any feature — PSI values, junction counts, or gene expression — on a UMAP, compare splicing between cell types, or inspect junction usage for a gene of interest. Pass the feature name via the <code>feature</code> argument.</p></div>
+      <div class="section-desc"><p>Plot splicing patterns across your cells. Overlay any feature (PSI values, junction counts, or gene expression) on a UMAP, compare splicing between cell types, or inspect junction usage for a gene of interest. Pass the feature name via the <code>feature</code> argument.</p></div>
 
       <dl></dl></div><div class="section level2">
 

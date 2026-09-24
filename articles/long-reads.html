@@ -56,8 +56,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow (transcript counts)</a></li>
-    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow (junction counts)</a></li>
+<li><a class="dropdown-item" href="../articles/long-reads.html">Long-read workflow: transcript-based PSI</a></li>
+    <li><a class="dropdown-item" href="../articles/short-reads.html">Short-read workflow: junction-based PSI</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -94,12 +94,12 @@
 <h2 id="when-to-use-this-workflow">When to use this workflow<a class="anchor" aria-label="anchor" href="#when-to-use-this-workflow"></a>
 </h2>
 <p>Use this workflow when your data was generated with a long-read
-platform (PacBio, Oxford Nanopore) or when you have used a short-read
+platform (PacBio, Oxford Nanopore) and quantified it with a long-read
 isoform quantifier such as <strong>Bagpiper</strong>,
 <strong>FLAMES</strong>, or <strong>LIQA</strong> that produces
-per-transcript per-cell counts. These tools assign each read to a
-specific full-length transcript rather than counting at the junction
-level.</p>
+per-transcript per-cell counts. These tools count full-length
+transcripts rather than splice junctions, and split molecules that fit
+several transcripts among them.</p>
 <p>If you have STARsolo junction counts from standard 10x Chromium short
 reads, see the <a href="short-reads.html">Short-read workflow</a>
 instead.</p>
@@ -143,7 +143,7 @@ FL). These map transcripts to the splicing events they support.</td>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="step-0-read-the-transcript-matrix">Step 0 – Read the transcript matrix<a class="anchor" aria-label="anchor" href="#step-0-read-the-transcript-matrix"></a>
+<h2 id="step-0-load-the-transcript-matrix">Step 0 – Load the transcript matrix<a class="anchor" aria-label="anchor" href="#step-0-load-the-transcript-matrix"></a>
 </h2>
 <p><code><a href="../reference/ReadTranscriptMatrix.html">ReadTranscriptMatrix()</a></code> reads the quantifier’s
 MatrixMarket triplet (gzip-aware) and returns a <strong>transcripts ×

@@ -3,11 +3,11 @@
 ## When to use this workflow
 
 Use this workflow when your data was generated with a long-read platform
-(PacBio, Oxford Nanopore) or when you have used a short-read isoform
+(PacBio, Oxford Nanopore) and quantified it with a long-read isoform
 quantifier such as **Bagpiper**, **FLAMES**, or **LIQA** that produces
-per-transcript per-cell counts. These tools assign each read to a
-specific full-length transcript rather than counting at the junction
-level.
+per-transcript per-cell counts. These tools count full-length
+transcripts rather than splice junctions, and split molecules that fit
+several transcripts among them.
 
 If you have STARsolo junction counts from standard 10x Chromium short
 reads, see the [Short-read
@@ -26,7 +26,7 @@ instead.
 
 ------------------------------------------------------------------------
 
-## Step 0 – Read the transcript matrix
+## Step 0 – Load the transcript matrix
 
 [`ReadTranscriptMatrix()`](https://avisrilab.org/Matisse/reference/ReadTranscriptMatrix.md)
 reads the quantifier’s MatrixMarket triplet (gzip-aware) and returns a

@@ -107,7 +107,7 @@ manually.
 
 ------------------------------------------------------------------------
 
-## Step 2 – Quality control
+## Step 3 – Quality control
 
 ### Visualise QC metrics
 
@@ -142,7 +142,7 @@ obj <- FilterEvents(obj, min_cells_covered = 20)
 
 ------------------------------------------------------------------------
 
-## Step 3 – Visualise splicing patterns
+## Step 4 – Visualise splicing patterns
 
 ### Where does the splicing switch happen on the UMAP?
 
