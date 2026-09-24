@@ -4,7 +4,7 @@ pagetitle: "Matisse — Understand your cells, layer by layer"
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/avisrilab/Matisse/actions/workflows/R-CMD-check.yml)
-[![pkgdown](https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg)](https://avisrilab.github.io/Matisse)
+[![pkgdown](https://github.com/avisrilab/Matisse/actions/workflows/pkgdown.yml/badge.svg)](https://avisrilab.org/Matisse)
 <!-- badges: end -->
 
 <div class="mat-hero">

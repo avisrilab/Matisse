@@ -53,7 +53,7 @@
 #'
 #' @section Package website:
 #' Full documentation and vignettes are available at
-#' \url{https://avisrilab.github.io/Matisse}.
+#' \url{https://avisrilab.org/Matisse}.
 #'
 #' @keywords internal
 "_PACKAGE"

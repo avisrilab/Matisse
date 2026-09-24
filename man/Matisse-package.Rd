@@ -61,20 +61,20 @@ from junction IDs at construction.
 \section{Package website}{
 
 Full documentation and vignettes are available at
-\url{https://avisrilab.github.io/Matisse}.
+\url{https://avisrilab.org/Matisse}.
 }
 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://avisrilab.github.io/Matisse}
+  \item \url{https://avisrilab.org/Matisse}
   \item \url{https://github.com/avisrilab/Matisse}
   \item Report bugs at \url{https://github.com/avisrilab/Matisse/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: k3yavi \email{avisrilab@gmail.com}
+\strong{Maintainer}: Avi Srivastava \email{avisrilab@gmail.com} (\href{https://orcid.org/0000-0001-9798-2079}{ORCID})
 
 }
 \keyword{internal}

@@ -1,297 +1,356 @@
 /* ============================================================
-   Matisse pkgdown theme — custom styles
-   Built on Bootstrap 5 / Bootswatch flatly
-   Primary: #2c6e8a
+   Matisse docs in the Srivastava Lab look (avisrilab.org)
+   The lab bar and theme script come from template.includes in
+   _pkgdown.yml. data-bs-theme on <html> follows the lab site's
+   stored choice (localStorage "lab-theme"), dark by default.
    ============================================================ */
 
-/* ── Hero ─────────────────────────────────────────────────── */
+/* ── Lab tokens: the same values as avisrilab.org/css/lab.css ─── */
+:root {
+  --lab-font: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --lab-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --lab-bar-h: 36px;
+  --lab-nav-h: 56px;               /* $pkgdown-nav-height */
+}
+html[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --lab-bg: #070b16;        --lab-bg-rgb: 7, 11, 22;
+  --lab-bg-subtle: #0c1222;
+  --lab-border: #1a2338;
+  --lab-text: #eef1f5;      --lab-text-rgb: 238, 241, 245;
+  --lab-muted: #aab2bf;
+  --lab-accent: #5fc9d2;    --lab-accent-rgb: 95, 201, 210;
+  --lab-accent-hover: #8adbe2; --lab-accent-hover-rgb: 138, 219, 226;
+  --lab-code-bg: #0c1222;
+}
+html[data-bs-theme="light"] {
+  /* "linen" */
+  color-scheme: light;
+  --lab-bg: #f7f3ee;        --lab-bg-rgb: 247, 243, 238;
+  --lab-bg-subtle: #efe8df;
+  --lab-border: #dfd4c6;
+  --lab-text: #22201c;      --lab-text-rgb: 34, 32, 28;
+  --lab-muted: #6a635a;
+  --lab-accent: #0f6b73;    --lab-accent-rgb: 15, 107, 115;
+  --lab-accent-hover: #0a5158; --lab-accent-hover-rgb: 10, 81, 88;
+  --lab-code-bg: #fffdf9;
+}
+
+/* Bootstrap reads these variables, so mapping them re-colours most of the site */
+html[data-bs-theme],
+html[data-bs-theme] .navbar[data-bs-theme] {
+  --bs-body-bg: var(--lab-bg);            --bs-body-bg-rgb: var(--lab-bg-rgb);
+  --bs-body-color: var(--lab-text);       --bs-body-color-rgb: var(--lab-text-rgb);
+  --bs-emphasis-color: var(--lab-text);   --bs-emphasis-color-rgb: var(--lab-text-rgb);
+  --bs-heading-color: var(--lab-text);
+  --bs-secondary-color: var(--lab-muted);
+  --bs-tertiary-color: var(--lab-muted);
+  --bs-secondary-bg: var(--lab-bg-subtle);
+  --bs-tertiary-bg: var(--lab-bg-subtle);
+  --bs-border-color: var(--lab-border);
+  --bs-border-color-translucent: var(--lab-border);
+  --bs-link-color: var(--lab-accent);     --bs-link-color-rgb: var(--lab-accent-rgb);
+  --bs-link-hover-color: var(--lab-accent-hover); --bs-link-hover-color-rgb: var(--lab-accent-hover-rgb);
+  --bs-primary: var(--lab-accent);        --bs-primary-rgb: var(--lab-accent-rgb);
+  --bs-code-color: var(--lab-text);
+  --bs-body-font-family: var(--lab-font);
+  --bs-font-sans-serif: var(--lab-font);
+  --bs-font-monospace: var(--lab-mono);
+}
+
+body {
+  font-family: var(--lab-font);
+  background: var(--lab-bg);
+  color: var(--lab-text);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--lab-font);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--lab-text);
+}
+code, kbd, pre, samp { font-family: var(--lab-mono); }
+/* links in the lab style: accent colour, underlined on hover */
+a { text-decoration: none; text-underline-offset: 3px; }
+a:hover { text-decoration: underline; }
+
+/* ── Lab bar: fixed above pkgdown's own (fixed) navbar ─────────── */
+.lab-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1035;
+  height: var(--lab-bar-h);
+  background: var(--lab-bg-subtle);
+  border-bottom: 1px solid var(--lab-border);
+  font-family: var(--lab-font);
+  font-size: 0.85rem;
+}
+.lab-bar__inner { display: flex; align-items: center; gap: 1.25rem; height: 100%; padding: 0 1rem; }
+.lab-bar__brand { color: var(--lab-text); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.lab-bar__brand span { color: var(--lab-accent); }
+.lab-bar__brand:hover { color: var(--lab-text); text-decoration: none; }
+.lab-bar__links { display: flex; gap: 1.25rem; margin-left: auto; }
+.lab-bar__links a { color: var(--lab-muted); text-decoration: none; }
+.lab-bar__links a:hover { color: var(--lab-text); text-decoration: none; }
+.lab-bar__theme {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; padding: 0;
+  background: none; border: 1px solid var(--lab-border); border-radius: 6px;
+  color: var(--lab-muted); cursor: pointer;
+}
+.lab-bar__theme:hover { color: var(--lab-accent); border-color: var(--lab-accent); }
+@media (max-width: 575.98px) {
+  .lab-bar__links a:not(.lab-bar__tools) { display: none; }
+}
+
+/* Shift pkgdown's layout down by the bar's height */
+.navbar.fixed-top { top: var(--lab-bar-h); }
+.row > main,
+.row > aside { margin-top: calc(var(--lab-nav-h) + var(--lab-bar-h)); }
+html, body { scroll-padding: calc(var(--lab-nav-h) + var(--lab-bar-h)); }
+@media (min-width: 576px) {
+  #toc {
+    top: calc(var(--lab-nav-h) + var(--lab-bar-h));
+    max-height: calc(100vh - var(--lab-nav-h) - var(--lab-bar-h) - 1rem);
+  }
+}
+
+/* ── pkgdown navbar in lab colours, in both themes ─────────────── */
+.navbar.fixed-top {
+  background: var(--lab-bg) !important;
+  border-bottom: 1px solid var(--lab-border);
+  font-family: var(--lab-font);
+}
+/* pkgdown gives the navbar its own data-bs-theme="dark", whose Bootstrap
+   colours would win in the light theme; this selector outranks them */
+html[data-bs-theme] .navbar[data-bs-theme] {
+  --bs-navbar-color: var(--lab-muted);
+  --bs-navbar-hover-color: var(--lab-text);
+  --bs-navbar-active-color: var(--lab-text);
+  --bs-navbar-brand-color: var(--lab-text);
+  --bs-navbar-brand-hover-color: var(--lab-accent);
+  --bs-navbar-toggler-border-color: var(--lab-border);
+}
+html[data-bs-theme="light"] .navbar[data-bs-theme] .navbar-toggler-icon {
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2834, 32, 28, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+.navbar-brand { font-weight: 600; }
+.dropdown-menu {
+  --bs-dropdown-bg: var(--lab-bg);
+  --bs-dropdown-color: var(--lab-text);
+  --bs-dropdown-border-color: var(--lab-border);
+  --bs-dropdown-link-color: var(--lab-text);
+  --bs-dropdown-link-hover-color: var(--lab-text);
+  --bs-dropdown-link-hover-bg: var(--lab-bg-subtle);
+  --bs-dropdown-link-active-color: var(--lab-text);
+  --bs-dropdown-link-active-bg: var(--lab-bg-subtle);
+  --bs-dropdown-header-color: var(--lab-muted);
+}
+.navbar .form-control {
+  background: var(--lab-bg-subtle);
+  border-color: var(--lab-border);
+  color: var(--lab-text);
+}
+.navbar .form-control::placeholder { color: var(--lab-muted); }
+
+/* ── Code ──────────────────────────────────────────────────────── */
+html[data-bs-theme] pre {
+  background: var(--lab-code-bg);
+  border: 1px solid var(--lab-border);
+  border-radius: 4px;
+  color: var(--lab-text);
+}
+html[data-bs-theme] pre code { background: transparent; }
+html[data-bs-theme] :not(pre) > code {
+  background: var(--lab-bg-subtle);
+  color: var(--lab-text);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+}
+/* pkgdown's arrow-dark highlighting, applied when the page is dark */
+html[data-bs-theme="dark"] pre code         { color: #f8f8f2; }
+html[data-bs-theme="dark"] pre code span.al { color: #f07178; background-color: #2a0f15; font-weight: bold; }
+html[data-bs-theme="dark"] pre code span.an { color: #d4d0ab; }
+html[data-bs-theme="dark"] pre code span.at { color: #00e0e0; }
+html[data-bs-theme="dark"] pre code span.bn { color: #d4d0ab; }
+html[data-bs-theme="dark"] pre code span.bu { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.cf { color: #ffa07a; font-weight: bold; }
+html[data-bs-theme="dark"] pre code span.ch { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.cn { color: #ffd700; }
+html[data-bs-theme="dark"] pre code span.co { color: #f8f8f2; font-style: italic; }
+html[data-bs-theme="dark"] pre code span.cv { color: #ffd700; }
+html[data-bs-theme="dark"] pre code span.do { color: #f8f8f2; }
+html[data-bs-theme="dark"] pre code span.dt { color: #ffa07a; }
+html[data-bs-theme="dark"] pre code span.dv { color: #d4d0ab; }
+html[data-bs-theme="dark"] pre code span.er { color: #f07178; text-decoration: underline; }
+html[data-bs-theme="dark"] pre code span.ex { color: #00e0e0; font-weight: bold; }
+html[data-bs-theme="dark"] pre code span.fl { color: #d4d0ab; }
+html[data-bs-theme="dark"] pre code span.fu { color: #ffa07a; }
+html[data-bs-theme="dark"] pre code span.im { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.in { color: #d4d0ab; }
+html[data-bs-theme="dark"] pre code span.kw { color: #ffa07a; font-weight: bold; }
+html[data-bs-theme="dark"] pre code span.op { color: #ffa07a; }
+html[data-bs-theme="dark"] pre code span.ot { color: #00e0e0; }
+html[data-bs-theme="dark"] pre code span.pp { color: #dcc6e0; }
+html[data-bs-theme="dark"] pre code span.re { color: #00e0e0; background-color: #f8f8f2; }
+html[data-bs-theme="dark"] pre code span.sc { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.ss { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.st { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.va { color: #00e0e0; }
+html[data-bs-theme="dark"] pre code span.vs { color: #abe338; }
+html[data-bs-theme="dark"] pre code span.wa { color: #dcc6e0; }
+
+/* Plots are drawn on white, so on the dark page they sit on a light plate */
+html[data-bs-theme="dark"] .template-article main img,
+html[data-bs-theme="dark"] .template-reference-topic main img {
+  background: #fff; padding: 6px; border-radius: 4px;
+}
+
+/* ── Home page (index.md) ─────────────────────────────────────── */
 .mat-hero {
-  background: linear-gradient(135deg, #1b4f6a 0%, #2c6e8a 55%, #3e8fa0 100%);
-  color: #fff;
-  border-radius: 12px;
-  padding: 4rem 2.5rem 3.5rem;
+  background: var(--lab-bg-subtle);
+  color: var(--lab-text);
+  border: 1px solid var(--lab-border);
+  border-radius: 4px;
+  padding: 3.5rem 2.5rem 3rem;
   text-align: center;
   margin: 1.5rem 0 3rem;
 }
-
 .mat-hero h1 {
   font-size: clamp(1.9rem, 4vw, 2.8rem);
-  font-weight: 700;
-  line-height: 1.2;
-  color: #fff;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--lab-text);
   margin-bottom: 1rem;
   border-bottom: none;
 }
-
+/* pkgdown wraps the title in .page-header, which draws a rule under it */
+.mat-hero .page-header { border-bottom: none; padding-bottom: 0; margin: 0; }
 .mat-hero-sub {
-  font-size: 1.15rem;
-  opacity: 0.88;
+  font-size: 1.1rem;
+  color: var(--lab-muted);
   max-width: 560px;
   margin: 0 auto 2rem;
-  line-height: 1.55;
+  line-height: 1.6;
 }
-
-.mat-btn-primary {
-  background: #fff;
-  color: #1b4f6a;
-  border: 2px solid #fff;
-  font-weight: 600;
-  border-radius: 6px;
-  padding: 0.55rem 1.6rem;
-  margin: 0.3rem;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-}
-.mat-btn-primary:hover {
-  background: transparent;
-  color: #fff;
-  text-decoration: none;
-}
-
+.mat-btn-primary,
 .mat-btn-outline {
-  background: transparent;
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.65);
-  font-weight: 500;
-  border-radius: 6px;
-  padding: 0.55rem 1.6rem;
+  border-radius: 999px;
+  padding: 0.5rem 1.4rem;
   margin: 0.3rem;
+  font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
 }
-.mat-btn-outline:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  text-decoration: none;
-}
+.mat-btn-primary { background: var(--lab-text); color: var(--lab-bg); border: 1px solid var(--lab-text); }
+.mat-btn-primary:hover { background: var(--lab-accent); border-color: var(--lab-accent); color: var(--lab-bg); text-decoration: none; }
+.mat-btn-outline { background: transparent; color: var(--lab-text); border: 1px solid var(--lab-border); }
+.mat-btn-outline:hover { background: transparent; border-color: var(--lab-muted); color: var(--lab-text); text-decoration: none; }
 
-/* ── Section layout ───────────────────────────────────────── */
-.mat-section {
-  padding: 1rem 0 2.5rem;
-}
-
+.mat-section { padding: 1rem 0 2.5rem; }
 .mat-section-title {
-  font-size: 1.55rem;
-  font-weight: 700;
-  color: #1b4f6a;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--lab-text);
   text-align: center;
   margin-bottom: 0.4rem;
   border-bottom: none;
 }
+.mat-section-sub { text-align: center; color: var(--lab-muted); font-size: 1rem; margin-bottom: 2rem; }
 
-.mat-section-sub {
-  text-align: center;
-  color: #6c757d;
-  font-size: 1rem;
-  margin-bottom: 2rem;
-}
-
-/* ── Feature cards ────────────────────────────────────────── */
 .mat-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 1.1rem;
   margin-bottom: 1rem;
 }
-
 .mat-card {
-  background: #f4f9fc;
-  border: 1px solid #cce3ef;
-  border-top: 3px solid #2c6e8a;
-  border-radius: 8px;
+  background: var(--lab-bg-subtle);
+  border: 1px solid var(--lab-border);
+  border-top: 2px solid var(--lab-accent);
+  border-radius: 4px;
   padding: 1.4rem 1.3rem 1.2rem;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.18s;
 }
-
-.mat-card:hover {
-  box-shadow: 0 6px 20px rgba(44, 110, 138, 0.14);
-  transform: translateY(-3px);
-}
-
-.mat-card h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1b4f6a;
-  margin-bottom: 0.45rem;
-  border-bottom: none;
-}
-
-.mat-card p {
-  font-size: 0.875rem;
-  color: #555;
-  margin: 0;
-  line-height: 1.5;
-}
-
+.mat-card:hover { border-color: var(--lab-muted); border-top-color: var(--lab-accent); }
+.mat-card h3 { font-size: 0.98rem; font-weight: 500; color: var(--lab-text); margin-bottom: 0.45rem; border-bottom: none; }
+.mat-card p { font-size: 0.9rem; color: var(--lab-muted); margin: 0; line-height: 1.55; }
 .mat-card-num {
   display: inline-block;
-  background: #2c6e8a;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  line-height: 1.5rem;
-  text-align: center;
+  width: 1.5rem; height: 1.5rem; line-height: calc(1.5rem - 2px);
   margin-bottom: 0.75rem;
+  border: 1px solid var(--lab-accent); border-radius: 50%;
+  color: var(--lab-accent);
+  font-family: var(--lab-mono); font-size: 0.72rem; text-align: center;
 }
 
-/* ── Figure showcase ──────────────────────────────────────── */
-.mat-figure {
-  text-align: center;
-  margin: 0.5rem 0 3rem;
-}
-
+.mat-figure { text-align: center; margin: 0.5rem 0 3rem; }
 .mat-figure img {
-  max-width: 680px;
-  width: 100%;
-  border-radius: 10px;
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.13);
-  border: 1px solid #e0eef4;
+  max-width: 680px; width: 100%;
+  padding: 8px; background: #fff;            /* the plot is drawn on white */
+  border: 1px solid var(--lab-border); border-radius: 4px;
 }
-
 .mat-figure figcaption {
-  margin-top: 0.9rem;
-  font-size: 0.86rem;
-  color: #6c757d;
   max-width: 620px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0.9rem auto 0;
+  color: var(--lab-muted);
+  font-size: 0.88rem;
   line-height: 1.55;
-  font-style: italic;
 }
 
-/* ── Platform compatibility badges ───────────────────────── */
-.mat-compat {
-  max-width: 680px;
-  margin: 0 auto 2.5rem;
-}
-
-.mat-compat-group {
-  margin-bottom: 1.1rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-
+.mat-compat { max-width: 680px; margin: 0 auto 2.5rem; }
+.mat-compat-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; margin-bottom: 1.1rem; }
 .mat-compat-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #888;
-  white-space: nowrap;
   min-width: 11rem;
+  color: var(--lab-muted);
+  font-family: var(--lab-mono); font-size: 0.78rem;
+  white-space: nowrap;
 }
-
 .mat-badge {
   display: inline-block;
-  background: #e6f3f8;
-  color: #1b4f6a;
-  border: 1px solid #b5d9e8;
-  border-radius: 20px;
   padding: 0.2rem 0.8rem;
+  border: 1px solid var(--lab-border); border-radius: 999px;
+  color: var(--lab-text);
   font-size: 0.82rem;
-  font-weight: 500;
   white-space: nowrap;
 }
 
-/* ── Installation box ─────────────────────────────────────── */
 .mat-install {
-  background: #f4f9fc;
-  border-left: 4px solid #2c6e8a;
-  border-radius: 0 8px 8px 0;
-  padding: 1.4rem 1.8rem;
-  margin: 0 auto 1rem;
   max-width: 560px;
+  margin: 0 auto 1rem;
+  padding: 1.4rem 1.8rem;
+  background: var(--lab-bg-subtle);
+  border-left: 2px solid var(--lab-accent);
+  border-radius: 0 4px 4px 0;
 }
+.mat-install pre { background: transparent !important; border: none; margin: 0; padding: 0; font-size: 0.95rem; }
 
-.mat-install pre {
-  background: transparent;
-  border: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.95rem;
-}
+.mat-cta-footer { text-align: center; padding: 2.5rem 1rem 3rem; margin-top: 1rem; border-top: 1px solid var(--lab-border); }
+.mat-cta-footer p { font-size: 1.1rem; color: var(--lab-muted); margin-bottom: 1rem; }
 
-/* ── Footer CTA ───────────────────────────────────────────── */
-.mat-cta-footer {
-  text-align: center;
-  padding: 2.5rem 1rem 3rem;
-  border-top: 1px solid #dee2e6;
-  margin-top: 1rem;
-}
+/* ── General polish ───────────────────────────────────────────── */
+.template-home h2 { border-bottom: none; }
+.template-home #pkgdown-sidebar { padding-top: 0.5rem; }
 
-.mat-cta-footer p {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 1rem;
-}
-
-/* ── General polish ───────────────────────────────────────── */
-
-/* Tighter top padding so hero sits closer to the navbar */
-#pkgdown-sidebar ~ .col-md-9 .row,
-.row.mat-hero-row {
-  padding-top: 0;
-}
-
-/* Remove default bottom border on h2 headings on the home page */
-.template-home h2 {
-  border-bottom: none;
-}
-
-/* Give the home page sidebar a little breathing room */
-.template-home #pkgdown-sidebar {
-  padding-top: 0.5rem;
-}
-
-/* ── Reduce excess horizontal whitespace ──────────────────── */
-
-/* Pull the Bootstrap container inward less aggressively */
 .container, .container-fluid, .container-xxl {
-  padding-left: 1rem  !important;
+  padding-left: 1rem !important;
   padding-right: 1rem !important;
 }
-
-/* Tighten the main content column on article/reference pages */
 .template-article .col-md-9,
-.template-reference-topic .col-md-9 {
-  padding-left: 1.5rem;
-  padding-right: 1rem;
-}
-
-/* Sidebar narrower so content gets more room */
+.template-reference-topic .col-md-9 { padding-left: 1.5rem; padding-right: 1rem; }
 .template-article #pkgdown-sidebar,
-.template-reference-topic #pkgdown-sidebar {
-  padding-right: 0.75rem;
-}
+.template-reference-topic #pkgdown-sidebar { padding-right: 0.75rem; }
 
-/* ── Back-to-top button ───────────────────────────────────── */
+footer { color: var(--lab-muted); border-top-color: var(--lab-border); }
+
+/* ── Back-to-top button ───────────────────────────────────────── */
 #back-to-top {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 999;
-  display: none;          /* hidden until user scrolls */
-  background: #2c6e8a;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 2.6rem;
-  height: 2.6rem;
-  font-size: 1.2rem;
-  line-height: 2.6rem;
-  text-align: center;
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+  display: none;          /* hidden until the reader scrolls */
+  width: 2.6rem; height: 2.6rem;
+  background: var(--lab-bg-subtle); color: var(--lab-text);
+  border: 1px solid var(--lab-border); border-radius: 50%;
+  font-size: 1.1rem; line-height: 2.4rem; text-align: center;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-  transition: background 0.2s, opacity 0.2s;
-  opacity: 0.85;
 }
-
-#back-to-top:hover {
-  background: #1b4f6a;
-  opacity: 1;
-}
+#back-to-top:hover { border-color: var(--lab-muted); }

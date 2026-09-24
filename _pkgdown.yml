@@ -1,4 +1,4 @@
-url: https://avisrilab.github.io/Matisse
+url: https://avisrilab.org/Matisse
 
 template:
   bootstrap: 5
@@ -8,6 +8,35 @@ template:
     heading-font: "Lato"
     base-font-size: "1rem"
     container-max-width: "100%"
+  # Srivastava Lab look: fonts, colours and dark mode are set in pkgdown/extra.css
+  # (it overrides the Bootstrap values above). The docs live on the lab's domain
+  # (avisrilab.org/Matisse), so they share the lab site's stored colour choice.
+  includes:
+    in_header: |
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+      <script>
+        (function () {
+          var t = null;
+          try { t = localStorage.getItem('lab-theme'); } catch (e) {}
+          document.documentElement.setAttribute('data-bs-theme', t === 'light' ? 'light' : 'dark');
+        })();
+      </script>
+    before_body: |
+      <div class="lab-bar">
+        <div class="lab-bar__inner">
+          <a class="lab-bar__brand" href="/">Srivastava <span>Lab</span></a>
+          <nav class="lab-bar__links" aria-label="Srivastava Lab">
+            <a href="/research.html">Research</a>
+            <a class="lab-bar__tools" href="/tools.html">Tools</a>
+            <a href="/publications.html">Publications</a>
+            <a href="/people.html">People</a>
+            <a href="/contact.html">Contact</a>
+          </nav>
+          <button class="lab-bar__theme" id="labTheme" type="button" aria-label="Toggle colour scheme"></button>
+        </div>
+      </div>
 
 home:
   title: "Matisse — Splicing and chromatin, one cell at a time"
