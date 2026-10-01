@@ -128,7 +128,7 @@ setMethod("CalculatePSI", "MatisseObject",
     psi_mat = result$psi,
     inc_mat = result$inclusion,
     exc_mat = result$exclusion
-  )
+  ).psi_to_dense_na(result$psi)
   object@seurat[["psi"]] <- psi_result$assay
 
   # Migrate event annotation into the PSI assay's feature metadata. After
